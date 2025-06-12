@@ -3,28 +3,31 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>Login</h2>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flashes">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card bg-secondary text-light shadow-lg">
+            <div class="card-header text-center">
+                <h2 class="card-title text-white mb-0">Login</h2>
             </div>
-        {% endif %}
-    {% endwith %}
-    <form method="POST" action="{{ url_for('login') }}">
-        <div class="form-group">
-            <label for="identifier">Username ou Email:</label>
-            <input type="text" class="form-control" id="identifier" name="identifier" required>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> {# <-- O CSRF TOKEN! #}
+
+                    <div class="mb-3">
+                        <label for="identifier" class="form-label">Username ou Email:</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="identifier" name="identifier" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Senha:</label>
+                        <input type="password" class="form-control bg-dark text-light border-secondary" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+                    </div>
+                </form>
+                <p class="mt-4 text-center text-light">Não tem uma conta? <a href="{{ url_for('register') }}" class="text-info">Registe-se aqui</a></p>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="password">Senha:</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Entrar</button>
-    </form>
-    <p>Não tem uma conta? <a href="{{ url_for('register') }}">Registe-se aqui</a></p>
+    </div>
 </div>
 {% endblock %}

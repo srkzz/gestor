@@ -38,7 +38,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # Recomendado para evitar a
 
 # 4. Inicializa a extensão Flask-SQLAlchemy
 db = SQLAlchemy(app)
-
+with app.app_context(): db.create_all()  # Cria as tabelas no banco de dados se não existirem
+# Nota: No Render, o comando 'Build Command' cuidará de criar as tabelas automaticamente.   
 # 5. Define os modelos de banco de dados (User e Task) - AGORA DENTRO DE app.py
 class User(db.Model):
     __tablename__ = 'users' # Nome da tabela no banco de dados, importante para ForeignKey

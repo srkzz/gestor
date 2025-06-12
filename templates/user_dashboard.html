@@ -3,35 +3,60 @@
 {% block title %}Dashboard de {{ user.username }}{% endblock %}
 
 {% block content %}
-    <h2>Bem-vindo, {{ user.username }}!</h2>
-    <p>
-        <a href="{{ url_for('add_task') }}" class="button-link">Adicionar Nova Tarefa</a>
-    </p>
+<h2 class="mb-4 text-white">As Suas Tarefas, {{ user.username }}!</h2>
 
-    <h3>Minhas Tarefas</h3>
-    {% if tasks %}
-        <ul>
-            {% for task in tasks %}
-                <li class="{{ 'completed' if task.is_completed }}">
-                    <div class="task-info">
-                        <strong>{{ task.title }}</strong>
-                        <p>{{ task.description }}</p>
-                        <small>Prioridade: {{ task.priority | capitalize }} | Data Limite: {{ task.due_date.strftime('%Y-%m-%d') }} | Categoria: {{ task.category }}</small>
-                    </div>
-                    <div class="action-buttons">
-                        {# Botões de ação, visíveis apenas para o proprietário da tarefa (já garantido pelo login_required) #}
-                        <a href="{{ url_for('edit_task', task_id=task.id) }}">Editar</a>
-                        <a href="{{ url_for('delete_task', task_id=task.id) }}" class="delete-button" onclick="return confirm('Tem certeza que deseja apagar esta tarefa?');">Apagar</a>
+<a href="{{ url_for('add_task') }}" class="btn btn-success mb-3">Adicionar Nova Tarefa</a>
+
+{% if tasks %}
+    <div class="table-responsive">
+        <table class="table table-dark table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Descrição</th>
+                    <th>Prioridade</th>
+                    <th>Data Limite</th>
+                    <th>Categoria</th>
+                    <th>Concluída</th>
+                    <th>Data de Criação</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr class="{% if task.is_completed %}table-success text-dark{% else %}table-secondary{% endif %}">
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.description or 'N/A' }}</td>
+                    <td>{{ task.priority | capitalize }}</td>
+                    <td>{{ task.due_date.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ task.category }}</td>
+                    <td>
                         {% if task.is_completed %}
-                            <a href="{{ url_for('mark_task_undone', task_id=task.id) }}">Desmarcar Concluída</a>
+                            <span class="badge bg-success">Sim</span>
                         {% else %}
-                            <a href="{{ url_for('mark_task_done', task_id=task.id) }}">Marcar Concluída</a>
+                            <span class="badge bg-warning text-dark">Não</span>
                         {% endif %}
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Nenhuma tarefa encontrada.</p>
-    {% endif %}
+                    </td>
+                    <td>{{ task.date_created.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td class="text-center">
+                        <div class="d-grid gap-2 d-md-block">
+                            {% if not task.is_completed %}
+                                <a href="{{ url_for('mark_task_done', task_id=task.id) }}" class="btn btn-sm btn-outline-success mb-1">Marcar Concluída</a>
+                            {% else %}
+                                <a href="{{ url_for('mark_task_undone', task_id=task.id) }}" class="btn btn-sm btn-outline-warning mb-1">Desmarcar</a>
+                            {% endif %}
+                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-info mb-1">Editar</a>
+                            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="btn btn-sm btn-danger mb-1" onclick="return confirm('Tem certeza que deseja apagar esta tarefa?')">Apagar</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info bg-secondary text-light border-0" role="alert">
+        Não tem tarefas registadas. <a href="{{ url_for('add_task') }}" class="alert-link text-info">Adicione uma agora!</a>
+    </div>
+{% endif %}
 {% endblock %}

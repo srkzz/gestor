@@ -139,3 +139,36 @@ form button[type="submit"] {
 form button[type="submit"]:hover {
     opacity: 0.9;
 }
+
+/* static/css/style.css */
+
+/* Estilo para o fundo com gradiente */
+.gradient-background {
+  height: 100%; /* Isso fará com que cubra a altura do pai */
+  width: 100%;
+  background-image: radial-gradient(
+    at 27% 37%,
+    hsla(215, 98%, 61%, 1) 0px,
+    transparent 0%
+  ),
+  radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 1) 0px, transparent 50%),
+  radial-gradient(at 52% 99%, hsla(354, 98%, 61%, 1) 0px, transparent 50%),
+  radial-gradient(at 10% 29%, hsla(256, 96%, 67%, 1) 0px, transparent 50%),
+  radial-gradient(at 97% 96%, hsla(38, 60%, 74%, 1) 0px, transparent 50%),
+  radial-gradient(at 33% 50%, hsla(222, 67%, 73%, 1) 0px, transparent 50%),
+  radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%);
+  
+  position: fixed; /* Fixa o fundo na viewport */
+  top: 0;
+  left: 0;
+  z-index: -1; /* Garante que fique atrás de todo o conteúdo */
+  filter: blur(100px) saturate(150%);
+  opacity: 0.15;
+}
+
+/* Para que o conteúdo da página fique visível sobre o gradiente:
+   Certifique-se de que os seus elementos de conteúdo (como a navbar e o <main>)
+   têm um background ou um z-index superior ao do gradiente.
+   As classes Bootstrap como .bg-dark, .bg-secondary já fazem isso para os elementos.
+   Adicionei `position-relative` e `z-1` ao `<main>` no `base.html` para garantir.
+*/

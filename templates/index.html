@@ -1,37 +1,22 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Tarefas - Início</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Bem-vindo ao Gestor de Tarefas!</h1>
+{% extends "base.html" %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+{% block title %}Bem-vindo!{% endblock %}
 
-        <h2>Utilizadores Registados:</h2>
-        {% if users %}
-            <ul class="user-list">
-                {% for user in users %}
-                    <li><a href="{{ url_for('user_dashboard', username=user.username) }}">{{ user.username }}</a></li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Nenhum utilizador registado ainda.</p>
-        {% endif %}
-
-        <p><a href="{{ url_for('register') }}" class="button">Registar Novo Utilizador</a></p>
-    </div>
-</body>
-</html>
+{% block content %}
+<div class="jumbotron bg-secondary text-center p-5 rounded shadow-lg">
+    <h1 class="display-4 text-white mb-3">Bem-vindo ao Gestor de Tarefas!</h1>
+    <p class="lead text-light mb-4">Organize a sua vida, uma tarefa de cada vez.</p>
+    <hr class="my-4 border-light">
+    <p class="text-light mb-4">Comece já a gerir as suas tarefas.</p>
+    {% if 'user_id' not in session %}
+        <p class="lead">
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('register') }}" role="button">Registar</a>
+            <a class="btn btn-outline-light btn-lg" href="{{ url_for('login') }}" role="button">Login</a>
+        </p>
+    {% else %}
+        <p class="lead">
+            <a class="btn btn-info btn-lg" href="{{ url_for('user_dashboard') }}" role="button">Ir para o meu Dashboard</a>
+        </p>
+    {% endif %}
+</div>
+{% endblock %}
