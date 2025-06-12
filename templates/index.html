@@ -3,25 +3,26 @@
 {% block title %}Bem-vindo!{% endblock %}
 
 {% block content %}
-<div class="jumbotron bg-secondary text-center p-5 rounded shadow-lg mb-5">
-    <h1 class="display-4 text-white mb-3">Bem-vindo ao Gestor de Tarefas!</h1>
+{# Aplicação da classe glassmorphism-card #}
+<div class="text-center p-5 mb-5 glassmorphism-card"> 
+    <h1 class="display-4 text-white mb-3 fw-bold">Bem-vindo ao Gestor de Tarefas!</h1>
     <p class="lead text-light mb-4">Organize a sua vida, uma tarefa de cada vez.</p>
     <hr class="my-4 border-light">
     <p class="text-light mb-4">Comece já a gerir as suas tarefas.</p>
     {% if 'user_id' not in session %}
         <p class="lead">
-            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('register') }}" role="button">Registar</a>
-            <a class="btn btn-outline-light btn-lg" href="{{ url_for('login') }}" role="button">Login</a>
+            <a class="btn btn-outline-light btn-lg m-2" href="{{ url_for('register') }}" role="button">Registar</a>
+            <a class="btn btn-outline-light btn-lg m-2" href="{{ url_for('login') }}" role="button">Login</a>
         </p>
     {% else %}
         <p class="lead">
-            <a class="btn btn-info btn-lg" href="{{ url_for('user_dashboard') }}" role="button">Ir para o meu Dashboard</a>
+            <a class="btn btn-info btn-lg m-2" href="{{ url_for('user_dashboard') }}" role="button">Ir para o meu Dashboard</a>
         </p>
     {% endif %}
 </div>
 
-{# NOVO: Secção de Tarefas Públicas Recentes #}
-<div class="card bg-secondary text-light shadow-lg mt-4">
+{# Secção de Tarefas Públicas Recentes (também farei um pequeno ajuste visual aqui para harmonizar) #}
+<div class="card bg-secondary text-light shadow-lg mt-4"> {# Manteremos o bg-secondary mas o CSS fará um ajuste sutil #}
     <div class="card-header">
         <h3 class="card-title text-white mb-0">Tarefas Públicas Recentes</h3>
     </div>
@@ -35,6 +36,14 @@
                             <small class="text-muted">{{ task.date_created.strftime('%d/%m/%Y') }}</small>
                         </div>
                         <p class="mb-1">{{ task.description or 'Sem descrição.' }}</p>
+                        {# NOVO: Exibição de Tags na Public Task Card #}
+                        {% if task.tags %}
+                            <div class="mb-2">
+                                {% for tag in task.tags %}
+                                    <span class="badge bg-primary me-1">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                         <small class="text-info">Criada por: {{ task.user.username }}</small>
                         <br>
                         <a href="{{ url_for('public_tasks') }}" class="btn btn-sm btn-outline-info mt-2">Ver todas as tarefas públicas</a>

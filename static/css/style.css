@@ -23,59 +23,52 @@
   opacity: 0.15;
 }
 
-/* --- NOVO: Estilos da Navbar para MDBootstrap --- */
-
+/* --- Estilos da Navbar (Inspirados na Colorlib/MDBootstrap) --- */
 .custom-mdb-navbar {
-    background-color: transparent !important; /* Totalmente transparente por padrão */
-    box-shadow: none !important; /* Remove sombra inicial */
-    backdrop-filter: blur(5px); /* Efeito de blur para quando rolar */
-    transition: background-color 0.4s ease, box-shadow 0.4s ease; /* Transições suaves */
-    padding-top: 1rem; /* Mais padding no topo e fundo */
+    background-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(5px);
+    transition: background-color 0.4s ease, box-shadow 0.4s ease;
+    padding-top: 1rem;
     padding-bottom: 1rem;
 }
 
-/* Fundo e sombra no hover (ou quando o utilizador rola a página, se quiser implementar JS) */
 .custom-mdb-navbar:hover,
-.custom-mdb-navbar.scrolled { /* Você pode adicionar 'scrolled' via JS se quiser */
-    background-color: rgba(33, 37, 41, 0.9) !important; /* Fundo escuro levemente transparente */
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; /* Sombra no hover/scroll */
+.custom-mdb-navbar.scrolled {
+    background-color: rgba(33, 37, 41, 0.9) !important;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
 }
 
-/* Estilo do Brand/Título da Navbar */
 .navbar-brand {
     font-weight: 700;
-    font-size: 1.25rem; /* Um pouco menor para caber melhor */
-    letter-spacing: 2px; /* Espaçamento entre letras */
-    color: #fff !important; /* Cor branca garantida */
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+    color: #fff !important;
 }
 
-/* Estilo para os Links de Navegação */
 .navbar-nav .nav-item .nav-link {
-    color: rgba(255, 255, 255, 0.8) !important; /* Branco suave para links */
+    color: rgba(255, 255, 255, 0.8) !important;
     font-weight: 500;
-    padding: 0.7rem 1rem; /* Padding ligeiramente ajustado */
+    padding: 0.7rem 1rem;
     border-radius: 5px;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Efeito de hover/ativo para links */
 .navbar-nav .nav-item .nav-link:hover,
 .navbar-nav .nav-item .nav-link.active,
 .navbar-nav .nav-item .nav-link:focus {
-    background-color: rgba(255, 255, 255, 0.1); /* Fundo sutil */
-    color: #fff !important; /* Texto branco */
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff !important;
 }
 
-/* Ícones dentro dos links */
 .navbar-nav .nav-item .nav-link i {
-    font-size: 1.1rem; /* Tamanho do ícone */
-    vertical-align: middle; /* Alinhamento vertical com o texto */
-    margin-right: 5px; /* Espaçamento à direita do ícone */
+    font-size: 1.1rem;
+    vertical-align: middle;
+    margin-right: 5px;
 }
 
-/* Estilo do Dropdown (menu do utilizador) */
 .dropdown-menu {
-    background-color: #212529; /* Fundo escuro */
+    background-color: #212529;
     border: none;
     box-shadow: 0px 10px 34px -20px rgba(0, 0, 0, 0.41);
     border-radius: 5px;
@@ -98,11 +91,10 @@
     border-top-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Estilo do Avatar na Navbar */
 .custom-avatar-small {
-    border: 1px solid rgba(255, 255, 255, 0.2); /* Borda mais suave para o avatar */
-    border-radius: 50%; /* Garante que é perfeitamente redondo */
-    object-fit: cover; /* Garante que a imagem preenche o espaço sem distorção */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 /* --- Estilos para o Cabeçalho da Tabela no Dashboard --- */
@@ -127,4 +119,60 @@
 }
 .table-header-modern th:last-child {
     border-top-right-radius: 0.5rem;
+}
+
+/* --- NOVO: Estilo Glassmorphism para Cards e Seções --- */
+.glassmorphism-card {
+    background-color: rgba(255, 255, 255, 0.1); /* Um branco transparente */
+    border: 1px solid rgba(255, 255, 255, 0.18); /* Borda branca suavemente transparente */
+    border-radius: 1rem; /* rounded-xl equivale a cerca de 16px */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), /* Sombra principal */
+                inset 0 0 10px rgba(255, 255, 255, 0.05); /* Sombra interna sutil */
+    backdrop-filter: blur(10px); /* Efeito de blur no fundo */
+    -webkit-backdrop-filter: blur(10px); /* Suporte para navegadores Webkit */
+    padding: 2.5rem; /* p-5 do Tailwind é 2.5rem (40px) */
+    color: inherit; /* Garante que o texto herda a cor do body (text-light) */
+    transition: all 0.3s ease-in-out; /* Transição suave para efeitos de hover */
+}
+
+/* Opcional: efeito de hover para o card glassmorphism */
+.glassmorphism-card:hover {
+    transform: translateY(-5px); /* Levanta o card ligeiramente */
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2),
+                inset 0 0 15px rgba(255, 255, 255, 0.08);
+}
+
+/* Garante que o texto dentro do card glassmorphism seja legível */
+.glassmorphism-card h1,
+.glassmorphism-card h5,
+.glassmorphism-card p,
+.glassmorphism-card .lead {
+    color: #fff; /* Garante que o texto principal seja branco */
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* Sombra de texto suave para melhor contraste */
+}
+
+.glassmorphism-card .hr {
+    border-top-color: rgba(255, 255, 255, 0.3) !important; /* Linha de separação mais clara */
+}
+
+/* Ajustes para botões dentro do glassmorphism-card */
+.glassmorphism-card .btn {
+    border: 1px solid rgba(255, 255, 255, 0.5); /* Borda transparente para botões */
+    background-color: transparent !important;
+    color: #fff !important;
+    transition: all 0.3s ease;
+}
+
+.glassmorphism-card .btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: #fff !important;
+}
+
+/* Estilos para o Card de Tarefas Públicas Recentes na Home Page */
+.card.bg-secondary.text-light {
+    background-color: rgba(33, 37, 41, 0.8) !important; /* Torna-o ligeiramente transparente */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border-radius: 0.75rem; /* round corners */
 }
