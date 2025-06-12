@@ -1,8 +1,8 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from werkzeug.security import generate_password_hash, check_password_hash # Importa as funções de segurança
+from flask_migrate import Migrate # Pode manter ou remover, não será usado ativamente
+from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
 # Carrega as variáveis de ambiente do ficheiro .env
@@ -16,16 +16,15 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///ins
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-migrate = Migrate(app, db) # Inicializa Flask-Migrate, mas não vamos usá-lo ativamente nesta abordagem
+migrate = Migrate(app, db) # Pode manter ou remover, não será usado ativamente nesta abordagem
 
 # Definição do modelo de Utilizador
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128)) # Campo para armazenar a hash da password
+    password_hash = db.Column(db.String(128))
 
-    # Propriedade para definir a password (hashed)
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -34,7 +33,6 @@ class User(db.Model):
     def password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    # Método para verificar a password
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
@@ -46,7 +44,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    priority = db.Column(db.Integer) # 1: alta, 2: média, 3: baixa
+    priority = db.Column(db.Integer)
     due_date = db.Column(db.Date)
     category = db.Column(db.String(50))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -58,8 +56,6 @@ class Task(db.Model):
 # Rotas da aplicação
 @app.route('/')
 def home():
-    # Exemplo: Apenas para listar todos os utilizadores (apenas para teste inicial)
-    # Na sua aplicação real, você vai querer lidar com login e utilizador atual
     users = User.query.all()
     return render_template('home.html', users=users)
 
@@ -70,7 +66,6 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-        # Verifica se o username ou email já existem
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Username already exists. Please choose a different one.')
@@ -82,18 +77,19 @@ def register():
             return redirect(url_for('register'))
 
         new_user = User(username=username, email=email)
-        new_user.password = password # Define a password, que será hashed
+        new_user.password = password
         db.session.add(new_user)
         db.session.commit()
         flash('Registration successful! You can now log in.')
-        return redirect(url_for('home')) # Pode redirecionar para uma página de login
+        return redirect(url_for('home'))
     return render_template('register.html')
 
-
-# **ATENÇÃO:** Esta linha é TEMPORÁRIA.
-# Será usada UMA VEZ para criar as tabelas na nova DB do Render.
-# Após o deploy bem-sucedido, deve REMOVÊ-LA ou comentá-la.
+with app.app_context():
+    db.create_all()
+    
+# O bloco if __name__ == '__main__': é para quando o ficheiro é executado diretamente.
+# Em produção (com Gunicorn), este bloco não é executado.
+# A criação das tabelas será feita no Build Command do Render.
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all() 
+    # A linha db.create_all() foi removida ou comentada daqui para o deploy no Render
     app.run(debug=True)
