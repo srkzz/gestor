@@ -57,7 +57,7 @@ class Task(db.Model):
 @app.route('/')
 def home():
     users = User.query.all()
-    return render_template('home.html', users=users)
+    return render_template('index.html', users=users)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -86,7 +86,6 @@ def register():
 
 with app.app_context():
     db.create_all()
-    
 # O bloco if __name__ == '__main__': é para quando o ficheiro é executado diretamente.
 # Em produção (com Gunicorn), este bloco não é executado.
 # A criação das tabelas será feita no Build Command do Render.
