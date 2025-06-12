@@ -23,50 +23,59 @@
   opacity: 0.15;
 }
 
-/* --- Estilos da Navbar (Inspirados na Colorlib) --- */
+/* --- NOVO: Estilos da Navbar para MDBootstrap --- */
 
-.navbar {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    transition: background-color 0.4s ease;
+.custom-mdb-navbar {
+    background-color: transparent !important; /* Totalmente transparente por padrão */
+    box-shadow: none !important; /* Remove sombra inicial */
+    backdrop-filter: blur(5px); /* Efeito de blur para quando rolar */
+    transition: background-color 0.4s ease, box-shadow 0.4s ease; /* Transições suaves */
+    padding-top: 1rem; /* Mais padding no topo e fundo */
+    padding-bottom: 1rem;
 }
 
-.custom-transparent-navbar {
-    background-color: transparent !important;
-    box-shadow: none !important;
+/* Fundo e sombra no hover (ou quando o utilizador rola a página, se quiser implementar JS) */
+.custom-mdb-navbar:hover,
+.custom-mdb-navbar.scrolled { /* Você pode adicionar 'scrolled' via JS se quiser */
+    background-color: rgba(33, 37, 41, 0.9) !important; /* Fundo escuro levemente transparente */
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; /* Sombra no hover/scroll */
 }
 
-.custom-transparent-navbar:hover {
-    background-color: rgba(33, 37, 41, 0.9) !important;
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
-}
-
+/* Estilo do Brand/Título da Navbar */
 .navbar-brand {
-    text-transform: uppercase;
     font-weight: 700;
-    font-size: 1.5rem;
-    color: #fff !important;
+    font-size: 1.25rem; /* Um pouco menor para caber melhor */
+    letter-spacing: 2px; /* Espaçamento entre letras */
+    color: #fff !important; /* Cor branca garantida */
 }
 
-.navbar-nav .nav-item {
-    margin: 0 5px;
-}
-
+/* Estilo para os Links de Navegação */
 .navbar-nav .nav-item .nav-link {
-    padding: 0.8rem 1.2rem;
-    border-radius: 5px;
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: rgba(255, 255, 255, 0.8) !important; /* Branco suave para links */
     font-weight: 500;
-    transition: all 0.3s ease;
+    padding: 0.7rem 1rem; /* Padding ligeiramente ajustado */
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Efeito de hover/ativo para links */
 .navbar-nav .nav-item .nav-link:hover,
-.navbar-nav .nav-item.active .nav-link {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff !important;
+.navbar-nav .nav-item .nav-link.active,
+.navbar-nav .nav-item .nav-link:focus {
+    background-color: rgba(255, 255, 255, 0.1); /* Fundo sutil */
+    color: #fff !important; /* Texto branco */
 }
 
+/* Ícones dentro dos links */
+.navbar-nav .nav-item .nav-link i {
+    font-size: 1.1rem; /* Tamanho do ícone */
+    vertical-align: middle; /* Alinhamento vertical com o texto */
+    margin-right: 5px; /* Espaçamento à direita do ícone */
+}
+
+/* Estilo do Dropdown (menu do utilizador) */
 .dropdown-menu {
-    background-color: #212529;
+    background-color: #212529; /* Fundo escuro */
     border: none;
     box-shadow: 0px 10px 34px -20px rgba(0, 0, 0, 0.41);
     border-radius: 5px;
@@ -89,28 +98,30 @@
     border-top-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Estilo do Avatar na Navbar */
 .custom-avatar-small {
-    border: 1px solid #6c757d;
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Borda mais suave para o avatar */
+    border-radius: 50%; /* Garante que é perfeitamente redondo */
+    object-fit: cover; /* Garante que a imagem preenche o espaço sem distorção */
 }
 
-/* --- NOVO: Estilos para o Cabeçalho da Tabela no Dashboard --- */
+/* --- Estilos para o Cabeçalho da Tabela no Dashboard --- */
 .table-header-modern {
-    background-color: #1a1e22; /* Um fundo escuro, similar ao bg-dark do Bootstrap */
-    border-top-left-radius: 0.5rem; /* Cantos arredondados no topo */
+    background-color: #1a1e22;
+    border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
-    overflow: hidden; /* Garante que os cantos arredondados sejam aplicados corretamente */
+    overflow: hidden;
 }
 
 .table-header-modern th {
-    color: #fff; /* Texto branco */
-    font-weight: 600; /* Um pouco mais negrito */
-    padding: 1.2rem 0.75rem; /* Mais padding para maior altura, como uma navbar */
-    text-align: left; /* Alinhamento do texto */
-    vertical-align: middle; /* Alinha o texto no meio */
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1); /* Uma linha divisória sutil */
+    color: #fff;
+    font-weight: 600;
+    padding: 1.2rem 0.75rem;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Remover a borda superior para o primeiro th para evitar duplicação */
 .table-header-modern th:first-child {
     border-top-left-radius: 0.5rem;
 }
