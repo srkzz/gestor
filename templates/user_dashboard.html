@@ -10,19 +10,59 @@
 
 <a href="{{ url_for('add_task') }}" class="btn btn-success mb-3"><i class="bi bi-plus-circle-fill me-2"></i> Adicionar Nova Tarefa</a>
 
+{# NOVO: Cartões de Resumo #}
+<div class="row mb-4 text-center">
+    {# Total de Tarefas #}
+    <div class="col-md-3">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card-small">
+            <div class="card-body">
+                <h5 class="card-title fs-2 fw-bold text-primary">{{ total_tasks_count }}</h5>
+                <p class="card-text text-muted">Total de Tarefas</p>
+            </div>
+        </div>
+    </div>
+    {# Tarefas Pendentes #}
+    <div class="col-md-3">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card-small">
+            <div class="card-body">
+                <h5 class="card-title fs-2 fw-bold text-warning">{{ pending_tasks_count }}</h5>
+                <p class="card-text text-muted">Tarefas Pendentes</p>
+            </div>
+        </div>
+    </div>
+    {# Tarefas Concluídas #}
+    <div class="col-md-3">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card-small">
+            <div class="card-body">
+                <h5 class="card-title fs-2 fw-bold text-success">{{ completed_tasks_count }}</h5>
+                <p class="card-text text-muted">Tarefas Concluídas</p>
+            </div>
+        </div>
+    </div>
+    {# Tarefas Públicas (suas) #}
+    <div class="col-md-3">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card-small">
+            <div class="card-body">
+                <h5 class="card-title fs-2 fw-bold text-info">{{ public_tasks_count }}</h5>
+                <p class="card-text text-muted">Tarefas Públicas (suas)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 {# Formulário de Filtros e Ordenação #}
-<div class="card bg-secondary text-light shadow-lg mb-4 rounded-3"> {# Adicionado rounded-3 para mais arredondamento #}
+<div class="card bg-secondary text-light shadow-lg mb-4 rounded-3">
     <div class="card-body">
         {# Título do Formulário de Filtros #}
         <h5 class="card-title text-white mb-4 fs-4 fw-bold border-bottom pb-2 border-light border-opacity-25">
-            <i class="bi bi-funnel-fill me-2 text-info text-center"></i>Filtrar Tarefas
+            <i class="bi bi-funnel-fill me-2 text-info"></i>Filtrar e Ordenar Tarefas
         </h5>
         <form action="{{ url_for('user_dashboard') }}" method="GET">
-            <div class="row g-3 mb-4"> {# Espaçamento vertical entre linhas do formulário #}
+            <div class="row g-3 mb-4">
                 {# Filtro de Estado #}
                 <div class="col-md-3">
                     <label for="status_filter" class="form-label small text-muted">Estado:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="status_filter" name="status"> {# rounded-pill para aspeto moderno #}
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="status_filter" name="status">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Todas</option>
                         <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pendentes</option>
                         <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Concluídas</option>
@@ -119,7 +159,17 @@
                 <tr class="{% if task.is_completed %}table-success text-dark{% else %}table-secondary{% endif %}">
                     <td>{{ task.title }}</td>
                     <td>{{ task.description or 'N/A' }}</td>
-                    <td>{{ task.priority | capitalize }}</td>
+                    <td>
+                        {# Ícones para Prioridade #}
+                        {% if task.priority == 'alta' %}
+                            <span class="priority-icon priority-high" title="Prioridade Alta"><i class="bi bi-arrow-up-circle-fill"></i></span>
+                        {% elif task.priority == 'media' %}
+                            <span class="priority-icon priority-medium" title="Prioridade Média"><i class="bi bi-dot"></i></span>
+                        {% else %} {# baixa #}
+                            <span class="priority-icon priority-low" title="Prioridade Baixa"><i class="bi bi-arrow-down-circle-fill"></i></span>
+                        {% endif %}
+                        {{ task.priority | capitalize }}
+                    </td>
                     <td>{{ task.due_date.strftime('%d/%m/%Y') }}</td>
                     <td>{{ task.category }}</td>
                     <td>
@@ -158,12 +208,41 @@
             </tbody>
         </table>
     </div>
+
+    {# Controles de Paginação #}
+    {% if total_pages > 1 %}
+    <nav aria-label="Paginação de Tarefas">
+        <ul class="pagination justify-content-center mt-4">
+            {# Botão Anterior #}
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('user_dashboard', page=page-1, status=status_filter, priority=priority_filter, category=category_filter, tag=tag_filter, sort_by=sort_by, sort_order=sort_order, search=search_query) }}">&laquo; Anterior</a>
+            </li>
+            
+            {# Números das Páginas #}
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link {% if p == page %}bg-primary border-primary{% else %}bg-dark text-light border-secondary{% endif %}" href="{{ url_for('user_dashboard', page=p, status=status_filter, priority=priority_filter, category=category_filter, tag=tag_filter, sort_by=sort_by, sort_order=sort_order, search=search_query) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            {# Botão Próximo #}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('user_dashboard', page=page+1, status=status_filter, priority=priority_filter, category=category_filter, tag=tag_filter, sort_by=sort_by, sort_order=sort_order, search=search_query) }}">Próximo &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
 {% else %}
-    <div class="alert alert-info bg-secondary text-light border-0" role="alert">
+    {# Empty State Aprimorado #}
+    <div class="alert alert-info bg-secondary text-light border-0 py-4 d-flex flex-column align-items-center justify-content-center" role="alert">
+        <i class="bi bi-emoji-dizzy display-4 mb-3"></i> {# Ícone sugestivo #}
         {% if status_filter != 'all' or priority_filter != 'all' or category_filter != 'all' or tag_filter != 'all' or search_query %}
-            Nenhuma tarefa encontrada com os filtros e pesquisa aplicados. <a href="{{ url_for('user_dashboard') }}" class="alert-link text-info">Limpar filtros</a>
+            <p class="mb-2 fs-5">Nenhuma tarefa encontrada com os filtros e pesquisa aplicados.</p>
+            <a href="{{ url_for('user_dashboard') }}" class="alert-link text-info fw-bold">Limpar filtros para ver todas as tarefas</a>
         {% else %}
-            Não tem tarefas registadas. <a href="{{ url_for('add_task') }}" class="alert-link text-info">Adicione uma agora!</a>
+            <p class="mb-2 fs-5">Parece que não tem tarefas registadas ainda!</p>
+            <a href="{{ url_for('add_task') }}" class="alert-link text-info fw-bold">Seja o primeiro a adicionar uma agora!</a>
         {% endif %}
     </div>
 {% endif %}

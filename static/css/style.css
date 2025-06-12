@@ -121,43 +121,40 @@
     border-top-right-radius: 0.5rem;
 }
 
-/* --- NOVO: Estilo Glassmorphism para Cards e Seções --- */
+/* --- Estilo Glassmorphism para Cards e Seções --- */
 .glassmorphism-card {
-    background-color: rgba(255, 255, 255, 0.1); /* Um branco transparente */
-    border: 1px solid rgba(255, 255, 255, 0.18); /* Borda branca suavemente transparente */
-    border-radius: 1rem; /* rounded-xl equivale a cerca de 16px */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), /* Sombra principal */
-                inset 0 0 10px rgba(255, 255, 255, 0.05); /* Sombra interna sutil */
-    backdrop-filter: blur(10px); /* Efeito de blur no fundo */
-    -webkit-backdrop-filter: blur(10px); /* Suporte para navegadores Webkit */
-    padding: 2.5rem; /* p-5 do Tailwind é 2.5rem (40px) */
-    color: inherit; /* Garante que o texto herda a cor do body (text-light) */
-    transition: all 0.3s ease-in-out; /* Transição suave para efeitos de hover */
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 1rem;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1),
+                inset 0 0 10px rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 2.5rem;
+    color: inherit;
+    transition: all 0.3s ease-in-out;
 }
 
-/* Opcional: efeito de hover para o card glassmorphism */
 .glassmorphism-card:hover {
-    transform: translateY(-5px); /* Levanta o card ligeiramente */
+    transform: translateY(-5px);
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2),
                 inset 0 0 15px rgba(255, 255, 255, 0.08);
 }
 
-/* Garante que o texto dentro do card glassmorphism seja legível */
 .glassmorphism-card h1,
 .glassmorphism-card h5,
 .glassmorphism-card p,
 .glassmorphism-card .lead {
-    color: #fff; /* Garante que o texto principal seja branco */
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* Sombra de texto suave para melhor contraste */
+    color: #fff;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .glassmorphism-card .hr {
-    border-top-color: rgba(255, 255, 255, 0.3) !important; /* Linha de separação mais clara */
+    border-top-color: rgba(255, 255, 255, 0.3) !important;
 }
 
-/* Ajustes para botões dentro do glassmorphism-card */
 .glassmorphism-card .btn {
-    border: 1px solid rgba(255, 255, 255, 0.5); /* Borda transparente para botões */
+    border: 1px solid rgba(255, 255, 255, 0.5);
     background-color: transparent !important;
     color: #fff !important;
     transition: all 0.3s ease;
@@ -168,11 +165,61 @@
     border-color: #fff !important;
 }
 
-/* Estilos para o Card de Tarefas Públicas Recentes na Home Page */
+/* Estilos para o Card de Tarefas Públicas Recentes na Home Page e Outros Cards */
 .card.bg-secondary.text-light {
-    background-color: rgba(33, 37, 41, 0.8) !important; /* Torna-o ligeiramente transparente */
+    background-color: rgba(33, 37, 41, 0.8) !important;
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-    border-radius: 0.75rem; /* round corners */
+    border-radius: 0.75rem;
+}
+
+/* NOVO: Estilo para os Cartões de Resumo no Dashboard (glassmorphism-card-small) */
+.glassmorphism-card-small {
+    background-color: rgba(255, 255, 255, 0.08); /* Mais transparente que o glassmorphism-card principal */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.75rem; /* Menos arredondado que o principal */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08),
+                inset 0 0 5px rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 1.5rem; /* Padding ligeiramente menor */
+    transition: all 0.2s ease-in-out;
+    height: 100%; /* Garante que os cartões têm a mesma altura na linha */
+}
+
+.glassmorphism-card-small:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12),
+                inset 0 0 8px rgba(255, 255, 255, 0.05);
+}
+
+.glassmorphism-card-small .card-title {
+    color: #fff; /* Garante que os números sejam brancos */
+    font-size: 2.5rem; /* Tamanho do número */
+    margin-bottom: 0.5rem;
+}
+
+.glassmorphism-card-small .card-text {
+    color: rgba(255, 255, 255, 0.7); /* Texto descritivo mais suave */
+    font-weight: 500;
+}
+
+/* --- Estilos para Ícones de Prioridade --- */
+.priority-icon {
+    font-size: 1.2em;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.priority-high {
+    color: #dc3545;
+}
+
+.priority-medium {
+    color: #ffc107;
+}
+
+.priority-low {
+    color: #28a745;
 }

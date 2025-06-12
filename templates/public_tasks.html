@@ -29,7 +29,7 @@
                     </div>
                     <div class="card-body d-flex flex-column">
                         <p class="card-text">{{ task.description or 'Sem descrição.' }}</p>
-                        {# NOVO: Exibição de Tags na Public Task Card #}
+                        {# Exibição de Tags na Public Task Card #}
                         {% if task.tags %}
                             <div class="mb-2">
                                 {% for tag in task.tags %}
@@ -43,7 +43,17 @@
                                 {{ task.user.username }}
                             </li>
                             <li><i class="bi bi-calendar"></i> Data Limite: {{ task.due_date.strftime('%d/%m/%Y') }}</li>
-                            <li><i class="bi bi-exclamation-circle-fill"></i> Prioridade: {{ task.priority | capitalize }}</li>
+                            <li>
+                                {# Ícones para Prioridade #}
+                                {% if task.priority == 'alta' %}
+                                    <span class="priority-icon priority-high" title="Prioridade Alta"><i class="bi bi-arrow-up-circle-fill"></i></span>
+                                {% elif task.priority == 'media' %}
+                                    <span class="priority-icon priority-medium" title="Prioridade Média"><i class="bi bi-dot"></i></span>
+                                {% else %} {# baixa #}
+                                    <span class="priority-icon priority-low" title="Prioridade Baixa"><i class="bi bi-arrow-down-circle-fill"></i></span>
+                                {% endif %}
+                                Prioridade: {{ task.priority | capitalize }}
+                            </li>
                         </ul>
                         <div class="mt-auto"> {# Empurra os comentários para baixo #}
                             <h6>Comentários:</h6>
@@ -82,12 +92,42 @@
             </div>
         {% endfor %}
     </div>
+
+    {# Controles de Paginação #}
+    {% if total_pages > 1 %}
+    <nav aria-label="Paginação de Tarefas Públicas">
+        <ul class="pagination justify-content-center mt-4">
+            {# Botão Anterior #}
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('public_tasks', page=page-1, search=search_query) }}">&laquo; Anterior</a>
+            </li>
+            
+            {# Números das Páginas #}
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link {% if p == page %}bg-primary border-primary{% else %}bg-dark text-light border-secondary{% endif %}" href="{{ url_for('public_tasks', page=p, search=search_query) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            {# Botão Próximo #}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link bg-dark text-light border-secondary" href="{{ url_for('public_tasks', page=page+1, search=search_query) }}">Próximo &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
 {% else %}
-    <div class="alert alert-info bg-secondary text-light border-0" role="alert">
+    {# Empty State Aprimorado para Tarefas Públicas #}
+    <div class="alert alert-info bg-secondary text-light border-0 py-4 d-flex flex-column align-items-center justify-content-center" role="alert">
+        <i class="bi bi-search-heart display-4 mb-3"></i> {# Ícone sugestivo #}
         {% if search_query %}
-            Nenhuma tarefa pública encontrada para "{{ search_query }}". <a href="{{ url_for('public_tasks') }}" class="alert-link text-info">Limpar pesquisa</a>
+            <p class="mb-2 fs-5">Nenhuma tarefa pública encontrada para "{{ search_query }}".</p>
+            <a href="{{ url_for('public_tasks') }}" class="alert-link text-info fw-bold">Limpar pesquisa para ver todas as tarefas públicas</a>
         {% else %}
-            Não há tarefas públicas disponíveis no momento.
+            <p class="mb-2 fs-5">Não há tarefas públicas disponíveis no momento.</p>
+            <p class="mb-2 fs-6 text-muted">Que tal criar uma nova tarefa e marcá-la como pública?</p>
+            <a href="{{ url_for('add_task') }}" class="alert-link text-info fw-bold">Adicionar uma tarefa pública agora!</a>
         {% endif %}
     </div>
 {% endif %}

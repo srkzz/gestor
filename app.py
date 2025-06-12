@@ -1,4 +1,4 @@
-# app.py (Versão com Funcionalidade de Tags)
+# app.py (Versão com Edição de Perfil e Cartões do Dashboard)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -7,7 +7,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
 from datetime import datetime, date
-from mongoengine.fields import ObjectId # Importa ObjectId para usar na conversão de IDs
+from mongoengine.fields import ObjectId
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
@@ -16,10 +16,13 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- Configuração da Aplicação ---
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '000d88cd9d44446ebdd237eb6b0db000')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua_chave_secreta_muito_segura_aqui_e_aleatoria')
 app.config['MONGODB_SETTINGS'] = {
     'host': os.getenv('MONGO_URI', 'mongodb://localhost:27017/gestor_tarefas_db')
 }
+
+# Constante para o número de itens por página
+PER_PAGE = 10 # Define 10 tarefas por página
 
 # Inicializa as extensões Flask
 db = MongoEngine(app)
@@ -57,7 +60,7 @@ class Task(db.Document):
     is_completed = db.BooleanField(default=False)
     date_created = db.DateTimeField(default=datetime.utcnow)
     is_public = db.BooleanField(default=False)
-    tags = db.ListField(db.StringField()) # NOVO: Campo para tags
+    tags = db.ListField(db.StringField())
 
     user = db.ReferenceField(User, required=True, reverse_delete_rule=2)
 
@@ -90,8 +93,12 @@ def login_required(f):
 def home():
     if 'user_id' in session:
         return redirect(url_for('user_dashboard'))
-    recent_public_tasks = Task.objects(is_public=True).order_by('-date_created').limit(5)
+    
+    recent_public_tasks_query = Task.objects(is_public=True).order_by('-date_created')
+    recent_public_tasks = recent_public_tasks_query.limit(5).all()
+
     return render_template('index.html', recent_public_tasks=recent_public_tasks)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -163,16 +170,22 @@ def user_dashboard():
     user_id_obj = ObjectId(session['user_id'])
     user = User.objects(id=user_id_obj).first_or_404()
     
+    # Parâmetros de filtro e ordenação da URL
     status_filter = request.args.get('status', 'all')
     priority_filter = request.args.get('priority', 'all')
     category_filter = request.args.get('category', 'all')
-    tag_filter = request.args.get('tag', 'all') # NOVO: Filtro por tag
+    tag_filter = request.args.get('tag', 'all')
     sort_by = request.args.get('sort_by', 'due_date')
     sort_order = request.args.get('sort_order', 'asc')
     search_query = request.args.get('search', '').strip()
 
+    # Parâmetros de paginação
+    page = request.args.get('page', 1, type=int)
+    
+    # Inicia a query para as tarefas do utilizador
     tasks_query = Task.objects(user=user)
 
+    # Aplica filtros
     if status_filter == 'completed':
         tasks_query = tasks_query(is_completed=True)
     elif status_filter == 'pending':
@@ -184,7 +197,7 @@ def user_dashboard():
     if category_filter != 'all':
         tasks_query = tasks_query(category=category_filter)
     
-    if tag_filter != 'all': # NOVO: Filtra se a tag estiver na lista de tags
+    if tag_filter != 'all':
         tasks_query = tasks_query(tags__in=[tag_filter]) 
     
     if search_query:
@@ -192,27 +205,52 @@ def user_dashboard():
             {'title': {'$regex': search_query, '$options': 'i'}},
             {'description': {'$regex': search_query, '$options': 'i'}},
             {'category': {'$regex': search_query, '$options': 'i'}},
-            {'tags': {'$regex': search_query, '$options': 'i'}} # NOVO: Inclui tags na pesquisa geral
+            {'tags': {'$regex': search_query, '$options': 'i'}}
         ]})
 
-    if sort_order == 'desc':
-        sort_by = '-' + sort_by
-    
-    tasks = tasks_query.order_by(sort_by).all()
+    # Calcula o total de tarefas ANTES de aplicar skip/limit
+    total_tasks = tasks_query.count()
+    total_pages = (total_tasks + PER_PAGE - 1) // PER_PAGE
 
+    # Aplica ordenação
+    if sort_order == 'desc':
+        sort_by_mongo = '-' + sort_by
+    else:
+        sort_by_mongo = sort_by
+    
+    # Aplica paginação
+    tasks = tasks_query.order_by(sort_by_mongo).skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
+
+    # Obtém todas as categorias e tags únicas para os filtros
     all_categories = sorted(list(set(task.category for task in Task.objects(user=user) if task.category)))
-    all_tags = sorted(list(set(tag for task in Task.objects(user=user) for tag in task.tags))) # NOVO: Obtém todas as tags únicas
+    all_tags = sorted(list(set(tag for task in Task.objects(user=user) for tag in task.tags)))
+
+    # NOVO: Contagens para os cartões do dashboard
+    total_tasks_count = Task.objects(user=user).count()
+    pending_tasks_count = Task.objects(user=user, is_completed=False).count()
+    completed_tasks_count = Task.objects(user=user, is_completed=True).count()
+    public_tasks_count = Task.objects(user=user, is_public=True).count()
+
 
     return render_template('user_dashboard.html', user=user, tasks=tasks,
                            status_filter=status_filter,
                            priority_filter=priority_filter,
                            category_filter=category_filter,
-                           tag_filter=tag_filter, # Passa para a template
-                           sort_by=sort_by.lstrip('-'),
+                           tag_filter=tag_filter,
+                           sort_by=sort_by,
                            sort_order=sort_order,
                            search_query=search_query,
                            all_categories=all_categories,
-                           all_tags=all_tags) # Passa para a template
+                           all_tags=all_tags,
+                           page=page,
+                           total_pages=total_pages,
+                           per_page=PER_PAGE,
+                           # NOVO: Passa as contagens para a template
+                           total_tasks_count=total_tasks_count,
+                           pending_tasks_count=pending_tasks_count,
+                           completed_tasks_count=completed_tasks_count,
+                           public_tasks_count=public_tasks_count)
+
 
 @app.route('/add_task', methods=['GET', 'POST'])
 @login_required
@@ -227,9 +265,8 @@ def add_task():
         due_date_str = request.form['due_date']
         category = request.form['category'].strip()
         is_public = 'is_public' in request.form
-        tags_str = request.form['tags'].strip() # NOVO: Obtém a string de tags
+        tags_str = request.form['tags'].strip()
 
-        # Converte a string de tags em uma lista, dividindo por vírgulas
         tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
 
         if not all([title, priority, due_date_str, category]):
@@ -249,7 +286,7 @@ def add_task():
             due_date=due_date,
             category=category,
             is_public=is_public,
-            tags=tags, # NOVO: Atribui a lista de tags
+            tags=tags,
             user=user
         )
         new_task.save()
@@ -274,10 +311,10 @@ def edit_task(task_id):
         task.category = request.form['category'].strip()
         due_date_str = request.form['due_date']
         task.is_public = 'is_public' in request.form 
-        tags_str = request.form['tags'].strip() # NOVO: Obtém a string de tags
+        tags_str = request.form['tags'].strip()
 
         tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
-        task.tags = tags # NOVO: Atribui a lista de tags
+        task.tags = tags
 
         if not all([task.title, task.priority, due_date_str, task.category]):
             flash("Todos os campos obrigatórios devem ser preenchidos.", 'error')
@@ -343,11 +380,29 @@ def profile():
     user = User.objects(id=user_id_obj).first_or_404()
 
     if request.method == 'POST':
+        new_username = request.form['username'].strip()
+        new_email = request.form['email'].strip()
         new_avatar_url = request.form['avatar_url'].strip()
+
+        # Validação de unicidade para username e email
+        if new_username != user.username and User.objects(username=new_username).first():
+            flash(f"O username '{new_username}' já está em uso.", 'error')
+            return render_template('profile.html', user=user)
+        
+        if new_email != user.email and User.objects(email=new_email).first():
+            flash(f"O email '{new_email}' já está em uso.", 'error')
+            return render_template('profile.html', user=user)
+
+        user.username = new_username
+        user.email = new_email
         user.avatar_url = new_avatar_url
         user.save()
-        session['avatar_url'] = new_avatar_url
-        flash('URL do avatar atualizado com sucesso!', 'success')
+
+        # Atualiza a sessão caso o username ou avatar_url tenham mudado
+        session['username'] = user.username
+        session['avatar_url'] = user.avatar_url
+        
+        flash('Perfil atualizado com sucesso!', 'success')
         return redirect(url_for('profile'))
 
     return render_template('profile.html', user=user)
@@ -387,19 +442,22 @@ def change_password():
 @app.route('/public_tasks')
 def public_tasks():
     search_query = request.args.get('search', '').strip()
+    page = request.args.get('page', 1, type=int)
     
     public_tasks_query = Task.objects(is_public=True)
     
     if search_query:
-        # Pesquisa case-insensitive no título, descrição, categoria E NAS TAGS
         public_tasks_query = public_tasks_query(__raw__={'$or': [
             {'title': {'$regex': search_query, '$options': 'i'}},
             {'description': {'$regex': search_query, '$options': 'i'}},
             {'category': {'$regex': search_query, '$options': 'i'}},
-            {'tags': {'$regex': search_query, '$options': 'i'}} # NOVO: Inclui tags na pesquisa geral
+            {'tags': {'$regex': search_query, '$options': 'i'}}
         ]})
 
-    public_tasks = public_tasks_query.order_by('-date_created').all()
+    total_public_tasks = public_tasks_query.count()
+    total_public_pages = (total_public_tasks + PER_PAGE - 1) // PER_PAGE
+
+    public_tasks = public_tasks_query.order_by('-date_created').skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     
     for task in public_tasks:
         task.comments = Comment.objects(task=task).order_by('date_created').all()
@@ -409,7 +467,9 @@ def public_tasks():
         current_user_obj = User.objects(id=ObjectId(session['user_id'])).first()
 
     return render_template('public_tasks.html', public_tasks=public_tasks, 
-                           current_user=current_user_obj, search_query=search_query)
+                           current_user=current_user_obj, search_query=search_query,
+                           page=page,
+                           total_pages=total_public_pages)
 
 @app.route('/task/<string:task_id>/add_comment', methods=['POST'])
 @login_required
