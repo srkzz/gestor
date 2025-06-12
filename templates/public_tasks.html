@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Tarefas Públicas{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-white">Tarefas Públicas</h2>
+
+{% if public_tasks %}
+    <div class="row">
+        {% for task in public_tasks %}
+            <div class="col-md-6 mb-4">
+                <div class="card bg-secondary text-light shadow-lg h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title text-white mb-0">{{ task.title }}</h5>
+                        <span class="badge bg-info">{{ task.category }}</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="card-text">{{ task.description or 'Sem descrição.' }}</p>
+                        <ul class="list-unstyled mb-3 small text-muted">
+                            <li><i class="bi bi-person-fill"></i> Criado por: 
+                                <img src="{{ task.user.avatar_url }}" alt="Avatar" class="rounded-circle" style="width: 20px; height: 20px; object-fit: cover; margin-right: 5px;">
+                                {{ task.user.username }}
+                            </li>
+                            <li><i class="bi bi-calendar"></i> Data Limite: {{ task.due_date.strftime('%d/%m/%Y') }}</li>
+                            <li><i class="bi bi-exclamation-circle-fill"></i> Prioridade: {{ task.priority | capitalize }}</li>
+                        </ul>
+                        <div class="mt-auto"> {# Empurra os comentários para baixo #}
+                            <h6>Comentários:</h6>
+                            {% if task.comments %}
+                                <ul class="list-group list-group-flush mb-3">
+                                    {% for comment in task.comments %}
+                                        <li class="list-group-item bg-dark text-light border-secondary rounded mb-1 py-2">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="rounded-circle me-2" style="width: 25px; height: 25px; object-fit: cover;">
+                                                <strong>{{ comment.user.username }}</strong>
+                                                <small class="text-muted ms-auto">{{ comment.date_created.strftime('%d/%m/%Y %H:%M') }}</small>
+                                            </div>
+                                            <p class="mb-0 small">{{ comment.content }}</p>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted small">Seja o primeiro a comentar!</p>
+                            {% endif %}
+
+                            {# Formulário para Adicionar Comentário #}
+                            {% if current_user %}
+                                <form method="POST" action="{{ url_for('add_comment', task_id=task.id) }}" class="mt-3">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> {# <-- O CSRF TOKEN! #}
+                                    <div class="input-group">
+                                        <input type="text" name="comment_content" class="form-control bg-dark text-light border-secondary" placeholder="Adicione um comentário..." required>
+                                        <button class="btn btn-outline-info" type="submit">Comentar</button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <p class="text-muted small mt-3">Faça <a href="{{ url_for('login') }}" class="text-info">Login</a> para comentar.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info bg-secondary text-light border-0" role="alert">
+        Não há tarefas públicas disponíveis no momento.
+    </div>
+{% endif %}
+{% endblock %}

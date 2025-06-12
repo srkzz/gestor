@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Gestor de Tarefas{% endblock %}</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- O SEU PRÓPRIO CSS (contém o gradiente e outros overrides) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="bg-dark text-light min-vh-100 d-flex flex-column position-relative"> {# Adicionada position-relative ao body #}
+<body class="bg-dark text-light min-vh-100 d-flex flex-column position-relative">
     {# Este div será o fundo com o gradiente #}
     <div class="gradient-background"></div> 
 
@@ -27,10 +29,17 @@
                             <a class="nav-link" href="{{ url_for('add_task') }}">Adicionar Tarefa</a>
                         </li>
                         <li class="nav-item">
-                            <span class="nav-link text-info">Olá, {{ session['username'] }}!</span>
+                            <a class="nav-link" href="{{ url_for('public_tasks') }}">Tarefas Públicas</a> {# NOVO LINK #}
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-outline-danger btn-sm ms-2" href="{{ url_for('logout') }}">Logout</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Olá, {{ session['username'] }}!
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('profile') }}">Perfil / Avatar</a></li> {# NOVO LINK #}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                            </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
@@ -45,7 +54,8 @@
         </div>
     </nav>
 
-    <main class="flex-grow-1 container mt-4 position-relative z-1"> {# Adicionada position-relative e z-1 ao main #}
+    <main class="flex-grow-1 container mt-4 position-relative z-1">
+        <!-- Mensagens Flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flashes mb-3">
@@ -62,6 +72,7 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Bootstrap JS Bundle com Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -34,9 +34,16 @@
                         <label for="due_date" class="form-label">Data Limite:</label>
                         <input type="date" class="form-control bg-dark text-light border-secondary" id="due_date" name="due_date" required>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label for="category" class="form-label">Categoria:</label>
                         <input type="text" class="form-control bg-dark text-light border-secondary" id="category" name="category" required>
+                    </div>
+                    {# NOVO: Checkbox para tarefa pública/privada #}
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" value="true" id="is_public" name="is_public">
+                        <label class="form-check-label" for="is_public">
+                            Tornar tarefa pública (visível para outros utilizadores)
+                        </label>
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">Adicionar Tarefa</button>

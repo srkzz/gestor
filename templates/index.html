@@ -3,7 +3,7 @@
 {% block title %}Bem-vindo!{% endblock %}
 
 {% block content %}
-<div class="jumbotron bg-secondary text-center p-5 rounded shadow-lg">
+<div class="jumbotron bg-secondary text-center p-5 rounded shadow-lg mb-5">
     <h1 class="display-4 text-white mb-3">Bem-vindo ao Gestor de Tarefas!</h1>
     <p class="lead text-light mb-4">Organize a sua vida, uma tarefa de cada vez.</p>
     <hr class="my-4 border-light">
@@ -19,4 +19,32 @@
         </p>
     {% endif %}
 </div>
+
+{# NOVO: Secção de Tarefas Públicas Recentes #}
+<div class="card bg-secondary text-light shadow-lg mt-4">
+    <div class="card-header">
+        <h3 class="card-title text-white mb-0">Tarefas Públicas Recentes</h3>
+    </div>
+    <div class="card-body">
+        {% if recent_public_tasks %}
+            <ul class="list-group list-group-flush">
+                {% for task in recent_public_tasks %}
+                    <li class="list-group-item bg-dark text-light border-secondary mb-2 rounded">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ task.title }}</h5>
+                            <small class="text-muted">{{ task.date_created.strftime('%d/%m/%Y') }}</small>
+                        </div>
+                        <p class="mb-1">{{ task.description or 'Sem descrição.' }}</p>
+                        <small class="text-info">Criada por: {{ task.user.username }}</small>
+                        <br>
+                        <a href="{{ url_for('public_tasks') }}" class="btn btn-sm btn-outline-info mt-2">Ver todas as tarefas públicas</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">Nenhuma tarefa pública encontrada. Seja o primeiro a criar uma!</p>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}

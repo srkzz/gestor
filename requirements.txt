@@ -1,7 +1,7 @@
 Flask==2.2.5
 Flask-Bcrypt
 Flask-WTF
-Flask-MongoEngine # NOVO
-pymongo           # NOVO (driver para MongoDB, dependência do Flask-MongoEngine)
+Flask-MongoEngine
+pymongo
 python-dotenv
 gunicorn
