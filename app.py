@@ -163,6 +163,8 @@ def delete_task(task_id):
     flash(f"Tarefa '{task.title}' apagada com sucesso!", 'success')
     return redirect(url_for('user_dashboard', username=username))
 
+with app.app_context():
+    db.create_all()
 
 # --- 7. Ponto de Entrada da Aplicação ---
 if __name__ == '__main__':
