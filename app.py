@@ -1,4 +1,4 @@
-# app.py (Versão Corrigida 'now' undefined)
+# app.py (Versão Corrigida 'now' undefined E Prints de Debug para Login)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -6,7 +6,7 @@ from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
-from datetime import datetime, date # Importa datetime para usar no context processor
+from datetime import datetime, date
 from mongoengine.fields import ObjectId
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
@@ -29,14 +29,11 @@ db = MongoEngine(app)
 bcrypt = Bcrypt(app)
 csrf = CSRFProtect(app)
 
-# --- NOVO: Context Processor para Variáveis Globais na Template ---
+# --- Context Processor para Variáveis Globais na Template ---
 @app.context_processor
 def inject_global_variables():
-    """
-    Injeta variáveis globais em todas as templates.
-    """
     return {
-        'now': datetime.utcnow() # 'now' estará disponível em todas as templates
+        'now': datetime.utcnow()
     }
 
 # --- Definição dos Modelos de Documentos (MongoDB) ---
@@ -133,9 +130,13 @@ def register():
         
         try:
             new_user.save()
+            # NOVO: Print para debug de registo
+            print(f"DEBUG: Utilizador '{username}' registado com sucesso! Hash: {new_user.password_hash}")
             flash(f"Utilizador '{username}' registado com sucesso! Faça login para continuar.", 'success')
             return redirect(url_for('login'))
         except Exception as e:
+            # NOVO: Print para debug de erro de registo
+            print(f"DEBUG: Erro ao registar utilizador '{username}': {e}")
             flash(f'Ocorreu um erro ao registar: {e}', 'error')
             return render_template('register.html')
 
@@ -144,23 +145,34 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'user_id' in session:
+        print(f"DEBUG: Já existe user_id na sessão: {session['user_id']}") # NOVO: Print
         return redirect(url_for('user_dashboard'))
 
     if request.method == 'POST':
         identifier = request.form['identifier'].strip()
         password = request.form['password'].strip()
 
+        print(f"DEBUG: Tentativa de login para identifier: '{identifier}', password (não hasheada): '{password}'") # NOVO: Print
+
         user = User.objects(username=identifier).first()
         if not user:
             user = User.objects(email=identifier).first()
-
-        if user and user.check_password(password):
-            session['user_id'] = str(user.id)
-            session['username'] = user.username
-            session['avatar_url'] = user.avatar_url
-            flash(f'Bem-vindo, {user.username}!', 'success')
-            return redirect(url_for('user_dashboard'))
+        
+        if user:
+            print(f"DEBUG: Utilizador encontrado: {user.username}, Hash armazenado: {user.password_hash}") # NOVO: Print
+            if user.check_password(password):
+                session['user_id'] = str(user.id)
+                session['username'] = user.username
+                session['avatar_url'] = user.avatar_url
+                print(f"DEBUG: Login bem-sucedido! user_id na sessão: {session['user_id']}") # NOVO: Print
+                flash(f'Bem-vindo, {user.username}!', 'success')
+                return redirect(url_for('user_dashboard'))
+            else:
+                print("DEBUG: Falha no login: Senha incorreta.") # NOVO: Print
+                flash('Username/Email ou senha inválidos.', 'error')
+                return render_template('login.html')
         else:
+            print("DEBUG: Falha no login: Utilizador não encontrado.") # NOVO: Print
             flash('Username/Email ou senha inválidos.', 'error')
             return render_template('login.html')
     
@@ -168,6 +180,7 @@ def login():
 
 @app.route('/logout')
 def logout():
+    print(f"DEBUG: Logout do utilizador: {session.get('username')}") # NOVO: Print
     session.pop('user_id', None)
     session.pop('username', None)
     session.pop('avatar_url', None)
@@ -177,6 +190,9 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def user_dashboard():
+    # NOVO: Print para verificar a sessão ao entrar no dashboard
+    print(f"DEBUG: Acesso ao dashboard. user_id na sessão: {session.get('user_id')}")
+    
     user_id_obj = ObjectId(session['user_id'])
     user = User.objects(id=user_id_obj).first_or_404()
     
