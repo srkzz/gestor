@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Tarefa{% endblock %}
+
+{% block content %}
+    <h2>Editar Tarefa: {{ task.title }}</h2>
+    <form method="POST">
+        <div>
+            <label for="title">Título:</label>
+            <input type="text" id="title" name="title" value="{{ task.title }}" required>
+        </div>
+        <div>
+            <label for="description">Descrição:</label>
+            <textarea id="description" name="description">{{ task.description }}</textarea>
+        </div>
+        <div>
+            <label for="priority">Prioridade:</label>
+            <select id="priority" name="priority" required>
+                <option value="alta" {% if task.priority == 'alta' %}selected{% endif %}>Alta</option>
+                <option value="média" {% if task.priority == 'média' %}selected{% endif %}>Média</option>
+                <option value="baixa" {% if task.priority == 'baixa' %}selected{% endif %}>Baixa</option>
+            </select>
+        </div>
+        <div>
+            <label for="due_date">Data Limite:</label>
+            <input type="date" id="due_date" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') }}" required>
+        </div>
+        <div>
+            <label for="category">Categoria:</label>
+            <input type="text" id="category" name="category" value="{{ task.category }}" required>
+        </div>
+        <button type="submit">Atualizar Tarefa</button>
+        <a href="{{ url_for('user_dashboard') }}" class="button-link">Cancelar</a>
+    </form>
+{% endblock %}

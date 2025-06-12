@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Registar Utilizador{% endblock %}
+{% block title %}Login{% endblock %}
 
 {% block content %}
-    <h2>Registar Novo Utilizador</h2>
+    <h2>Login</h2>
     <form method="POST">
         <div>
             <label for="username">Username:</label>
@@ -13,7 +13,7 @@
             <label for="password">Senha:</label>
             <input type="password" id="password" name="password" required>
         </div>
-        <button type="submit">Registar</button>
+        <button type="submit">Login</button>
     </form>
-    <p>Já tem uma conta? <a href="{{ url_for('login') }}">Faça login aqui</a>.</p>
+    <p>Não tem uma conta? <a href="{{ url_for('register_user') }}">Registe-se aqui</a>.</p>
 {% endblock %}
