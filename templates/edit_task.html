@@ -29,13 +29,10 @@
                             <option value="alta" {% if task.priority == 'alta' %}selected{% endif %}>Alta</option>
                         </select>
                     </div>
-                    {# FIX: Adicionado data-mdb-format para garantir o formato de data correto #}
+                    {# REVERTIDO: Campo Data Limite para input type="date" nativo #}
                     <div class="mb-3">
                         <label for="due_date" class="form-label">Data Limite:</label>
-                        <div class="form-outline" data-mdb-input-init>
-                            <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="due_date" name="due_date" data-mdb-toggle="datepicker" data-mdb-format="yyyy-mm-dd" value="{{ task.due_date.strftime('%Y-%m-%d') }}" required>
-                            <label for="due_date" class="form-label text-muted">Selecione a data</label>
-                        </div>
+                        <input type="date" class="form-control bg-dark text-light border-secondary rounded-pill" id="due_date" name="due_date" value="{{ task.due_date.strftime('%Y-%m-%d') }}" required>
                     </div>
                     <div class="mb-3">
                         <label for="category" class="form-label">Categoria:</label>
@@ -65,11 +62,4 @@
 </div>
 {% endblock %}
 
-{# Script para inicializar o Date Picker #}
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const datepicker = new mdb.Datepicker(document.getElementById('due_date'));
-    });
-</script>
-{% endblock %}
+{# Removido o bloco de script do datepicker aqui #}
