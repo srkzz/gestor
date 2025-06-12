@@ -1,4 +1,4 @@
-# app.py (Versão com Edição de Perfil e Cartões do Dashboard)
+# app.py (Versão Corrigida 'now' undefined)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -6,7 +6,7 @@ from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
-from datetime import datetime, date
+from datetime import datetime, date # Importa datetime para usar no context processor
 from mongoengine.fields import ObjectId
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
@@ -28,6 +28,16 @@ PER_PAGE = 10 # Define 10 tarefas por página
 db = MongoEngine(app)
 bcrypt = Bcrypt(app)
 csrf = CSRFProtect(app)
+
+# --- NOVO: Context Processor para Variáveis Globais na Template ---
+@app.context_processor
+def inject_global_variables():
+    """
+    Injeta variáveis globais em todas as templates.
+    """
+    return {
+        'now': datetime.utcnow() # 'now' estará disponível em todas as templates
+    }
 
 # --- Definição dos Modelos de Documentos (MongoDB) ---
 
@@ -170,7 +180,6 @@ def user_dashboard():
     user_id_obj = ObjectId(session['user_id'])
     user = User.objects(id=user_id_obj).first_or_404()
     
-    # Parâmetros de filtro e ordenação da URL
     status_filter = request.args.get('status', 'all')
     priority_filter = request.args.get('priority', 'all')
     category_filter = request.args.get('category', 'all')
@@ -179,13 +188,10 @@ def user_dashboard():
     sort_order = request.args.get('sort_order', 'asc')
     search_query = request.args.get('search', '').strip()
 
-    # Parâmetros de paginação
     page = request.args.get('page', 1, type=int)
     
-    # Inicia a query para as tarefas do utilizador
     tasks_query = Task.objects(user=user)
 
-    # Aplica filtros
     if status_filter == 'completed':
         tasks_query = tasks_query(is_completed=True)
     elif status_filter == 'pending':
@@ -208,24 +214,19 @@ def user_dashboard():
             {'tags': {'$regex': search_query, '$options': 'i'}}
         ]})
 
-    # Calcula o total de tarefas ANTES de aplicar skip/limit
     total_tasks = tasks_query.count()
     total_pages = (total_tasks + PER_PAGE - 1) // PER_PAGE
 
-    # Aplica ordenação
     if sort_order == 'desc':
         sort_by_mongo = '-' + sort_by
     else:
         sort_by_mongo = sort_by
     
-    # Aplica paginação
     tasks = tasks_query.order_by(sort_by_mongo).skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
 
-    # Obtém todas as categorias e tags únicas para os filtros
     all_categories = sorted(list(set(task.category for task in Task.objects(user=user) if task.category)))
     all_tags = sorted(list(set(tag for task in Task.objects(user=user) for tag in task.tags)))
 
-    # NOVO: Contagens para os cartões do dashboard
     total_tasks_count = Task.objects(user=user).count()
     pending_tasks_count = Task.objects(user=user, is_completed=False).count()
     completed_tasks_count = Task.objects(user=user, is_completed=True).count()
@@ -245,7 +246,6 @@ def user_dashboard():
                            page=page,
                            total_pages=total_pages,
                            per_page=PER_PAGE,
-                           # NOVO: Passa as contagens para a template
                            total_tasks_count=total_tasks_count,
                            pending_tasks_count=pending_tasks_count,
                            completed_tasks_count=completed_tasks_count,
@@ -384,7 +384,6 @@ def profile():
         new_email = request.form['email'].strip()
         new_avatar_url = request.form['avatar_url'].strip()
 
-        # Validação de unicidade para username e email
         if new_username != user.username and User.objects(username=new_username).first():
             flash(f"O username '{new_username}' já está em uso.", 'error')
             return render_template('profile.html', user=user)
@@ -398,7 +397,6 @@ def profile():
         user.avatar_url = new_avatar_url
         user.save()
 
-        # Atualiza a sessão caso o username ou avatar_url tenham mudado
         session['username'] = user.username
         session['avatar_url'] = user.avatar_url
         
