@@ -11,7 +11,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('add_task') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> {# <-- O CSRF TOKEN! #}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="mb-3">
                         <label for="title" class="form-label">Título da Tarefa:</label>
@@ -38,7 +38,13 @@
                         <label for="category" class="form-label">Categoria:</label>
                         <input type="text" class="form-control bg-dark text-light border-secondary" id="category" name="category" required>
                     </div>
-                    {# NOVO: Checkbox para tarefa pública/privada #}
+                    {# NOVO: Campo para tags #}
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">Tags (separar por vírgulas):</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="tags" name="tags" placeholder="Ex: estudo, trabalho, urgente">
+                        <div class="form-text text-muted">Separar múltiplas tags com vírgulas.</div>
+                    </div>
+                    {# Checkbox para tarefa pública/privada #}
                     <div class="form-check mb-4">
                         <input class="form-check-input" type="checkbox" value="true" id="is_public" name="is_public">
                         <label class="form-check-label" for="is_public">

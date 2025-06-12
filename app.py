@@ -1,4 +1,4 @@
-# app.py (Versão Final com Mudança de Palavra-Passe e Avatar na Sessão)
+# app.py (Versão com Funcionalidade de Tags)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -16,7 +16,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- Configuração da Aplicação ---
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua_chave_secreta_muito_segura_aqui_e_aleatoria')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '000d88cd9d44446ebdd237eb6b0db000')
 app.config['MONGODB_SETTINGS'] = {
     'host': os.getenv('MONGO_URI', 'mongodb://localhost:27017/gestor_tarefas_db')
 }
@@ -29,13 +29,9 @@ csrf = CSRFProtect(app)
 # --- Definição dos Modelos de Documentos (MongoDB) ---
 
 class User(db.Document):
-    # __tablename__ é para SQLAlchemy, não é necessário para MongoEngine,
-    # mas mantido para referência se alguma vez voltar a SQL.
-    # Em MongoEngine, o nome da coleção é o nome da classe em minúsculas por padrão.
     username = db.StringField(required=True, unique=True, max_length=80)
     email = db.StringField(required=True, unique=True, max_length=120)
     password_hash = db.StringField(required=True, max_length=255)
-    # Campo para o URL do avatar. Define um URL de avatar padrão.
     avatar_url = db.StringField(default='https://www.gravatar.com/avatar/?d=mp')
 
     @property
@@ -61,9 +57,8 @@ class Task(db.Document):
     is_completed = db.BooleanField(default=False)
     date_created = db.DateTimeField(default=datetime.utcnow)
     is_public = db.BooleanField(default=False)
+    tags = db.ListField(db.StringField()) # NOVO: Campo para tags
 
-    # ReferenceField para ligar a tarefa ao utilizador.
-    # reverse_delete_rule=2 (CASCADE) significa que se o utilizador for apagado, as tarefas também o serão.
     user = db.ReferenceField(User, required=True, reverse_delete_rule=2)
 
     def __repr__(self):
@@ -72,9 +67,7 @@ class Task(db.Document):
 class Comment(db.Document):
     content = db.StringField(required=True)
     date_created = db.DateTimeField(default=datetime.utcnow)
-    # reverse_delete_rule=1 (DENY) significa que não é possível apagar o utilizador se ele tiver comentários.
     user = db.ReferenceField(User, required=True, reverse_delete_rule=1)
-    # reverse_delete_rule=2 (CASCADE) significa que se a tarefa for apagada, os comentários também o serão.
     task = db.ReferenceField(Task, required=True, reverse_delete_rule=2)
 
     def __repr__(self):
@@ -119,7 +112,7 @@ def register():
             return render_template('register.html')
 
         new_user = User(username=username, email=email)
-        new_user.password = password # Setter faz o hashing
+        new_user.password = password
         
         try:
             new_user.save()
@@ -147,7 +140,7 @@ def login():
         if user and user.check_password(password):
             session['user_id'] = str(user.id)
             session['username'] = user.username
-            session['avatar_url'] = user.avatar_url # NOVO: Guarda o avatar_url na sessão
+            session['avatar_url'] = user.avatar_url
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('user_dashboard'))
         else:
@@ -160,7 +153,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
-    session.pop('avatar_url', None) # NOVO: Remove o avatar_url da sessão
+    session.pop('avatar_url', None)
     flash('Você fez logout com sucesso.', 'info')
     return redirect(url_for('home'))
 
@@ -170,8 +163,56 @@ def user_dashboard():
     user_id_obj = ObjectId(session['user_id'])
     user = User.objects(id=user_id_obj).first_or_404()
     
-    tasks = Task.objects(user=user).order_by('is_completed', 'due_date').all()
-    return render_template('user_dashboard.html', user=user, tasks=tasks)
+    status_filter = request.args.get('status', 'all')
+    priority_filter = request.args.get('priority', 'all')
+    category_filter = request.args.get('category', 'all')
+    tag_filter = request.args.get('tag', 'all') # NOVO: Filtro por tag
+    sort_by = request.args.get('sort_by', 'due_date')
+    sort_order = request.args.get('sort_order', 'asc')
+    search_query = request.args.get('search', '').strip()
+
+    tasks_query = Task.objects(user=user)
+
+    if status_filter == 'completed':
+        tasks_query = tasks_query(is_completed=True)
+    elif status_filter == 'pending':
+        tasks_query = tasks_query(is_completed=False)
+    
+    if priority_filter != 'all':
+        tasks_query = tasks_query(priority=priority_filter)
+
+    if category_filter != 'all':
+        tasks_query = tasks_query(category=category_filter)
+    
+    if tag_filter != 'all': # NOVO: Filtra se a tag estiver na lista de tags
+        tasks_query = tasks_query(tags__in=[tag_filter]) 
+    
+    if search_query:
+        tasks_query = tasks_query(__raw__={'$or': [
+            {'title': {'$regex': search_query, '$options': 'i'}},
+            {'description': {'$regex': search_query, '$options': 'i'}},
+            {'category': {'$regex': search_query, '$options': 'i'}},
+            {'tags': {'$regex': search_query, '$options': 'i'}} # NOVO: Inclui tags na pesquisa geral
+        ]})
+
+    if sort_order == 'desc':
+        sort_by = '-' + sort_by
+    
+    tasks = tasks_query.order_by(sort_by).all()
+
+    all_categories = sorted(list(set(task.category for task in Task.objects(user=user) if task.category)))
+    all_tags = sorted(list(set(tag for task in Task.objects(user=user) for tag in task.tags))) # NOVO: Obtém todas as tags únicas
+
+    return render_template('user_dashboard.html', user=user, tasks=tasks,
+                           status_filter=status_filter,
+                           priority_filter=priority_filter,
+                           category_filter=category_filter,
+                           tag_filter=tag_filter, # Passa para a template
+                           sort_by=sort_by.lstrip('-'),
+                           sort_order=sort_order,
+                           search_query=search_query,
+                           all_categories=all_categories,
+                           all_tags=all_tags) # Passa para a template
 
 @app.route('/add_task', methods=['GET', 'POST'])
 @login_required
@@ -186,6 +227,10 @@ def add_task():
         due_date_str = request.form['due_date']
         category = request.form['category'].strip()
         is_public = 'is_public' in request.form
+        tags_str = request.form['tags'].strip() # NOVO: Obtém a string de tags
+
+        # Converte a string de tags em uma lista, dividindo por vírgulas
+        tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
 
         if not all([title, priority, due_date_str, category]):
             flash("Todos os campos obrigatórios devem ser preenchidos.", 'error')
@@ -204,6 +249,7 @@ def add_task():
             due_date=due_date,
             category=category,
             is_public=is_public,
+            tags=tags, # NOVO: Atribui a lista de tags
             user=user
         )
         new_task.save()
@@ -228,6 +274,10 @@ def edit_task(task_id):
         task.category = request.form['category'].strip()
         due_date_str = request.form['due_date']
         task.is_public = 'is_public' in request.form 
+        tags_str = request.form['tags'].strip() # NOVO: Obtém a string de tags
+
+        tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
+        task.tags = tags # NOVO: Atribui a lista de tags
 
         if not all([task.title, task.priority, due_date_str, task.category]):
             flash("Todos os campos obrigatórios devem ser preenchidos.", 'error')
@@ -296,7 +346,7 @@ def profile():
         new_avatar_url = request.form['avatar_url'].strip()
         user.avatar_url = new_avatar_url
         user.save()
-        session['avatar_url'] = new_avatar_url # NOVO: Atualiza o avatar_url na sessão
+        session['avatar_url'] = new_avatar_url
         flash('URL do avatar atualizado com sucesso!', 'success')
         return redirect(url_for('profile'))
 
@@ -333,9 +383,23 @@ def change_password():
 
     return render_template('change_password.html')
 
+
 @app.route('/public_tasks')
 def public_tasks():
-    public_tasks = Task.objects(is_public=True).order_by('-date_created').all()
+    search_query = request.args.get('search', '').strip()
+    
+    public_tasks_query = Task.objects(is_public=True)
+    
+    if search_query:
+        # Pesquisa case-insensitive no título, descrição, categoria E NAS TAGS
+        public_tasks_query = public_tasks_query(__raw__={'$or': [
+            {'title': {'$regex': search_query, '$options': 'i'}},
+            {'description': {'$regex': search_query, '$options': 'i'}},
+            {'category': {'$regex': search_query, '$options': 'i'}},
+            {'tags': {'$regex': search_query, '$options': 'i'}} # NOVO: Inclui tags na pesquisa geral
+        ]})
+
+    public_tasks = public_tasks_query.order_by('-date_created').all()
     
     for task in public_tasks:
         task.comments = Comment.objects(task=task).order_by('date_created').all()
@@ -344,7 +408,8 @@ def public_tasks():
     if 'user_id' in session:
         current_user_obj = User.objects(id=ObjectId(session['user_id'])).first()
 
-    return render_template('public_tasks.html', public_tasks=public_tasks, current_user=current_user_obj)
+    return render_template('public_tasks.html', public_tasks=public_tasks, 
+                           current_user=current_user_obj, search_query=search_query)
 
 @app.route('/task/<string:task_id>/add_comment', methods=['POST'])
 @login_required
