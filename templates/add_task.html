@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Tarefa para {{ user.username }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Adicionar Nova Tarefa para {{ user.username }}</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <label for="title">Título:</label>
+            <input type="text" id="title" name="title" required><br>
+
+            <label for="description">Descrição (Opcional):</label>
+            <textarea id="description" name="description"></textarea><br>
+
+            <label for="priority">Prioridade:</label>
+            <select id="priority" name="priority" required>
+                <option value="alta">Alta</option>
+                <option value="média">Média</option>
+                <option value="baixa">Baixa</option>
+            </select><br>
+
+            <label for="due_date">Data Limite (YYYY-MM-DD):</label>
+            <input type="date" id="due_date" name="due_date" required><br>
+
+            <label for="category">Categoria:</label>
+            <input type="text" id="category" name="category" required><br>
+
+            <button type="submit">Adicionar Tarefa</button>
+        </form>
+
+        <p><a href="{{ url_for('user_dashboard', username=user.username) }}">Voltar ao Dashboard</a></p>
+    </div>
+</body>
+</html>

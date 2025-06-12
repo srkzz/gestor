@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de {{ user.username }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard de {{ user.username }}</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Suas Tarefas:</h2>
+        <a href="{{ url_for('add_task', username=user.username) }}" class="button">Adicionar Nova Tarefa</a>
+
+        {% if tasks %}
+            <ul class="task-list">
+                {% for task in tasks %}
+                    <li class="task-item {% if task.is_completed %}task-concluida{% endif %}">
+                        <h3>{{ task.title }} {% if task.is_completed %}(Concluída){% endif %}</h3>
+                        <p><strong>Descrição:</strong> {{ task.description }}</p>
+                        <p><strong>Prioridade:</strong> {{ task.priority }}</p>
+                        <p><strong>Data Limite:</strong> {{ task.due_date.strftime('%Y-%m-%d') }}</p>
+                        <p><strong>Categoria:</strong> {{ task.category }}</p>
+                        <div class="task-actions">
+                            {% if not task.is_completed %}
+                                <a href="{{ url_for('mark_task_done', task_id=task.id) }}" class="button mark-done">Marcar como Concluída</a>
+                            {% endif %}
+                            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="button delete">Apagar Tarefa</a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Não há tarefas para este utilizador. <a href="{{ url_for('add_task', username=user.username) }}">Adicione uma!</a></p>
+        {% endif %}
+
+        <p><a href="{{ url_for('home') }}">Voltar ao Início</a></p>
+    </div>
+</body>
+</html>
