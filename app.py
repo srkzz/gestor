@@ -1,4 +1,4 @@
-# app.py (Versão Final e Limpa)
+# app.py (Versão para MongoDB com Delete de Comentário)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -7,7 +7,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
 from datetime import datetime, date
-from mongoengine.fields import ObjectId
+from mongoengine.fields import ObjectId # Importa ObjectId para usar na conversão de IDs
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
@@ -67,9 +67,9 @@ class Task(db.Document):
     is_completed = db.BooleanField(default=False)
     date_created = db.DateTimeField(default=datetime.utcnow)
     is_public = db.BooleanField(default=False)
-    tags = db.ListField(db.StringField())
+    tags = db.ListField(db.StringField()) # Novo campo para tags
 
-    user = db.ReferenceField(User, required=True, reverse_delete_rule=2)
+    user = db.ReferenceField(User, required=True, reverse_delete_rule=2) # 2 = CASCADE
 
     def __repr__(self):
         return f"<Task(id={self.id}, title='{self.title}', user={self.user.username})>"
@@ -77,11 +77,12 @@ class Task(db.Document):
 class Comment(db.Document):
     content = db.StringField(required=True)
     date_created = db.DateTimeField(default=datetime.utcnow)
-    user = db.ReferenceField(User, required=True, reverse_delete_rule=1)
-    task = db.ReferenceField(Task, required=True, reverse_delete_rule=2)
+    user = db.ReferenceField(User, required=True, reverse_delete_rule=1) # 1 = DENY (não apagar user se tiver comments)
+    task = db.ReferenceField(Task, required=True, reverse_delete_rule=2) # 2 = CASCADE (apagar comments se apagar task)
 
     def __repr__(self):
         return f"<Comment(id={self.id}, user={self.user.username}, task={self.task.title})>"
+
 
 # --- Funções de Autenticação/Autorização (Decoradores) ---
 def login_required(f):
@@ -150,11 +151,11 @@ def login():
         user = User.objects(username=identifier).first()
         if not user:
             user = User.objects(email=identifier).first()
-        
+
         if user and user.check_password(password):
             session['user_id'] = str(user.id)
             session['username'] = user.username
-            session['avatar_url'] = user.avatar_url
+            session['avatar_url'] = user.avatar_url # Garante que o avatar está na sessão
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('user_dashboard'))
         else:
@@ -167,7 +168,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
-    session.pop('avatar_url', None)
+    session.pop('avatar_url', None) # Remove avatar da sessão também
     flash('Você fez logout com sucesso.', 'info')
     return redirect(url_for('home'))
 
@@ -204,11 +205,12 @@ def user_dashboard():
         tasks_query = tasks_query(tags__in=[tag_filter]) 
     
     if search_query:
+        # Busca insensível a maiúsculas/minúsculas em vários campos
         tasks_query = tasks_query(__raw__={'$or': [
             {'title': {'$regex': search_query, '$options': 'i'}},
             {'description': {'$regex': search_query, '$options': 'i'}},
             {'category': {'$regex': search_query, '$options': 'i'}},
-            {'tags': {'$regex': search_query, '$options': 'i'}}
+            {'tags': {'$regex': search_query, '$options': 'i'}} # Pesquisa em tags
         ]})
 
     total_tasks = tasks_query.count()
@@ -219,11 +221,14 @@ def user_dashboard():
     else:
         sort_by_mongo = sort_by
     
+    # Executa a query com paginação e ordenação
     tasks = tasks_query.order_by(sort_by_mongo).skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
 
+    # Obtém todas as categorias e tags únicas para os filtros (do utilizador atual)
     all_categories = sorted(list(set(task.category for task in Task.objects(user=user) if task.category)))
     all_tags = sorted(list(set(tag for task in Task.objects(user=user) for tag in task.tags)))
 
+    # Contagens para os cards de resumo no dashboard
     total_tasks_count = Task.objects(user=user).count()
     pending_tasks_count = Task.objects(user=user, is_completed=False).count()
     completed_tasks_count = Task.objects(user=user, is_completed=True).count()
@@ -463,6 +468,7 @@ def public_tasks():
     public_tasks = public_tasks_query.order_by('-date_created').skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     
     for task in public_tasks:
+        # Carrega os comentários para cada tarefa
         task.comments = Comment.objects(task=task).order_by('date_created').all()
 
     current_user_obj = None
@@ -498,6 +504,21 @@ def add_comment(task_id):
     )
     new_comment.save()
     flash('Comentário adicionado com sucesso!', 'success')
+    return redirect(url_for('public_tasks'))
+
+# NOVO: Rota para apagar um comentário
+@app.route('/comment/<string:comment_id>/delete')
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.objects(id=comment_id).first_or_404()
+
+    # Verifica se o utilizador logado é o autor do comentário
+    if str(comment.user.id) != session['user_id']:
+        flash('Você não tem permissão para apagar este comentário.', 'error')
+        return redirect(url_for('public_tasks'))
+
+    comment.delete()
+    flash('Comentário apagado com sucesso!', 'success')
     return redirect(url_for('public_tasks'))
 
 # --- Error Handlers Personalizados ---

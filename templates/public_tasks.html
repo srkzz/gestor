@@ -7,8 +7,8 @@
     <span class="d-inline-block p-2 border-bottom border-3 border-primary">Tarefas Públicas</span>
 </h2>
 
-{# Formulário de Pesquisa - Já com bom aspeto, mas vamos garantir o rounded-pill #}
-<div class="card bg-secondary text-light shadow-lg mb-4 rounded-3 glassmorphism-card-small"> {# Pequeno glassmorphism para o card de pesquisa #}
+{# Formulário de Pesquisa #}
+<div class="card bg-secondary text-light shadow-lg mb-4 rounded-3 glassmorphism-card-small">
     <div class="card-body">
         <form action="{{ url_for('public_tasks') }}" method="GET" class="d-flex">
             <input type="text" class="form-control me-2 bg-dark text-light border-secondary rounded-pill" placeholder="Pesquisar tarefas públicas (título, descrição, categoria, tags)..." name="search" value="{{ search_query }}">
@@ -31,12 +31,12 @@
                         <span class="badge bg-info">{{ task.category }}</span>
                     </div>
                     <div class="card-body d-flex flex-column">
-                        <p class="card-text text-white-75">{{ task.description or 'Sem descrição.' }}</p> {# Texto mais suave #}
+                        <p class="card-text text-white-75">{{ task.description or 'Sem descrição.' }}</p>
                         {# Exibição de Tags na Public Task Card #}
                         {% if task.tags %}
                             <div class="mb-2">
                                 {% for tag in task.tags %}
-                                    <span class="badge bg-primary me-1 rounded-pill">{{ tag }}</span> {# Tags arredondadas #}
+                                    <span class="badge bg-primary me-1 rounded-pill">{{ tag }}</span>
                                 {% endfor %}
                             </div>
                         {% endif %}
@@ -58,7 +58,7 @@
                                 Prioridade: {{ task.priority | capitalize }}
                             </li>
                         </ul>
-                        <div class="mt-auto pt-3 border-top border-secondary border-opacity-25"> {# Separador para comentários #}
+                        <div class="mt-auto pt-3 border-top border-secondary border-opacity-25">
                             <h6 class="text-white fw-bold mb-2">Comentários:</h6>
                             {% if task.comments %}
                                 <ul class="list-group list-group-flush mb-3">
@@ -68,6 +68,15 @@
                                                 <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="rounded-circle me-2" style="width: 25px; height: 25px; object-fit: cover;">
                                                 <strong class="text-info">{{ comment.user.username }}</strong>
                                                 <small class="text-muted ms-auto">{{ comment.date_created.strftime('%d/%m/%Y %H:%M') }}</small>
+                                                {# NOVO: Botão de Apagar Comentário (visível apenas para o autor) #}
+                                                {% if current_user and comment.user.id == current_user.id %}
+                                                    <a href="{{ url_for('delete_comment', comment_id=comment.id) }}" 
+                                                       class="btn btn-danger btn-sm ms-2 rounded-pill" 
+                                                       onclick="return confirm('Tem certeza que deseja apagar este comentário?')" 
+                                                       title="Apagar Comentário">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                {% endif %}
                                             </div>
                                             <p class="mb-0 small text-white-75">{{ comment.content }}</p>
                                         </li>
@@ -82,8 +91,8 @@
                                 <form method="POST" action="{{ url_for('add_comment', task_id=task.id) }}" class="mt-3">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="input-group">
-                                        <input type="text" name="comment_content" class="form-control bg-dark text-light border-secondary rounded-pill" placeholder="Adicione um comentário..." required> {# rounded-pill #}
-                                        <button class="btn btn-outline-info rounded-pill ms-2" type="submit"><i class="bi bi-chat-fill"></i> Comentar</button> {# rounded-pill #}
+                                        <input type="text" name="comment_content" class="form-control bg-dark text-light border-secondary rounded-pill" placeholder="Adicione um comentário..." required>
+                                        <button class="btn btn-outline-info rounded-pill ms-2" type="submit"><i class="bi bi-chat-fill"></i> Comentar</button>
                                     </div>
                                 </form>
                             {% else %}
@@ -123,7 +132,7 @@
 {% else %}
     {# Empty State Aprimorado para Tarefas Públicas #}
     <div class="alert alert-info bg-secondary text-light border-0 py-4 d-flex flex-column align-items-center justify-content-center" role="alert">
-        <i class="bi bi-search-heart display-4 mb-3"></i> {# Ícone sugestivo #}
+        <i class="bi bi-search-heart display-4 mb-3"></i>
         {% if search_query %}
             <p class="mb-2 fs-5">Nenhuma tarefa pública encontrada para "{{ search_query }}".</p>
             <a href="{{ url_for('public_tasks') }}" class="alert-link text-info fw-bold">Limpar pesquisa para ver todas as tarefas públicas</a>
