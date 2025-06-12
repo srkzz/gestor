@@ -6,6 +6,7 @@
 <h2 class="mb-4 text-white">As Suas Tarefas, {{ user.username }}!</h2>
 
 <a href="{{ url_for('add_task') }}" class="btn btn-success mb-3">Adicionar Nova Tarefa</a>
+<a href="{{ url_for('public_tasks') }}" class="btn btn-success mb-3">Ver Tarefas Públicas</a>
 
 {% if tasks %}
     <div class="table-responsive">

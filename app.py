@@ -1,4 +1,4 @@
-# app.py (Versão para MongoDB com Novas Funcionalidades)
+# app.py (Versão Final com Mudança de Palavra-Passe e Avatar na Sessão)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -16,7 +16,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- Configuração da Aplicação ---
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '000d88cd9d44446ebdd237eb6b0db000')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua_chave_secreta_muito_segura_aqui_e_aleatoria')
 app.config['MONGODB_SETTINGS'] = {
     'host': os.getenv('MONGO_URI', 'mongodb://localhost:27017/gestor_tarefas_db')
 }
@@ -29,11 +29,14 @@ csrf = CSRFProtect(app)
 # --- Definição dos Modelos de Documentos (MongoDB) ---
 
 class User(db.Document):
+    # __tablename__ é para SQLAlchemy, não é necessário para MongoEngine,
+    # mas mantido para referência se alguma vez voltar a SQL.
+    # Em MongoEngine, o nome da coleção é o nome da classe em minúsculas por padrão.
     username = db.StringField(required=True, unique=True, max_length=80)
     email = db.StringField(required=True, unique=True, max_length=120)
     password_hash = db.StringField(required=True, max_length=255)
-    # NOVO: Campo para o URL do avatar
-    avatar_url = db.StringField(default='https://www.gravatar.com/avatar/?d=mp') # Default: imagem de pessoa genérica
+    # Campo para o URL do avatar. Define um URL de avatar padrão.
+    avatar_url = db.StringField(default='https://www.gravatar.com/avatar/?d=mp')
 
     @property
     def password(self):
@@ -57,24 +60,25 @@ class Task(db.Document):
     category = db.StringField(required=True, max_length=50)
     is_completed = db.BooleanField(default=False)
     date_created = db.DateTimeField(default=datetime.utcnow)
-    # NOVO: Campo para definir se a tarefa é pública
-    is_public = db.BooleanField(default=False) 
+    is_public = db.BooleanField(default=False)
 
-    user = db.ReferenceField(User, required=True, reverse_delete_rule=2) # 2 = CASCADE
+    # ReferenceField para ligar a tarefa ao utilizador.
+    # reverse_delete_rule=2 (CASCADE) significa que se o utilizador for apagado, as tarefas também o serão.
+    user = db.ReferenceField(User, required=True, reverse_delete_rule=2)
 
     def __repr__(self):
         return f"<Task(id={self.id}, title='{self.title}', user={self.user.username})>"
 
-# NOVO MODELO: Para comentários em tarefas públicas
 class Comment(db.Document):
     content = db.StringField(required=True)
     date_created = db.DateTimeField(default=datetime.utcnow)
-    user = db.ReferenceField(User, required=True, reverse_delete_rule=1) # 1 = DENY (não apagar user se tiver comments)
-    task = db.ReferenceField(Task, required=True, reverse_delete_rule=2) # 2 = CASCADE (apagar comments se apagar task)
+    # reverse_delete_rule=1 (DENY) significa que não é possível apagar o utilizador se ele tiver comentários.
+    user = db.ReferenceField(User, required=True, reverse_delete_rule=1)
+    # reverse_delete_rule=2 (CASCADE) significa que se a tarefa for apagada, os comentários também o serão.
+    task = db.ReferenceField(Task, required=True, reverse_delete_rule=2)
 
     def __repr__(self):
         return f"<Comment(id={self.id}, user={self.user.username}, task={self.task.title})>"
-
 
 # --- Funções de Autenticação/Autorização (Decoradores) ---
 def login_required(f):
@@ -93,8 +97,6 @@ def login_required(f):
 def home():
     if 'user_id' in session:
         return redirect(url_for('user_dashboard'))
-    # NOVO: Para mostrar uma lista de tarefas públicas recentes na home page
-    # Limita a 5 tarefas mais recentes, que são públicas
     recent_public_tasks = Task.objects(is_public=True).order_by('-date_created').limit(5)
     return render_template('index.html', recent_public_tasks=recent_public_tasks)
 
@@ -117,7 +119,7 @@ def register():
             return render_template('register.html')
 
         new_user = User(username=username, email=email)
-        new_user.password = password
+        new_user.password = password # Setter faz o hashing
         
         try:
             new_user.save()
@@ -145,6 +147,7 @@ def login():
         if user and user.check_password(password):
             session['user_id'] = str(user.id)
             session['username'] = user.username
+            session['avatar_url'] = user.avatar_url # NOVO: Guarda o avatar_url na sessão
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('user_dashboard'))
         else:
@@ -157,6 +160,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
+    session.pop('avatar_url', None) # NOVO: Remove o avatar_url da sessão
     flash('Você fez logout com sucesso.', 'info')
     return redirect(url_for('home'))
 
@@ -181,8 +185,7 @@ def add_task():
         priority = request.form['priority']
         due_date_str = request.form['due_date']
         category = request.form['category'].strip()
-        # NOVO: Obtém o valor do checkbox 'is_public'
-        is_public = 'is_public' in request.form # Checkbox envia 'on' se marcado, senão não envia nada
+        is_public = 'is_public' in request.form
 
         if not all([title, priority, due_date_str, category]):
             flash("Todos os campos obrigatórios devem ser preenchidos.", 'error')
@@ -200,7 +203,7 @@ def add_task():
             priority=priority,
             due_date=due_date,
             category=category,
-            is_public=is_public, # Guarda o estado público/privado
+            is_public=is_public,
             user=user
         )
         new_task.save()
@@ -224,7 +227,6 @@ def edit_task(task_id):
         task.priority = request.form['priority']
         task.category = request.form['category'].strip()
         due_date_str = request.form['due_date']
-        # NOVO: Obtém o valor do checkbox 'is_public' para edição
         task.is_public = 'is_public' in request.form 
 
         if not all([task.title, task.priority, due_date_str, task.category]):
@@ -284,7 +286,6 @@ def delete_task(task_id):
     flash(f"Tarefa '{task.title}' apagada com sucesso!", 'success')
     return redirect(url_for('user_dashboard'))
 
-# NOVO: Rota para a página de perfil (avatar)
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -295,19 +296,47 @@ def profile():
         new_avatar_url = request.form['avatar_url'].strip()
         user.avatar_url = new_avatar_url
         user.save()
+        session['avatar_url'] = new_avatar_url # NOVO: Atualiza o avatar_url na sessão
         flash('URL do avatar atualizado com sucesso!', 'success')
         return redirect(url_for('profile'))
 
     return render_template('profile.html', user=user)
 
-# NOVO: Rota para a página de tarefas públicas (o "fórum")
-# NOVO: Rota para a página de tarefas públicas (o "fórum")
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    user_id_obj = ObjectId(session['user_id'])
+    user = User.objects(id=user_id_obj).first_or_404()
+
+    if request.method == 'POST':
+        current_password = request.form['current_password'].strip()
+        new_password = request.form['new_password'].strip()
+        confirm_new_password = request.form['confirm_new_password'].strip()
+
+        if not user.check_password(current_password):
+            flash('A sua palavra-passe atual está incorreta.', 'error')
+            return render_template('change_password.html')
+
+        if new_password != confirm_new_password:
+            flash('A nova palavra-passe e a confirmação não correspondem.', 'error')
+            return render_template('change_password.html')
+
+        if len(new_password) < 6:
+            flash('A nova palavra-passe deve ter pelo menos 6 caracteres.', 'error')
+            return render_template('change_password.html')
+        
+        user.password = new_password
+        user.save()
+
+        flash('Palavra-passe alterada com sucesso!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('change_password.html')
+
 @app.route('/public_tasks')
 def public_tasks():
-    # Busca todas as tarefas que são marcadas como públicas
     public_tasks = Task.objects(is_public=True).order_by('-date_created').all()
     
-    # NOVO: Anexa os comentários a cada tarefa
     for task in public_tasks:
         task.comments = Comment.objects(task=task).order_by('date_created').all()
 
@@ -317,13 +346,11 @@ def public_tasks():
 
     return render_template('public_tasks.html', public_tasks=public_tasks, current_user=current_user_obj)
 
-# NOVO: Rota para adicionar um comentário a uma tarefa pública
 @app.route('/task/<string:task_id>/add_comment', methods=['POST'])
 @login_required
 def add_comment(task_id):
     task = Task.objects(id=task_id).first_or_404()
 
-    # Verifica se a tarefa é pública antes de permitir comentários
     if not task.is_public:
         flash('Não é possível comentar em tarefas privadas.', 'error')
         return redirect(url_for('public_tasks'))
@@ -331,7 +358,7 @@ def add_comment(task_id):
     comment_content = request.form['comment_content'].strip()
     if not comment_content:
         flash('O comentário não pode estar vazio.', 'error')
-        return redirect(url_for('public_tasks')) # Ou redireciona para a própria tarefa se tivermos página para ela
+        return redirect(url_for('public_tasks'))
 
     user_id_obj = ObjectId(session['user_id'])
     current_user = User.objects(id=user_id_obj).first_or_404()
@@ -343,9 +370,7 @@ def add_comment(task_id):
     )
     new_comment.save()
     flash('Comentário adicionado com sucesso!', 'success')
-    return redirect(url_for('public_tasks')) # Redireciona de volta para a lista de tarefas públicas
+    return redirect(url_for('public_tasks'))
 
-
-# Ponto de entrada da aplicação
 if __name__ == '__main__':
     app.run(debug=True)
