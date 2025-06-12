@@ -3,14 +3,20 @@
 {% block title %}Dashboard de {{ user.username }}{% endblock %}
 
 {% block content %}
-<h2 class="mb-4 text-white">As Suas Tarefas, {{ user.username }}!</h2>
+{# Título Principal do Dashboard #}
+<h2 class="mb-4 text-white display-5 fw-bold text-center text-uppercase tracking-wider">
+    <span class="d-inline-block p-2 border-bottom border-3 border-primary">As Suas Tarefas, {{ user.username }}!</span>
+</h2>
 
 <a href="{{ url_for('add_task') }}" class="btn btn-success mb-3"><i class="bi bi-plus-circle-fill me-2"></i> Adicionar Nova Tarefa</a>
 
 {# Formulário de Filtros e Ordenação #}
 <div class="card bg-secondary text-light shadow-lg mb-4">
     <div class="card-body">
-        <h5 class="card-title text-white mb-3">Filtrar e Ordenar Tarefas</h5>
+        {# Título do Formulário de Filtros #}
+        <h5 class="card-title text-white mb-3 fs-4 fw-bold border-bottom pb-2 border-light border-opacity-25">
+            <i class="bi bi-funnel-fill me-2 text-info"></i>Filtrar e Ordenar Tarefas
+        </h5>
         <form action="{{ url_for('user_dashboard') }}" method="GET">
             <div class="row g-3">
                 {# Filtro de Estado #}
@@ -45,10 +51,21 @@
                     </select>
                 </div>
 
-                {# Pesquisa de Texto #}
+                {# Filtro de Tags #}
                 <div class="col-md-3">
+                    <label for="tag_filter" class="form-label small">Tag:</label>
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="tag_filter" name="tag">
+                        <option value="all" {% if tag_filter == 'all' %}selected{% endif %}>Todas</option>
+                        {% for tag in all_tags %}
+                            <option value="{{ tag }}" {% if tag_filter == tag %}selected{% endif %}>{{ tag }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Pesquisa de Texto #}
+                <div class="col-md-4">
                     <label for="search_query" class="form-label small">Pesquisar:</label>
-                    <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="search_query" name="search" placeholder="Título, descrição, categoria..." value="{{ search_query }}">
+                    <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="search_query" name="search" placeholder="Título, descrição, categoria, tags..." value="{{ search_query }}">
                 </div>
 
                 {# Ordenar Por #}
@@ -83,15 +100,16 @@
 {% if tasks %}
     <div class="table-responsive">
         <table class="table table-dark table-striped table-hover align-middle">
-            <thead>
+            <thead class="table-header-modern">
                 <tr>
                     <th>Título</th>
                     <th>Descrição</th>
                     <th>Prioridade</th>
                     <th>Data Limite</th>
                     <th>Categoria</th>
+                    <th>Tags</th>
                     <th>Concluída</th>
-                    <th>Pública?</th> {# Novo cabeçalho #}
+                    <th>Pública?</th>
                     <th>Data de Criação</th>
                     <th class="text-center">Ações</th>
                 </tr>
@@ -104,6 +122,11 @@
                     <td>{{ task.priority | capitalize }}</td>
                     <td>{{ task.due_date.strftime('%d/%m/%Y') }}</td>
                     <td>{{ task.category }}</td>
+                    <td>
+                        {% for tag in task.tags %}
+                            <span class="badge bg-primary me-1">{{ tag }}</span>
+                        {% endfor %}
+                    </td>
                     <td>
                         {% if task.is_completed %}
                             <span class="badge bg-success">Sim</span>
@@ -137,7 +160,7 @@
     </div>
 {% else %}
     <div class="alert alert-info bg-secondary text-light border-0" role="alert">
-        {% if status_filter != 'all' or priority_filter != 'all' or category_filter != 'all' or search_query %}
+        {% if status_filter != 'all' or priority_filter != 'all' or category_filter != 'all' or tag_filter != 'all' or search_query %}
             Nenhuma tarefa encontrada com os filtros e pesquisa aplicados. <a href="{{ url_for('user_dashboard') }}" class="alert-link text-info">Limpar filtros</a>
         {% else %}
             Não tem tarefas registadas. <a href="{{ url_for('add_task') }}" class="alert-link text-info">Adicione uma agora!</a>

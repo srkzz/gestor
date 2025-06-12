@@ -26,28 +26,25 @@
 /* --- Estilos da Navbar (Inspirados na Colorlib) --- */
 
 .navbar {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Linha fina na base da navbar */
-    transition: background-color 0.4s ease; /* Transição suave para a cor de fundo */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background-color 0.4s ease;
 }
 
-/* NOVO: Classe para a navbar transparente por padrão */
 .custom-transparent-navbar {
-    background-color: transparent !important; /* Fundo totalmente transparente */
-    box-shadow: none !important; /* Remover sombra inicial */
+    background-color: transparent !important;
+    box-shadow: none !important;
 }
 
-/* NOVO: Efeito de hover para a navbar */
 .custom-transparent-navbar:hover {
-    background-color: rgba(33, 37, 41, 0.9) !important; /* Cor de fundo escura com leve transparência no hover */
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; /* Adicionar sombra no hover */
+    background-color: rgba(33, 37, 41, 0.9) !important;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
 }
 
-/* Estilos de link e brand para garantir visibilidade */
 .navbar-brand {
     text-transform: uppercase;
     font-weight: 700;
     font-size: 1.5rem;
-    color: #fff !important; /* Cor branca para o texto do brand */
+    color: #fff !important;
 }
 
 .navbar-nav .nav-item {
@@ -68,9 +65,8 @@
     color: #fff !important;
 }
 
-/* Estilo específico para o dropdown (menu que aparece ao clicar no perfil) */
 .dropdown-menu {
-    background-color: #212529; /* Fundo mais escuro para o dropdown */
+    background-color: #212529;
     border: none;
     box-shadow: 0px 10px 34px -20px rgba(0, 0, 0, 0.41);
     border-radius: 5px;
@@ -93,7 +89,31 @@
     border-top-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Estilo do Avatar na Navbar */
 .custom-avatar-small {
     border: 1px solid #6c757d;
+}
+
+/* --- NOVO: Estilos para o Cabeçalho da Tabela no Dashboard --- */
+.table-header-modern {
+    background-color: #1a1e22; /* Um fundo escuro, similar ao bg-dark do Bootstrap */
+    border-top-left-radius: 0.5rem; /* Cantos arredondados no topo */
+    border-top-right-radius: 0.5rem;
+    overflow: hidden; /* Garante que os cantos arredondados sejam aplicados corretamente */
+}
+
+.table-header-modern th {
+    color: #fff; /* Texto branco */
+    font-weight: 600; /* Um pouco mais negrito */
+    padding: 1.2rem 0.75rem; /* Mais padding para maior altura, como uma navbar */
+    text-align: left; /* Alinhamento do texto */
+    vertical-align: middle; /* Alinha o texto no meio */
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1); /* Uma linha divisória sutil */
+}
+
+/* Remover a borda superior para o primeiro th para evitar duplicação */
+.table-header-modern th:first-child {
+    border-top-left-radius: 0.5rem;
+}
+.table-header-modern th:last-child {
+    border-top-right-radius: 0.5rem;
 }
