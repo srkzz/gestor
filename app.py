@@ -1,4 +1,4 @@
-# app.py (Versão com Funcionalidade Admin)
+# app.py (Versão para MongoDB com Gestão de Utilizadores Admin)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
@@ -8,7 +8,7 @@ from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
 from datetime import datetime, date
 from mongoengine.fields import ObjectId
-from functools import wraps # Importa wraps para o decorador
+from functools import wraps 
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
@@ -34,7 +34,8 @@ csrf = CSRFProtect(app)
 @app.context_processor
 def inject_global_variables():
     return {
-        'now': datetime.utcnow()
+        'now': datetime.utcnow(),
+        'current_user_is_admin': session.get('is_admin', False) # Injeta se o utilizador atual é admin na sessão
     }
 
 # --- Definição dos Modelos de Documentos (MongoDB) ---
@@ -44,7 +45,7 @@ class User(db.Document):
     email = db.StringField(required=True, unique=True, max_length=120)
     password_hash = db.StringField(required=True, max_length=255)
     avatar_url = db.StringField(default='https://www.gravatar.com/avatar/?d=mp')
-    is_admin = db.BooleanField(default=False) # NOVO: Campo para identificar administradores
+    is_admin = db.BooleanField(default=False) 
 
     @property
     def password(self):
@@ -96,7 +97,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# NOVO: Decorador para rotas de administração
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -107,7 +107,6 @@ def admin_required(f):
         user = User.objects(id=ObjectId(session['user_id'])).first()
         if not user or not user.is_admin:
             flash('Você não tem permissão para aceder a esta área.', 'error')
-            # Redireciona para o dashboard se logado, ou home se não
             return redirect(url_for('user_dashboard') if 'user_id' in session else url_for('home'))
         return f(*args, **kwargs)
     return decorated_function
@@ -145,7 +144,6 @@ def register():
 
         new_user = User(username=username, email=email)
         new_user.password = password
-        # Por padrão, novos utilizadores NÃO são admins
         new_user.is_admin = False 
         
         try:
@@ -175,7 +173,7 @@ def login():
             session['user_id'] = str(user.id)
             session['username'] = user.username
             session['avatar_url'] = user.avatar_url
-            session['is_admin'] = user.is_admin # NOVO: Armazena o estado de admin na sessão
+            session['is_admin'] = user.is_admin 
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('user_dashboard'))
         else:
@@ -189,7 +187,7 @@ def logout():
     session.pop('user_id', None)
     session.pop('username', None)
     session.pop('avatar_url', None)
-    session.pop('is_admin', None) # NOVO: Remove is_admin da sessão
+    session.pop('is_admin', None) 
     flash('Você fez logout com sucesso.', 'info')
     return redirect(url_for('home'))
 
@@ -535,13 +533,54 @@ def delete_comment(comment_id):
     flash('Comentário apagado com sucesso!', 'success')
     return redirect(url_for('public_tasks'))
 
-# NOVO: Rota para o Painel de Administração
+# Rota para o Painel de Administração
 @app.route('/admin')
 @admin_required # Protege esta rota apenas para administradores
 def admin_dashboard():
-    # Para o painel de administração, vamos listar todos os utilizadores (apenas para demonstração)
     all_users = User.objects().order_by('username').all()
-    return render_template('admin_dashboard.html', all_users=all_users)
+    # Pega o usuário logado para poder comparar IDs no template e desabilitar ações contra si mesmo
+    current_user = User.objects(id=ObjectId(session['user_id'])).first()
+    return render_template('admin_dashboard.html', all_users=all_users, current_user=current_user)
+
+# NOVO: Rota para alternar o status de administrador de um utilizador
+@app.route('/admin/user/<string:user_id>/toggle_admin', methods=['POST'])
+@admin_required # Apenas admins podem usar esta rota
+def toggle_admin_status(user_id):
+    target_user = User.objects(id=ObjectId(user_id)).first_or_404()
+    
+    # Prevenção: Um admin não pode despromover a si próprio
+    if str(target_user.id) == session['user_id']:
+        flash('Você não pode alterar o seu próprio status de administrador.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    target_user.is_admin = not target_user.is_admin
+    target_user.save()
+    flash(f"Status de administrador de '{target_user.username}' alterado para '{'Admin' if target_user.is_admin else 'Não Admin'}'.", 'success')
+    return redirect(url_for('admin_dashboard'))
+
+# NOVO: Rota para apagar um utilizador
+@app.route('/admin/user/<string:user_id>/delete', methods=['POST'])
+@admin_required # Apenas admins podem usar esta rota
+def delete_user(user_id):
+    target_user = User.objects(id=ObjectId(user_id)).first_or_404()
+
+    # Prevenção: Um admin não pode apagar a si próprio
+    if str(target_user.id) == session['user_id']:
+        flash('Você não pode apagar a sua própria conta de administrador.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    # Se o utilizador a ser apagado for admin, certifique-se de que não é o único admin
+    if target_user.is_admin:
+        # Conta quantos admins existem
+        num_admins = User.objects(is_admin=True).count()
+        if num_admins <= 1:
+            flash('Não pode apagar o único administrador da plataforma.', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+    username_to_delete = target_user.username
+    target_user.delete() # Irá apagar também as tarefas e comentários deste utilizador (cascade rules)
+    flash(f"Utilizador '{username_to_delete}' e todos os seus dados apagados com sucesso.", 'success')
+    return redirect(url_for('admin_dashboard'))
 
 # --- Error Handlers Personalizados ---
 
