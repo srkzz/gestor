@@ -4,3 +4,5 @@ psycopg2-binary
 python-dotenv
 gunicorn
 Flask-Migrate
+Flask-Bcrypt
+Flask-WTF
