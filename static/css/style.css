@@ -1,9 +1,8 @@
-
 /* static/css/style.css */
 
 /* Estilo para o fundo com gradiente */
 .gradient-background {
-  height: 100%; /* Isso fará com que cubra a altura do pai */
+  height: 100%;
   width: 100%;
   background-image: radial-gradient(
     at 27% 37%,
@@ -16,18 +15,71 @@
   radial-gradient(at 97% 96%, hsla(38, 60%, 74%, 1) 0px, transparent 50%),
   radial-gradient(at 33% 50%, hsla(222, 67%, 73%, 1) 0px, transparent 50%),
   radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%);
-  
-  position: fixed; /* Fixa o fundo na viewport */
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: -1; /* Garante que fique atrás de todo o conteúdo */
+  z-index: -1;
   filter: blur(100px) saturate(150%);
   opacity: 0.15;
 }
 
-/* Para que o conteúdo da página fique visível sobre o gradiente:
-   Certifique-se de que os seus elementos de conteúdo (como a navbar e o <main>)
-   têm um background ou um z-index superior ao do gradiente.
-   As classes Bootstrap como .bg-dark, .bg-secondary já fazem isso para os elementos.
-   Adicionei `position-relative` e `z-1` ao `<main>` no `base.html` para garantir.
-*/
+/* --- Estilos da Navbar (Inspirados na Colorlib) --- */
+
+.navbar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Linha fina na base da navbar */
+}
+
+.navbar-brand {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 1.5rem; /* Ajustado para melhor visibilidade com Bootstrap */
+    color: #fff !important; /* Assegura que a cor seja branca */
+}
+
+.navbar-nav .nav-item {
+    margin: 0 5px; /* Espaçamento entre os itens do menu */
+}
+
+.navbar-nav .nav-item .nav-link {
+    padding: 0.8rem 1.2rem; /* Padding ajustado */
+    border-radius: 5px; /* Cantos arredondados para os links */
+    color: rgba(255, 255, 255, 0.8) !important; /* Branco mais suave para links */
+    font-weight: 500;
+    transition: all 0.3s ease; /* Transição suave para hover */
+}
+
+.navbar-nav .nav-item .nav-link:hover,
+.navbar-nav .nav-item.active .nav-link {
+    background-color: rgba(255, 255, 255, 0.1); /* Fundo sutil no hover/ativo */
+    color: #fff !important; /* Texto branco no hover/ativo */
+}
+
+/* Estilo específico para o dropdown (menu que aparece ao clicar no perfil) */
+.dropdown-menu {
+    background-color: #212529; /* Fundo mais escuro para o dropdown */
+    border: none;
+    box-shadow: 0px 10px 34px -20px rgba(0, 0, 0, 0.41); /* Sombra suave */
+    border-radius: 5px;
+    padding: 0.5rem 0;
+}
+
+.dropdown-menu .dropdown-item {
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 0.7rem 1.5rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+.dropdown-menu .dropdown-divider {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Estilo do Avatar na Navbar */
+.custom-avatar-small {
+    border: 1px solid #6c757d; /* Borda sutil ao redor do avatar */
+}
