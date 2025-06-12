@@ -1,4 +1,4 @@
-# app.py (Versão para MongoDB com Gestão de Utilizadores Admin)
+# app.py (Versão para MongoDB com Gestão de Utilizadores e Tarefas Admin)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
@@ -535,20 +535,19 @@ def delete_comment(comment_id):
 
 # Rota para o Painel de Administração
 @app.route('/admin')
-@admin_required # Protege esta rota apenas para administradores
+@admin_required 
 def admin_dashboard():
     all_users = User.objects().order_by('username').all()
-    # Pega o usuário logado para poder comparar IDs no template e desabilitar ações contra si mesmo
+    all_tasks = Task.objects().order_by('-date_created').all() 
     current_user = User.objects(id=ObjectId(session['user_id'])).first()
-    return render_template('admin_dashboard.html', all_users=all_users, current_user=current_user)
+    return render_template('admin_dashboard.html', all_users=all_users, all_tasks=all_tasks, current_user=current_user)
 
-# NOVO: Rota para alternar o status de administrador de um utilizador
+# Rota para alternar o status de administrador de um utilizador
 @app.route('/admin/user/<string:user_id>/toggle_admin', methods=['POST'])
-@admin_required # Apenas admins podem usar esta rota
+@admin_required 
 def toggle_admin_status(user_id):
     target_user = User.objects(id=ObjectId(user_id)).first_or_404()
     
-    # Prevenção: Um admin não pode despromover a si próprio
     if str(target_user.id) == session['user_id']:
         flash('Você não pode alterar o seu próprio status de administrador.', 'error')
         return redirect(url_for('admin_dashboard'))
@@ -558,29 +557,37 @@ def toggle_admin_status(user_id):
     flash(f"Status de administrador de '{target_user.username}' alterado para '{'Admin' if target_user.is_admin else 'Não Admin'}'.", 'success')
     return redirect(url_for('admin_dashboard'))
 
-# NOVO: Rota para apagar um utilizador
+# Rota para apagar um utilizador
 @app.route('/admin/user/<string:user_id>/delete', methods=['POST'])
-@admin_required # Apenas admins podem usar esta rota
+@admin_required 
 def delete_user(user_id):
     target_user = User.objects(id=ObjectId(user_id)).first_or_404()
 
-    # Prevenção: Um admin não pode apagar a si próprio
     if str(target_user.id) == session['user_id']:
         flash('Você não pode apagar a sua própria conta de administrador.', 'error')
         return redirect(url_for('admin_dashboard'))
 
-    # Se o utilizador a ser apagado for admin, certifique-se de que não é o único admin
     if target_user.is_admin:
-        # Conta quantos admins existem
         num_admins = User.objects(is_admin=True).count()
         if num_admins <= 1:
             flash('Não pode apagar o único administrador da plataforma.', 'error')
             return redirect(url_for('admin_dashboard'))
 
     username_to_delete = target_user.username
-    target_user.delete() # Irá apagar também as tarefas e comentários deste utilizador (cascade rules)
+    target_user.delete() 
     flash(f"Utilizador '{username_to_delete}' e todos os seus dados apagados com sucesso.", 'success')
     return redirect(url_for('admin_dashboard'))
+
+# Rota para alternar o status público de uma tarefa
+@app.route('/admin/task/<string:task_id>/toggle_public', methods=['POST'])
+@admin_required 
+def admin_toggle_task_public_status(task_id):
+    task = Task.objects(id=task_id).first_or_404()
+
+    task.is_public = not task.is_public
+    task.save()
+    flash(f"Status de publicidade da tarefa '{task.title}' alterado para '{'Pública' if task.is_public else 'Privada'}'.", 'success')
+    return redirect(url_for('public_tasks')) # Redireciona de volta para a página pública
 
 # --- Error Handlers Personalizados ---
 

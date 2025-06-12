@@ -8,7 +8,7 @@
 </h2>
 
 <div class="row justify-content-center mt-4">
-    <div class="col-lg-10">
+    <div class="col-lg-10 mb-5"> {# Adicionado mb-5 para espaçamento #}
         <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
             <div class="card-header text-center">
                 <h3 class="card-title text-white mb-0"><i class="bi bi-people-fill me-2"></i>Gestão de Utilizadores</h3>
@@ -84,6 +84,82 @@
             </div>
             <div class="card-footer text-center text-muted small">
                 Utilize este painel com cautela. Alterações no status de administrador e exclusão de utilizadores são permanentes.
+            </div>
+        </div>
+    </div>
+</div>
+
+{# NOVO: Seção de Gestão de Tarefas #}
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-10">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
+            <div class="card-header text-center">
+                <h3 class="card-title text-white mb-0"><i class="bi bi-list-task me-2"></i>Gestão de Tarefas</h3>
+            </div>
+            <div class="card-body">
+                {% if all_tasks %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle">
+                        <thead>
+                            <tr class="text-primary">
+                                <th scope="col">Título</th>
+                                <th scope="col">Criado por</th>
+                                <th scope="col">Categoria</th>
+                                <th scope="col">Pública?</th>
+                                <th scope="col">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in all_tasks %}
+                            <tr>
+                                <td><strong>{{ task.title }}</strong></td>
+                                <td>
+                                    <img src="{{ task.user.avatar_url }}" alt="Avatar" class="rounded-circle me-1" style="width: 25px; height: 25px; object-fit: cover;">
+                                    {{ task.user.username }}
+                                </td>
+                                <td>{{ task.category }}</td>
+                                <td>
+                                    {% if task.is_public %}
+                                        <span class="badge bg-success rounded-pill">Sim</span>
+                                    {% else %}
+                                        <span class="badge bg-danger rounded-pill">Não</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin_toggle_task_public_status', task_id=task.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {% if task.is_public %}
+                                            <button type="submit" class="btn btn-sm btn-warning rounded-pill" onclick="return confirm('Tem certeza que deseja tornar a tarefa \\'{{ task.title }}\\' privada?')" title="Tornar Privada">
+                                                <i class="bi bi-eye-slash-fill me-1"></i> Tornar Privada
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-info rounded-pill" onclick="return confirm('Tem certeza que deseja tornar a tarefa \\'{{ task.title }}\\' pública?')" title="Tornar Pública">
+                                                <i class="bi bi-eye-fill me-1"></i> Tornar Pública
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    {# Futura opção para apagar tarefa, se desejar #}
+                                    {# <form method="POST" action="{{ url_for('admin_delete_task', task_id=task.id) }}" class="d-inline ms-2">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill" onclick="return confirm('Apagar tarefa \'{{ task.title }}\'?')" title="Apagar Tarefa">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form> #}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="alert alert-info text-center bg-dark text-white border-0 py-4">
+                        <i class="bi bi-info-circle display-4 mb-3"></i>
+                        <p class="mb-0 fs-5">Nenhuma tarefa registada ainda.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center text-muted small">
+                Este painel permite gerir a visibilidade de todas as tarefas na plataforma.
             </div>
         </div>
     </div>

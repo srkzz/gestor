@@ -28,7 +28,28 @@
                 <div class="card bg-secondary text-light shadow-lg h-100 rounded-3 glassmorphism-card-small">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title text-white mb-0">{{ task.title }}</h5>
-                        <span class="badge bg-info">{{ task.category }}</span>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-info me-2">{{ task.category }}</span>
+                            {# NOVO: Botão de Ação Admin para alternar visibilidade #}
+                            {% if current_user_is_admin %}
+                                <form method="POST" action="{{ url_for('admin_toggle_task_public_status', task_id=task.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% if task.is_public %}
+                                        <button type="submit" class="btn btn-sm btn-warning rounded-pill" 
+                                                onclick="return confirm('Tem certeza que deseja tornar a tarefa \'{{ task.title }}\' privada?')" 
+                                                title="Tornar Privada">
+                                            <i class="bi bi-eye-slash-fill"></i> Privada
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm btn-info rounded-pill" 
+                                                onclick="return confirm('Tem certeza que deseja tornar a tarefa \'{{ task.title }}\' pública?')" 
+                                                title="Tornar Pública">
+                                            <i class="bi bi-eye-fill"></i> Pública
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="card-body d-flex flex-column">
                         <p class="card-text text-white-75">{{ task.description or 'Sem descrição.' }}</p>
@@ -68,7 +89,7 @@
                                                 <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="rounded-circle me-2" style="width: 25px; height: 25px; object-fit: cover;">
                                                 <strong class="text-info">{{ comment.user.username }}</strong>
                                                 <small class="text-muted ms-auto">{{ comment.date_created.strftime('%d/%m/%Y %H:%M') }}</small>
-                                                {# NOVO: Botão de Apagar Comentário (visível apenas para o autor) #}
+                                                {# Botão de Apagar Comentário (visível apenas para o autor) #}
                                                 {% if current_user and comment.user.id == current_user.id %}
                                                     <a href="{{ url_for('delete_comment', comment_id=comment.id) }}" 
                                                        class="btn btn-danger btn-sm ms-2 rounded-pill" 
