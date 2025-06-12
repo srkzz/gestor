@@ -45,6 +45,14 @@
                                 <i class="bi bi-people-fill me-1"></i> Público
                             </a>
                         </li>
+                        {# NOVO: Link para o Painel de Administração (apenas para admins) #}
+                        {% if session.get('is_admin') %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}" data-mdb-ripple-init>
+                                    <i class="bi bi-gear-fill me-1"></i> Admin
+                                </a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-mdb-dropdown-init aria-expanded="false">
                                 <img src="{{ session.get('avatar_url', 'https://www.gravatar.com/avatar/?d=mp') }}" 
@@ -80,6 +88,8 @@
 
     {# Conteúdo principal da página #}
     <main class="flex-grow-1 container mt-5 pt-5 position-relative z-1">
+        {# Contêiner para Notificações Toast #}
+        <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;"></div>
         {% block content %}{% endblock %}
     </main>
 
@@ -93,13 +103,9 @@
     <!-- MDBootstrap JS Bundle -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.2.0/mdb.umd.min.js"></script>
 
-    {# NOVO: Contêiner para Notificações Toast #}
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;"></div>
-
-    {# NOVO: Script para exibir as Flash Messages como Toasts #}
+    {# Script para exibir as Flash Messages como Toasts #}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Verifica se há mensagens flash a serem exibidas
             const flashes = document.querySelectorAll('.flashes .alert');
             const toastContainer = document.querySelector('.toast-container');
 
@@ -108,16 +114,15 @@
                 const category = flashEl.classList.contains('alert-success') ? 'success' : 
                                  flashEl.classList.contains('alert-error') ? 'danger' : 
                                  flashEl.classList.contains('alert-warning') ? 'warning' : 
-                                 flashEl.classList.contains('alert-info') ? 'info' : 'primary'; // MDBootstrap usa danger em vez de error
+                                 flashEl.classList.contains('alert-info') ? 'info' : 'primary';
 
-                // Cria um novo elemento Toast
                 const toastEl = document.createElement('div');
                 toastEl.classList.add('toast', 'fade', 'show');
                 toastEl.setAttribute('role', 'alert');
                 toastEl.setAttribute('aria-live', 'assertive');
                 toastEl.setAttribute('aria-atomic', 'true');
-                toastEl.setAttribute('data-mdb-autohide', 'true'); // Auto-ocultar
-                toastEl.setAttribute('data-mdb-delay', '5000'); // Desaparece após 5 segundos
+                toastEl.setAttribute('data-mdb-autohide', 'true');
+                toastEl.setAttribute('data-mdb-delay', '5000');
 
                 toastEl.innerHTML = `
                     <div class="toast-header bg-${category} text-white">
@@ -130,17 +135,15 @@
                 `;
                 
                 toastContainer.appendChild(toastEl);
-
-                // Inicializa o Toast do MDBootstrap
                 new mdb.Toast(toastEl).show();
             });
 
-            // Remove as mensagens flash originais (para evitar duplicação)
             const flashContainer = document.querySelector('.flashes');
             if (flashContainer) {
                 flashContainer.remove();
             }
         });
     </script>
+    {% block scripts %}{% endblock %} {# Permite que templates filhas adicionem scripts #}
 </body>
 </html>

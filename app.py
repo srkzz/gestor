@@ -1,13 +1,14 @@
-# app.py (Versão para MongoDB com Delete de Comentário)
+# app.py (Versão com Funcionalidade Admin)
 
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
 from datetime import datetime, date
-from mongoengine.fields import ObjectId # Importa ObjectId para usar na conversão de IDs
+from mongoengine.fields import ObjectId
+from functools import wraps # Importa wraps para o decorador
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
@@ -43,6 +44,7 @@ class User(db.Document):
     email = db.StringField(required=True, unique=True, max_length=120)
     password_hash = db.StringField(required=True, max_length=255)
     avatar_url = db.StringField(default='https://www.gravatar.com/avatar/?d=mp')
+    is_admin = db.BooleanField(default=False) # NOVO: Campo para identificar administradores
 
     @property
     def password(self):
@@ -67,9 +69,9 @@ class Task(db.Document):
     is_completed = db.BooleanField(default=False)
     date_created = db.DateTimeField(default=datetime.utcnow)
     is_public = db.BooleanField(default=False)
-    tags = db.ListField(db.StringField()) # Novo campo para tags
+    tags = db.ListField(db.StringField()) 
 
-    user = db.ReferenceField(User, required=True, reverse_delete_rule=2) # 2 = CASCADE
+    user = db.ReferenceField(User, required=True, reverse_delete_rule=2) 
 
     def __repr__(self):
         return f"<Task(id={self.id}, title='{self.title}', user={self.user.username})>"
@@ -77,8 +79,8 @@ class Task(db.Document):
 class Comment(db.Document):
     content = db.StringField(required=True)
     date_created = db.DateTimeField(default=datetime.utcnow)
-    user = db.ReferenceField(User, required=True, reverse_delete_rule=1) # 1 = DENY (não apagar user se tiver comments)
-    task = db.ReferenceField(Task, required=True, reverse_delete_rule=2) # 2 = CASCADE (apagar comments se apagar task)
+    user = db.ReferenceField(User, required=True, reverse_delete_rule=1) 
+    task = db.ReferenceField(Task, required=True, reverse_delete_rule=2) 
 
     def __repr__(self):
         return f"<Comment(id={self.id}, user={self.user.username}, task={self.task.title})>"
@@ -86,12 +88,27 @@ class Comment(db.Document):
 
 # --- Funções de Autenticação/Autorização (Decoradores) ---
 def login_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Você precisa fazer login para aceder a esta página.', 'warning')
             return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# NOVO: Decorador para rotas de administração
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Você precisa fazer login para aceder a esta área de administração.', 'warning')
+            return redirect(url_for('login'))
+        
+        user = User.objects(id=ObjectId(session['user_id'])).first()
+        if not user or not user.is_admin:
+            flash('Você não tem permissão para aceder a esta área.', 'error')
+            # Redireciona para o dashboard se logado, ou home se não
+            return redirect(url_for('user_dashboard') if 'user_id' in session else url_for('home'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -128,6 +145,8 @@ def register():
 
         new_user = User(username=username, email=email)
         new_user.password = password
+        # Por padrão, novos utilizadores NÃO são admins
+        new_user.is_admin = False 
         
         try:
             new_user.save()
@@ -155,7 +174,8 @@ def login():
         if user and user.check_password(password):
             session['user_id'] = str(user.id)
             session['username'] = user.username
-            session['avatar_url'] = user.avatar_url # Garante que o avatar está na sessão
+            session['avatar_url'] = user.avatar_url
+            session['is_admin'] = user.is_admin # NOVO: Armazena o estado de admin na sessão
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('user_dashboard'))
         else:
@@ -168,7 +188,8 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
-    session.pop('avatar_url', None) # Remove avatar da sessão também
+    session.pop('avatar_url', None)
+    session.pop('is_admin', None) # NOVO: Remove is_admin da sessão
     flash('Você fez logout com sucesso.', 'info')
     return redirect(url_for('home'))
 
@@ -205,12 +226,11 @@ def user_dashboard():
         tasks_query = tasks_query(tags__in=[tag_filter]) 
     
     if search_query:
-        # Busca insensível a maiúsculas/minúsculas em vários campos
         tasks_query = tasks_query(__raw__={'$or': [
             {'title': {'$regex': search_query, '$options': 'i'}},
             {'description': {'$regex': search_query, '$options': 'i'}},
             {'category': {'$regex': search_query, '$options': 'i'}},
-            {'tags': {'$regex': search_query, '$options': 'i'}} # Pesquisa em tags
+            {'tags': {'$regex': search_query, '$options': 'i'}}
         ]})
 
     total_tasks = tasks_query.count()
@@ -221,14 +241,11 @@ def user_dashboard():
     else:
         sort_by_mongo = sort_by
     
-    # Executa a query com paginação e ordenação
     tasks = tasks_query.order_by(sort_by_mongo).skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
 
-    # Obtém todas as categorias e tags únicas para os filtros (do utilizador atual)
     all_categories = sorted(list(set(task.category for task in Task.objects(user=user) if task.category)))
     all_tags = sorted(list(set(tag for task in Task.objects(user=user) for tag in task.tags)))
 
-    # Contagens para os cards de resumo no dashboard
     total_tasks_count = Task.objects(user=user).count()
     pending_tasks_count = Task.objects(user=user, is_completed=False).count()
     completed_tasks_count = Task.objects(user=user, is_completed=True).count()
@@ -468,7 +485,6 @@ def public_tasks():
     public_tasks = public_tasks_query.order_by('-date_created').skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     
     for task in public_tasks:
-        # Carrega os comentários para cada tarefa
         task.comments = Comment.objects(task=task).order_by('date_created').all()
 
     current_user_obj = None
@@ -506,13 +522,11 @@ def add_comment(task_id):
     flash('Comentário adicionado com sucesso!', 'success')
     return redirect(url_for('public_tasks'))
 
-# NOVO: Rota para apagar um comentário
 @app.route('/comment/<string:comment_id>/delete')
 @login_required
 def delete_comment(comment_id):
     comment = Comment.objects(id=comment_id).first_or_404()
 
-    # Verifica se o utilizador logado é o autor do comentário
     if str(comment.user.id) != session['user_id']:
         flash('Você não tem permissão para apagar este comentário.', 'error')
         return redirect(url_for('public_tasks'))
@@ -520,6 +534,14 @@ def delete_comment(comment_id):
     comment.delete()
     flash('Comentário apagado com sucesso!', 'success')
     return redirect(url_for('public_tasks'))
+
+# NOVO: Rota para o Painel de Administração
+@app.route('/admin')
+@admin_required # Protege esta rota apenas para administradores
+def admin_dashboard():
+    # Para o painel de administração, vamos listar todos os utilizadores (apenas para demonstração)
+    all_users = User.objects().order_by('username').all()
+    return render_template('admin_dashboard.html', all_users=all_users)
 
 # --- Error Handlers Personalizados ---
 
