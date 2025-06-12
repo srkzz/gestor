@@ -3,17 +3,28 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
+<div class="container">
     <h2>Login</h2>
-    <form method="POST">
-        <div>
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flashes">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+            <label for="identifier">Username ou Email:</label>
+            <input type="text" class="form-control" id="identifier" name="identifier" required>
         </div>
-        <div>
+        <div class="form-group">
             <label for="password">Senha:</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" class="form-control" id="password" name="password" required>
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" class="btn btn-primary">Entrar</button>
     </form>
-    <p>Não tem uma conta? <a href="{{ url_for('register') }}">Registe-se aqui</a>.</p>
+    <p>Não tem uma conta? <a href="{{ url_for('register') }}">Registe-se aqui</a></p>
+</div>
 {% endblock %}
