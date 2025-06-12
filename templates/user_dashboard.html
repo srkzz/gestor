@@ -11,18 +11,18 @@
 <a href="{{ url_for('add_task') }}" class="btn btn-success mb-3"><i class="bi bi-plus-circle-fill me-2"></i> Adicionar Nova Tarefa</a>
 
 {# Formulário de Filtros e Ordenação #}
-<div class="card bg-secondary text-light shadow-lg mb-4">
+<div class="card bg-secondary text-light shadow-lg mb-4 rounded-3"> {# Adicionado rounded-3 para mais arredondamento #}
     <div class="card-body">
         {# Título do Formulário de Filtros #}
-        <h5 class="card-title text-white mb-3 fs-4 fw-bold border-bottom pb-2 border-light border-opacity-25">
+        <h5 class="card-title text-white mb-4 fs-4 fw-bold border-bottom pb-2 border-light border-opacity-25">
             <i class="bi bi-funnel-fill me-2 text-info"></i>Filtrar e Ordenar Tarefas
         </h5>
         <form action="{{ url_for('user_dashboard') }}" method="GET">
-            <div class="row g-3">
+            <div class="row g-3 mb-4"> {# Espaçamento vertical entre linhas do formulário #}
                 {# Filtro de Estado #}
                 <div class="col-md-3">
-                    <label for="status_filter" class="form-label small">Estado:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="status_filter" name="status">
+                    <label for="status_filter" class="form-label small text-muted">Estado:</label>
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="status_filter" name="status"> {# rounded-pill para aspeto moderno #}
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Todas</option>
                         <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pendentes</option>
                         <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Concluídas</option>
@@ -31,8 +31,8 @@
 
                 {# Filtro de Prioridade #}
                 <div class="col-md-3">
-                    <label for="priority_filter" class="form-label small">Prioridade:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="priority_filter" name="priority">
+                    <label for="priority_filter" class="form-label small text-muted">Prioridade:</label>
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="priority_filter" name="priority">
                         <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>Todas</option>
                         <option value="baixa" {% if priority_filter == 'baixa' %}selected{% endif %}>Baixa</option>
                         <option value="media" {% if priority_filter == 'media' %}selected{% endif %}>Média</option>
@@ -42,8 +42,8 @@
 
                 {# Filtro de Categoria #}
                 <div class="col-md-3">
-                    <label for="category_filter" class="form-label small">Categoria:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="category_filter" name="category">
+                    <label for="category_filter" class="form-label small text-muted">Categoria:</label>
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="category_filter" name="category">
                         <option value="all" {% if category_filter == 'all' %}selected{% endif %}>Todas</option>
                         {% for cat in all_categories %}
                             <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat | capitalize }}</option>
@@ -53,8 +53,8 @@
 
                 {# Filtro de Tags #}
                 <div class="col-md-3">
-                    <label for="tag_filter" class="form-label small">Tag:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="tag_filter" name="tag">
+                    <label for="tag_filter" class="form-label small text-muted">Tag:</label>
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="tag_filter" name="tag">
                         <option value="all" {% if tag_filter == 'all' %}selected{% endif %}>Todas</option>
                         {% for tag in all_tags %}
                             <option value="{{ tag }}" {% if tag_filter == tag %}selected{% endif %}>{{ tag }}</option>
@@ -64,14 +64,14 @@
 
                 {# Pesquisa de Texto #}
                 <div class="col-md-4">
-                    <label for="search_query" class="form-label small">Pesquisar:</label>
-                    <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="search_query" name="search" placeholder="Título, descrição, categoria, tags..." value="{{ search_query }}">
+                    <label for="search_query" class="form-label small text-muted">Pesquisar:</label>
+                    <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary rounded-pill" id="search_query" name="search" placeholder="Título, descrição, categoria, tags..." value="{{ search_query }}">
                 </div>
 
                 {# Ordenar Por #}
                 <div class="col-md-4">
-                    <label for="sort_by" class="form-label small">Ordenar Por:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="sort_by" name="sort_by">
+                    <label for="sort_by" class="form-label small text-muted">Ordenar Por:</label>
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="sort_by" name="sort_by">
                         <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>Data Limite</option>
                         <option value="date_created" {% if sort_by == 'date_created' %}selected{% endif %}>Data de Criação</option>
                         <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Título</option>
@@ -81,16 +81,16 @@
 
                 {# Ordem (Ascendente/Descendente) #}
                 <div class="col-md-4">
-                    <label for="sort_order" class="form-label small">Ordem:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="sort_order" name="sort_order">
+                    <label for="sort_order" class="form-label small text-muted">Ordem:</label>
+                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="sort_order" name="sort_order">
                         <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascendente</option>
                         <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descendente</option>
                     </select>
                 </div>
             </div>
             <div class="d-flex justify-content-end mt-3">
-                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-filter-circle-fill me-2"></i> Aplicar Filtros</button>
-                <a href="{{ url_for('user_dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-x-circle-fill me-2"></i> Limpar Filtros</a>
+                <button type="submit" class="btn btn-primary me-2 rounded-pill"><i class="bi bi-filter-circle-fill me-2"></i> Aplicar Filtros</button>
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-x-circle-fill me-2"></i> Limpar Filtros</a>
             </div>
         </form>
     </div>
