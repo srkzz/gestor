@@ -1,4 +1,4 @@
-# app.py (Versão com Prints de Debug para Adicionar Tarefa)
+# app.py (Versão Final e Limpa)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -16,7 +16,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- Configuração da Aplicação ---
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '000d88cd9d44446ebdd237eb6b0db000')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua_chave_secreta_muito_segura_aqui_e_aleatoria')
 app.config['MONGODB_SETTINGS'] = {
     'host': os.getenv('MONGO_URI', 'mongodb://localhost:27017/gestor_tarefas_db')
 }
@@ -256,8 +256,6 @@ def add_task():
     user = User.objects(id=user_id_obj).first_or_404()
 
     if request.method == 'POST':
-        # NOVO: Prints para debug dos dados do formulário
-        print(f"DEBUG: Dados do formulário para add_task: {request.form}")
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         priority = request.form.get('priority', '')
@@ -266,20 +264,15 @@ def add_task():
         is_public = 'is_public' in request.form
         tags_str = request.form.get('tags', '').strip()
 
-        print(f"DEBUG: title='{title}', description='{description}', priority='{priority}', due_date_str='{due_date_str}', category='{category}', is_public='{is_public}', tags_str='{tags_str}'")
-
         tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
 
         if not all([title, priority, due_date_str, category]):
-            print(f"DEBUG: Campos obrigatórios ausentes: title={bool(title)}, priority={bool(priority)}, due_date_str={bool(due_date_str)}, category={bool(category)}")
             flash("Todos os campos obrigatórios devem ser preenchidos.", 'error')
             return render_template('add_task.html', user=user)
 
         try:
             due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-            print(f"DEBUG: Data convertida com sucesso: {due_date}")
         except ValueError as e:
-            print(f"DEBUG: Erro de formato de data: {e} para '{due_date_str}'")
             flash("Formato de data inválido. Use AAAA-MM-DD.", 'error')
             return render_template('add_task.html', user=user)
 
@@ -295,11 +288,9 @@ def add_task():
         )
         try:
             new_task.save()
-            print(f"DEBUG: Tarefa '{title}' salva com sucesso.")
             flash(f"Tarefa '{title}' adicionada com sucesso!", 'success')
             return redirect(url_for('user_dashboard'))
         except Exception as e:
-            print(f"DEBUG: Erro ao salvar tarefa: {e}")
             flash(f"Ocorreu um erro ao salvar a tarefa: {e}", 'error')
             return render_template('add_task.html', user=user)
 
@@ -315,8 +306,6 @@ def edit_task(task_id):
         return redirect(url_for('user_dashboard'))
 
     if request.method == 'POST':
-        # NOVO: Prints para debug dos dados do formulário de edição
-        print(f"DEBUG: Dados do formulário para edit_task: {request.form}")
         task.title = request.form.get('title', '').strip()
         task.description = request.form.get('description', '').strip()
         task.priority = request.form.get('priority', '')
@@ -325,31 +314,24 @@ def edit_task(task_id):
         task.is_public = 'is_public' in request.form 
         tags_str = request.form.get('tags', '').strip()
 
-        print(f"DEBUG: title='{task.title}', description='{task.description}', priority='{task.priority}', due_date_str='{due_date_str}', category='{task.category}', is_public='{task.is_public}', tags_str='{tags_str}'")
-
         tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
         task.tags = tags
 
         if not all([task.title, task.priority, due_date_str, task.category]):
-            print(f"DEBUG: Campos obrigatórios ausentes em edit_task: title={bool(task.title)}, priority={bool(task.priority)}, due_date_str={bool(due_date_str)}, category={bool(task.category)}")
             flash("Todos os campos obrigatórios devem ser preenchidos.", 'error')
             return render_template('edit_task.html', task=task)
 
         try:
             task.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-            print(f"DEBUG: Data convertida com sucesso em edit_task: {task.due_date}")
         except ValueError as e:
-            print(f"DEBUG: Erro de formato de data em edit_task: {e} para '{due_date_str}'")
             flash("Formato de data inválido. Use AAAA-MM-DD.", 'error')
             return render_template('edit_task.html', task=task)
 
         try:
             task.save()
-            print(f"DEBUG: Tarefa '{task.title}' atualizada com sucesso.")
             flash(f"Tarefa '{task.title}' atualizada com sucesso!", 'success')
             return redirect(url_for('user_dashboard'))
         except Exception as e:
-            print(f"DEBUG: Erro ao atualizar tarefa: {e}")
             flash(f"Ocorreu um erro ao atualizar a tarefa: {e}", 'error')
             return render_template('edit_task.html', task=task)
 

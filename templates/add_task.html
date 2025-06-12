@@ -30,11 +30,11 @@
                             <option value="alta">Alta</option>
                         </select>
                     </div>
-                    {# NOVO: Campo Data Limite com Date Picker do MDBootstrap #}
+                    {# FIX: Adicionado data-mdb-format para garantir o formato de data correto #}
                     <div class="mb-3">
                         <label for="due_date" class="form-label">Data Limite:</label>
                         <div class="form-outline" data-mdb-input-init>
-                            <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="due_date" name="due_date" data-mdb-toggle="datepicker" required>
+                            <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="due_date" name="due_date" data-mdb-toggle="datepicker" data-mdb-format="yyyy-mm-dd" required>
                             <label for="due_date" class="form-label text-muted">Selecione a data</label>
                         </div>
                     </div>
