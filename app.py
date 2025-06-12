@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate # IMPORTANTE: Adicione esta linha
 
 # 1. Carrega as variáveis de ambiente do ficheiro .env (apenas para desenvolvimento local)
 load_dotenv()
@@ -30,7 +31,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # 4. Inicializa a extensão Flask-SQLAlchemy
 db = SQLAlchemy(app)
 
-# 5. Define os modelos de banco de dados (User e Task)
+# 5. Inicializa Flask-Migrate
+migrate = Migrate(app, db) # IMPORTANTE: Adicione esta linha
+
+# 6. Define os modelos de banco de dados (User e Task)
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -64,12 +68,11 @@ class Task(db.Model):
     def __repr__(self):
         return f"<Task {self.title}>"
 
-# 6. Cria as tabelas da base de dados se não existirem
-with app.app_context():
-    db.create_all()
+# 7. REMOVIDO: `with app.app_context(): db.create_all()`
+# As migrações irão gerir o esquema da base de dados.
 
 # --- Funções de Autenticação/Autorização ---
-
+# ... (o resto das suas funções e rotas permanecem as mesmas) ...
 def login_required(f):
     """Decorador para proteger rotas que exigem login."""
     from functools import wraps
