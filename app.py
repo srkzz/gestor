@@ -1,4 +1,4 @@
-# app.py (Versão para MongoDB com Gestão de Utilizadores e Tarefas Admin)
+# app.py (Versão para MongoDB com Recarregamento Forçado da Página Pública)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
@@ -482,6 +482,12 @@ def public_tasks():
 
     public_tasks = public_tasks_query.order_by('-date_created').skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     
+    # DEBUG: Prints para ajudar a diagnosticar o que está a ser carregado
+    print(f"DEBUG_PUBLIC_TASKS: Carregando /public_tasks. URL: {request.url}")
+    print(f"DEBUG_PUBLIC_TASKS: Número de tarefas públicas carregadas do DB: {len(public_tasks)}")
+    for task in public_tasks:
+        print(f"DEBUG_PUBLIC_TASKS: ID da Tarefa: {task.id}, Título: '{task.title}', É Pública: {task.is_public}")
+
     for task in public_tasks:
         task.comments = Comment.objects(task=task).order_by('date_created').all()
 
@@ -578,7 +584,7 @@ def delete_user(user_id):
     flash(f"Utilizador '{username_to_delete}' e todos os seus dados apagados com sucesso.", 'success')
     return redirect(url_for('admin_dashboard'))
 
-# Rota para alternar o status público de uma tarefa
+# Rota para alternar o status público de uma tarefa (usada no admin dashboard e public_tasks)
 @app.route('/admin/task/<string:task_id>/toggle_public', methods=['POST'])
 @admin_required 
 def admin_toggle_task_public_status(task_id):
@@ -587,7 +593,8 @@ def admin_toggle_task_public_status(task_id):
     task.is_public = not task.is_public
     task.save()
     flash(f"Status de publicidade da tarefa '{task.title}' alterado para '{'Pública' if task.is_public else 'Privada'}'.", 'success')
-    return redirect(url_for('public_tasks')) # Redireciona de volta para a página pública
+    # NOVO: Adiciona um timestamp ao redirecionamento para forçar o recarregamento completo da página
+    return redirect(url_for('public_tasks', _t=datetime.utcnow().timestamp())) 
 
 # --- Error Handlers Personalizados ---
 
