@@ -5,31 +5,30 @@
 {% block content %}
 <div class="row justify-content-center mt-5">
     <div class="col-md-6">
-        <div class="card bg-secondary text-light shadow-lg">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card"> {# Aplicada a classe #}
             <div class="card-header text-center">
-                <h2 class="card-title text-white mb-0">Registar</h2>
+                <h2 class="card-title text-white mb-0 fs-3 fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Registar</h2>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('register') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> {# <-- O CSRF TOKEN! #}
-                    
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username:</label>
-                        <input type="text" class="form-control bg-dark text-light border-secondary" id="username" name="username" required>
+                        <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="username" name="username" required> {# rounded-pill #}
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email:</label>
-                        <input type="email" class="form-control bg-dark text-light border-secondary" id="email" name="email" required>
+                        <input type="email" class="form-control bg-dark text-light border-secondary rounded-pill" id="email" name="email" required> {# rounded-pill #}
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label for="password" class="form-label">Senha:</label>
-                        <input type="password" class="form-control bg-dark text-light border-secondary" id="password" name="password" required>
+                        <input type="password" class="form-control bg-dark text-light border-secondary rounded-pill" id="password" name="password" required> {# rounded-pill #}
                     </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">Registar</button>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill">Registar</button> {# rounded-pill #}
                     </div>
                 </form>
-                <p class="mt-4 text-center text-light">Já tem uma conta? <a href="{{ url_for('login') }}" class="text-info">Faça Login aqui</a></p>
+                <p class="mt-4 text-center text-light">Já tem uma conta? <a href="{{ url_for('login') }}" class="text-info">Faça login aqui</a>.</p>
             </div>
         </div>
     </div>

@@ -5,9 +5,9 @@
 {% block content %}
 <div class="row justify-content-center mt-5">
     <div class="col-md-8">
-        <div class="card bg-secondary text-light shadow-lg">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
             <div class="card-header text-center">
-                <h2 class="card-title text-white mb-0"><strong>ADICIONAR TAREFA</strong></h2>
+                <h2 class="card-title text-white mb-0">Adicionar Nova Tarefa</h2>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('add_task') }}">
@@ -15,33 +15,37 @@
 
                     <div class="mb-3">
                         <label for="title" class="form-label">Título da Tarefa:</label>
-                        <input type="text" class="form-control bg-dark text-light border-secondary" id="title" name="title" required>
+                        <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="title" name="title" required>
                     </div>
                     <div class="mb-3">
                         <label for="description" class="form-label">Descrição (Opcional):</label>
-                        <textarea class="form-control bg-dark text-light border-secondary" id="description" name="description" rows="3"></textarea>
+                        <textarea class="form-control bg-dark text-light border-secondary rounded-3" id="description" name="description" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="priority" class="form-label">Prioridade:</label>
-                        <select class="form-select bg-dark text-light border-secondary" id="priority" name="priority" required>
+                        <select class="form-select bg-dark text-light border-secondary rounded-pill" id="priority" name="priority" required>
                             <option value="" disabled selected>Selecione a prioridade</option>
                             <option value="baixa">Baixa</option>
                             <option value="media">Média</option>
                             <option value="alta">Alta</option>
                         </select>
                     </div>
+                    {# NOVO: Campo Data Limite com Date Picker do MDBootstrap #}
                     <div class="mb-3">
                         <label for="due_date" class="form-label">Data Limite:</label>
-                        <input type="date" class="form-control bg-dark text-light border-secondary" id="due_date" name="due_date" required>
+                        <div class="form-outline" data-mdb-input-init>
+                            <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="due_date" name="due_date" data-mdb-toggle="datepicker" required>
+                            <label for="due_date" class="form-label text-muted">Selecione a data</label>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="category" class="form-label">Categoria:</label>
-                        <input type="text" class="form-control bg-dark text-light border-secondary" id="category" name="category" required>
+                        <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="category" name="category" required>
                     </div>
-                    {# NOVO: Campo para tags #}
+                    {# Campo para tags #}
                     <div class="mb-3">
                         <label for="tags" class="form-label">Tags (separar por vírgulas):</label>
-                        <input type="text" class="form-control bg-dark text-light border-secondary" id="tags" name="tags" placeholder="Ex: estudo, trabalho, urgente">
+                        <input type="text" class="form-control bg-dark text-light border-secondary rounded-pill" id="tags" name="tags" placeholder="Ex: estudo, trabalho, urgente">
                         <div class="form-text text-muted">Separar múltiplas tags com vírgulas.</div>
                     </div>
                     {# Checkbox para tarefa pública/privada #}
@@ -52,11 +56,20 @@
                         </label>
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">Adicionar Tarefa</button>
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill">Adicionar Tarefa</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{# Script para inicializar o Date Picker #}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const datepicker = new mdb.Datepicker(document.getElementById('due_date'));
+    });
+</script>
 {% endblock %}
