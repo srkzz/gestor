@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Erro Interno do Servidor - 500{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center text-center mt-5 pt-5">
+    <div class="col-md-8">
+        <div class="glassmorphism-card p-5">
+            <h1 class="display-1 text-warning fw-bold mb-3">500</h1>
+            <h2 class="text-white mb-4">Erro Interno do Servidor</h2>
+            <p class="lead text-muted mb-4">
+                Ups! Algo correu mal do nosso lado.
+                Estamos a trabalhar para resolver o problema.
+            </p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg rounded-pill">
+                <i class="bi bi-house-door-fill me-2"></i>Voltar à Página Inicial
+            </a>
+            <p class="mt-4 text-white-50">Por favor, tente novamente mais tarde.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-# app.py (Versão Final e Limpa)
+# app.py (Versão com Páginas de Erro Personalizadas)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -16,8 +16,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- Configuração da Aplicação ---
-# A SECRET_KEY DEVE ser definida no ficheiro .env para segurança e persistência da sessão
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '000d88cd9d44446ebdd237eb6b0db000') # Fallback, mas DEVE estar no .env
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua_chave_secreta_muito_segura_aqui_e_aleatoria')
 app.config['MONGODB_SETTINGS'] = {
     'host': os.getenv('MONGO_URI', 'mongodb://localhost:27017/gestor_tarefas_db')
 }
@@ -495,6 +494,24 @@ def add_comment(task_id):
     new_comment.save()
     flash('Comentário adicionado com sucesso!', 'success')
     return redirect(url_for('public_tasks'))
+
+# --- NOVO: Error Handlers Personalizados ---
+
+@app.errorhandler(404)
+def not_found_error(error):
+    """
+    Handler para erros 404 (Página Não Encontrada).
+    """
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """
+    Handler para erros 500 (Erro Interno do Servidor).
+    """
+    # Em produção, pode ser útil logar o erro aqui para investigação.
+    # db.session.rollback() # Se estivesse a usar SQLAlchemy
+    return render_template('500.html'), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

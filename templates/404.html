@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Página Não Encontrada - 404{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center text-center mt-5 pt-5">
+    <div class="col-md-8">
+        <div class="glassmorphism-card p-5">
+            <h1 class="display-1 text-danger fw-bold mb-3">404</h1>
+            <h2 class="text-white mb-4">Página Não Encontrada</h2>
+            <p class="lead text-muted mb-4">
+                Lamentamos, mas a página que procura não existe ou foi removida.
+            </p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg rounded-pill">
+                <i class="bi bi-house-door-fill me-2"></i>Ir para a Página Inicial
+            </a>
+            <p class="mt-4 text-white-50">Se acha que isto é um erro, por favor, entre em contacto com o suporte.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

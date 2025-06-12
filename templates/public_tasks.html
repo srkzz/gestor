@@ -3,16 +3,18 @@
 {% block title %}Tarefas Públicas{% endblock %}
 
 {% block content %}
-<h2 class="mb-4 text-white">Tarefas Públicas</h2>
+<h2 class="mb-4 text-white display-5 fw-bold text-center text-uppercase tracking-wider">
+    <span class="d-inline-block p-2 border-bottom border-3 border-primary">Tarefas Públicas</span>
+</h2>
 
-{# Formulário de Pesquisa #}
-<div class="card bg-secondary text-light shadow-lg mb-4">
+{# Formulário de Pesquisa - Já com bom aspeto, mas vamos garantir o rounded-pill #}
+<div class="card bg-secondary text-light shadow-lg mb-4 rounded-3 glassmorphism-card-small"> {# Pequeno glassmorphism para o card de pesquisa #}
     <div class="card-body">
         <form action="{{ url_for('public_tasks') }}" method="GET" class="d-flex">
-            <input type="text" class="form-control me-2 bg-dark text-light border-secondary" placeholder="Pesquisar tarefas públicas (título, descrição, categoria, tags)..." name="search" value="{{ search_query }}">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-2"></i>Pesquisar</button>
+            <input type="text" class="form-control me-2 bg-dark text-light border-secondary rounded-pill" placeholder="Pesquisar tarefas públicas (título, descrição, categoria, tags)..." name="search" value="{{ search_query }}">
+            <button type="submit" class="btn btn-primary rounded-pill"><i class="bi bi-search me-2"></i>Pesquisar</button>
             {% if search_query %}
-                <a href="{{ url_for('public_tasks') }}" class="btn btn-outline-secondary ms-2"><i class="bi bi-x-lg"></i> Limpar</a>
+                <a href="{{ url_for('public_tasks') }}" class="btn btn-outline-secondary ms-2 rounded-pill"><i class="bi bi-x-lg"></i> Limpar</a>
             {% endif %}
         </form>
     </div>
@@ -22,27 +24,28 @@
     <div class="row">
         {% for task in public_tasks %}
             <div class="col-md-6 mb-4">
-                <div class="card bg-secondary text-light shadow-lg h-100">
+                {# Aplicar glassmorphism-card-small a cada cartão de tarefa #}
+                <div class="card bg-secondary text-light shadow-lg h-100 rounded-3 glassmorphism-card-small">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title text-white mb-0">{{ task.title }}</h5>
                         <span class="badge bg-info">{{ task.category }}</span>
                     </div>
                     <div class="card-body d-flex flex-column">
-                        <p class="card-text">{{ task.description or 'Sem descrição.' }}</p>
+                        <p class="card-text text-white-75">{{ task.description or 'Sem descrição.' }}</p> {# Texto mais suave #}
                         {# Exibição de Tags na Public Task Card #}
                         {% if task.tags %}
                             <div class="mb-2">
                                 {% for tag in task.tags %}
-                                    <span class="badge bg-primary me-1">{{ tag }}</span>
+                                    <span class="badge bg-primary me-1 rounded-pill">{{ tag }}</span> {# Tags arredondadas #}
                                 {% endfor %}
                             </div>
                         {% endif %}
                         <ul class="list-unstyled mb-3 small text-muted">
-                            <li><i class="bi bi-person-fill"></i> Criado por: 
-                                <img src="{{ task.user.avatar_url }}" alt="Avatar" class="rounded-circle" style="width: 20px; height: 20px; object-fit: cover; margin-right: 5px;">
+                            <li><i class="bi bi-person-fill me-1"></i> Criado por: 
+                                <img src="{{ task.user.avatar_url }}" alt="Avatar" class="rounded-circle me-1" style="width: 20px; height: 20px; object-fit: cover;">
                                 {{ task.user.username }}
                             </li>
-                            <li><i class="bi bi-calendar"></i> Data Limite: {{ task.due_date.strftime('%d/%m/%Y') }}</li>
+                            <li><i class="bi bi-calendar me-1"></i> Data Limite: {{ task.due_date.strftime('%d/%m/%Y') }}</li>
                             <li>
                                 {# Ícones para Prioridade #}
                                 {% if task.priority == 'alta' %}
@@ -55,18 +58,18 @@
                                 Prioridade: {{ task.priority | capitalize }}
                             </li>
                         </ul>
-                        <div class="mt-auto"> {# Empurra os comentários para baixo #}
-                            <h6>Comentários:</h6>
+                        <div class="mt-auto pt-3 border-top border-secondary border-opacity-25"> {# Separador para comentários #}
+                            <h6 class="text-white fw-bold mb-2">Comentários:</h6>
                             {% if task.comments %}
                                 <ul class="list-group list-group-flush mb-3">
                                     {% for comment in task.comments %}
                                         <li class="list-group-item bg-dark text-light border-secondary rounded mb-1 py-2">
                                             <div class="d-flex align-items-center mb-1">
                                                 <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="rounded-circle me-2" style="width: 25px; height: 25px; object-fit: cover;">
-                                                <strong>{{ comment.user.username }}</strong>
+                                                <strong class="text-info">{{ comment.user.username }}</strong>
                                                 <small class="text-muted ms-auto">{{ comment.date_created.strftime('%d/%m/%Y %H:%M') }}</small>
                                             </div>
-                                            <p class="mb-0 small">{{ comment.content }}</p>
+                                            <p class="mb-0 small text-white-75">{{ comment.content }}</p>
                                         </li>
                                     {% endfor %}
                                 </ul>
@@ -79,8 +82,8 @@
                                 <form method="POST" action="{{ url_for('add_comment', task_id=task.id) }}" class="mt-3">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="input-group">
-                                        <input type="text" name="comment_content" class="form-control bg-dark text-light border-secondary" placeholder="Adicione um comentário..." required>
-                                        <button class="btn btn-outline-info" type="submit"><i class="bi bi-chat-fill"></i> Comentar</button>
+                                        <input type="text" name="comment_content" class="form-control bg-dark text-light border-secondary rounded-pill" placeholder="Adicione um comentário..." required> {# rounded-pill #}
+                                        <button class="btn btn-outline-info rounded-pill ms-2" type="submit"><i class="bi bi-chat-fill"></i> Comentar</button> {# rounded-pill #}
                                     </div>
                                 </form>
                             {% else %}
