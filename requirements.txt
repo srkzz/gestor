@@ -1,4 +1,4 @@
-Flask==2.3.2
+Flask==2.2.5
 Flask-Bcrypt
 Flask-WTF
 Flask-MongoEngine # NOVO
