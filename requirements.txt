@@ -1,8 +1,7 @@
 Flask==2.3.2
-Flask-SQLAlchemy
-psycopg2-binary
-python-dotenv
-gunicorn
-Flask-Migrate
 Flask-Bcrypt
 Flask-WTF
+Flask-MongoEngine # NOVO
+pymongo           # NOVO (driver para MongoDB, dependência do Flask-MongoEngine)
+python-dotenv
+gunicorn
