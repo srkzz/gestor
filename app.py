@@ -20,6 +20,14 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma_chave_secreta_padra
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///:memory:') # Fallback para SQLite em memória
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Define o caminho para a pasta da base de dados
+basedir = os.path.abspath(os.path.dirname(__file__))
+instance_path = os.path.join(basedir, 'instance')
+
+# Garante que a pasta 'instance' existe
+if not os.path.exists(instance_path):
+    os.makedirs(instance_path)
+
 # 4. Inicializa a extensão Flask-SQLAlchemy
 db = SQLAlchemy(app)
 
