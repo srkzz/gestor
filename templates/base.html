@@ -15,8 +15,8 @@
     {# Este div será o fundo com o gradiente. A classe `gradient-background` está definida em style.css. #}
     <div class="gradient-background"></div> 
 
-    {# Navbar principal com tema escuro, sombra e padding ajustado #}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg py-3">
+    {# Navbar principal. Removida a classe bg-dark para torná-la transparente por padrão. #}
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-lg py-3 custom-transparent-navbar"> {# ADICIONADA custom-transparent-navbar #}
         <div class="container-fluid">
             {# Link do Brand/Título da Aplicação #}
             <a class="navbar-brand fs-4 fw-bold" href="{{ url_for('home') }}">Gestor de Tarefas</a>
@@ -48,7 +48,7 @@
                                 <img src="{{ session.get('avatar_url', 'https://www.gravatar.com/avatar/?d=mp') }}" 
                                      alt="Avatar" 
                                      class="rounded-circle me-2 custom-avatar-small" 
-                                     onerror="this.onerror=null;this.src='https://www.gravatar.com/avatar/?d=mp';" {# Fallback para imagem padrão se o URL falhar #}
+                                     onerror="this.onerror=null;this.src='https://www.gravatar.com/avatar/?d=mp';"
                                      style="width: 30px; height: 30px; object-fit: cover;"> 
                                 Olá, {{ session['username'] }}! {# Nome de utilizador #}
                             </a>

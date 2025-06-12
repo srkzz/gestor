@@ -27,38 +27,52 @@
 
 .navbar {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Linha fina na base da navbar */
+    transition: background-color 0.4s ease; /* Transição suave para a cor de fundo */
 }
 
+/* NOVO: Classe para a navbar transparente por padrão */
+.custom-transparent-navbar {
+    background-color: transparent !important; /* Fundo totalmente transparente */
+    box-shadow: none !important; /* Remover sombra inicial */
+}
+
+/* NOVO: Efeito de hover para a navbar */
+.custom-transparent-navbar:hover {
+    background-color: rgba(33, 37, 41, 0.9) !important; /* Cor de fundo escura com leve transparência no hover */
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important; /* Adicionar sombra no hover */
+}
+
+/* Estilos de link e brand para garantir visibilidade */
 .navbar-brand {
     text-transform: uppercase;
     font-weight: 700;
-    font-size: 1.5rem; /* Ajustado para melhor visibilidade com Bootstrap */
-    color: #fff !important; /* Assegura que a cor seja branca */
+    font-size: 1.5rem;
+    color: #fff !important; /* Cor branca para o texto do brand */
 }
 
 .navbar-nav .nav-item {
-    margin: 0 5px; /* Espaçamento entre os itens do menu */
+    margin: 0 5px;
 }
 
 .navbar-nav .nav-item .nav-link {
-    padding: 0.8rem 1.2rem; /* Padding ajustado */
-    border-radius: 5px; /* Cantos arredondados para os links */
-    color: rgba(255, 255, 255, 0.8) !important; /* Branco mais suave para links */
+    padding: 0.8rem 1.2rem;
+    border-radius: 5px;
+    color: rgba(255, 255, 255, 0.8) !important;
     font-weight: 500;
-    transition: all 0.3s ease; /* Transição suave para hover */
+    transition: all 0.3s ease;
 }
 
 .navbar-nav .nav-item .nav-link:hover,
 .navbar-nav .nav-item.active .nav-link {
-    background-color: rgba(255, 255, 255, 0.1); /* Fundo sutil no hover/ativo */
-    color: #fff !important; /* Texto branco no hover/ativo */
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff !important;
 }
 
 /* Estilo específico para o dropdown (menu que aparece ao clicar no perfil) */
 .dropdown-menu {
     background-color: #212529; /* Fundo mais escuro para o dropdown */
     border: none;
-    box-shadow: 0px 10px 34px -20px rgba(0, 0, 0, 0.41); /* Sombra suave */
+    box-shadow: 0px 10px 34px -20px rgba(0, 0, 0, 0.41);
     border-radius: 5px;
     padding: 0.5rem 0;
 }
@@ -81,5 +95,5 @@
 
 /* Estilo do Avatar na Navbar */
 .custom-avatar-small {
-    border: 1px solid #6c757d; /* Borda sutil ao redor do avatar */
+    border: 1px solid #6c757d;
 }
