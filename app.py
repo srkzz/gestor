@@ -18,7 +18,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- Configuração da Aplicação ---
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sua_chave_secreta_muito_segura_aqui_e_aleatoria')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '000d88cd9d44446ebdd237eb6b0db000')
 app.config['MONGODB_SETTINGS'] = {
     'host': os.getenv('MONGO_URI', 'mongodb://localhost:27017/gestor_tarefas_db')
 }
