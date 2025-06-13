@@ -34,6 +34,8 @@ csrf = CSRFProtect(app)
 # --- Context Processor para Variáveis Globais na Template ---
 @app.context_processor
 def inject_global_variables():
+    # DEBUG: Imprime o valor de is_admin na sessão para diagnóstico
+    print(f"DEBUG: session['is_admin'] na inject_global_variables: {session.get('is_admin', False)}")
     return {
         'now': datetime.utcnow(),
         'current_user_is_admin': session.get('is_admin', False) # Injeta se o utilizador atual é admin na sessão
@@ -129,9 +131,9 @@ def home():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username'].strip()
-        email = request.form['email'].strip()
-        password = request.form['password'].strip()
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
 
         if not username or not email or not password:
             flash('Username, email e senha não podem estar vazios.', 'error')
@@ -164,8 +166,8 @@ def login():
         return redirect(url_for('user_dashboard'))
 
     if request.method == 'POST':
-        identifier = request.form['identifier'].strip()
-        password = request.form['password'].strip()
+        identifier = request.form.get('identifier', '').strip()
+        password = request.form.get('password', '').strip()
 
         user = User.objects(username=identifier).first()
         if not user:
@@ -175,7 +177,7 @@ def login():
             session['user_id'] = str(user.id)
             session['username'] = user.username
             session['avatar_url'] = user.avatar_url
-            session['is_admin'] = user.is_admin 
+            session['is_admin'] = user.is_admin # NOVO: Define o estado de admin na sessão
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('user_dashboard'))
         else:
@@ -189,7 +191,7 @@ def logout():
     session.pop('user_id', None)
     session.pop('username', None)
     session.pop('avatar_url', None)
-    session.pop('is_admin', None) 
+    session.pop('is_admin', None) # NOVO: Remove o estado de admin da sessão no logout
     flash('Você fez logout com sucesso.', 'info')
     return redirect(url_for('home'))
 
@@ -409,9 +411,9 @@ def profile():
     user = User.objects(id=user_id_obj).first_or_404()
 
     if request.method == 'POST':
-        new_username = request.form['username'].strip()
-        new_email = request.form['email'].strip()
-        new_avatar_url = request.form['avatar_url'].strip()
+        new_username = request.form.get('username', '').strip()
+        new_email = request.form.get('email', '').strip()
+        new_avatar_url = request.form.get('avatar_url', '').strip()
 
         if new_username != user.username and User.objects(username=new_username).first():
             flash(f"O username '{new_username}' já está em uso.", 'error')
@@ -441,9 +443,9 @@ def change_password():
     user = User.objects(id=user_id_obj).first_or_404()
 
     if request.method == 'POST':
-        current_password = request.form['current_password'].strip()
-        new_password = request.form['new_password'].strip()
-        confirm_new_password = request.form['confirm_new_password'].strip()
+        current_password = request.form.get('current_password', '').strip()
+        new_password = request.form.get('new_password', '').strip()
+        confirm_new_password = request.form.get('confirm_new_password', '').strip()
 
         if not user.check_password(current_password):
             flash('A sua palavra-passe atual está incorreta.', 'error')
@@ -529,7 +531,7 @@ def add_comment(task_id):
         # Redireciona para a página de tarefas públicas (lista) se tentar comentar em privada na URL
         return redirect(url_for('public_tasks')) 
 
-    comment_content = request.form['comment_content'].strip()
+    comment_content = request.form.get('comment_content', '').strip()
     if not comment_content:
         flash('O comentário não pode estar vazio.', 'error')
         # Redireciona de volta para a página de detalhes da tarefa
@@ -642,13 +644,7 @@ def admin_toggle_task_public_status(task_id):
     task.is_public = not task.is_public
     task.save()
     flash(f"Status de publicidade da tarefa '{task.title}' alterado para '{'Pública' if task.is_public else 'Privada'}'.", 'success')
-    # Redireciona para a página de onde veio, com um timestamp para forçar recarregamento.
-    # Se veio do admin_dashboard, usa o URL de admin_dashboard. Se veio de public_tasks, usa public_tasks.
-    # Melhoria: usar request.referrer ou passar um 'next' param. Por agora, redirecionar sempre para public_tasks
-    # (ou admin_dashboard se a tarefa foi toggled de lá).
-
-    # Uma abordagem mais robusta seria passar um parâmetro 'next' no formulário para onde redirecionar.
-    # Por simplicidade, vamos verificar de onde veio o pedido para redirecionar adequadamente.
+    
     referrer = request.referrer
     if referrer and 'admin' in referrer:
         return redirect(url_for('admin_dashboard', _t=datetime.utcnow().timestamp()))
