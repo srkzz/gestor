@@ -1,4 +1,4 @@
-# app.py (Versão para MongoDB com Recarregamento Forçado da Página Pública)
+# app.py (Versão Final com Paginação, Contadores e Detalhe de Tarefa Pública)
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from datetime import datetime, date
 from mongoengine.fields import ObjectId
 from functools import wraps 
+import math # Importa math para ceil na paginação
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
@@ -118,6 +119,7 @@ def home():
     if 'user_id' in session:
         return redirect(url_for('user_dashboard'))
     
+    # Busca 5 tarefas públicas recentes para a home
     recent_public_tasks_query = Task.objects(is_public=True).order_by('-date_created')
     recent_public_tasks = recent_public_tasks_query.limit(5).all()
 
@@ -177,7 +179,7 @@ def login():
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('user_dashboard'))
         else:
-            flash('Username/Email ou senha inválidos.', 'error')
+            flash('Credenciais inválidas.', 'error') 
             return render_template('login.html')
     
     return render_template('login.html')
@@ -205,7 +207,7 @@ def user_dashboard():
     sort_order = request.args.get('sort_order', 'asc')
     search_query = request.args.get('search', '').strip()
 
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get('page', 1, type=int) # Paginação: Página atual
     
     tasks_query = Task.objects(user=user)
 
@@ -231,19 +233,21 @@ def user_dashboard():
             {'tags': {'$regex': search_query, '$options': 'i'}}
         ]})
 
-    total_tasks = tasks_query.count()
-    total_pages = (total_tasks + PER_PAGE - 1) // PER_PAGE
+    total_tasks = tasks_query.count() # Contagem total ANTES da paginação
+    total_pages = math.ceil(total_tasks / PER_PAGE) # Cálculo do número total de páginas
 
     if sort_order == 'desc':
         sort_by_mongo = '-' + sort_by
     else:
         sort_by_mongo = sort_by
     
+    # Aplica a paginação na query final
     tasks = tasks_query.order_by(sort_by_mongo).skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
 
     all_categories = sorted(list(set(task.category for task in Task.objects(user=user) if task.category)))
     all_tags = sorted(list(set(tag for task in Task.objects(user=user) for tag in task.tags)))
 
+    # Contadores para o dashboard
     total_tasks_count = Task.objects(user=user).count()
     pending_tasks_count = Task.objects(user=user, is_completed=False).count()
     completed_tasks_count = Task.objects(user=user, is_completed=True).count()
@@ -255,14 +259,14 @@ def user_dashboard():
                            priority_filter=priority_filter,
                            category_filter=category_filter,
                            tag_filter=tag_filter,
-                           sort_by=sort_by,
+                           sort_by=sort_by.lstrip('-'), # Remove o '-' para exibir corretamente na UI
                            sort_order=sort_order,
                            search_query=search_query,
                            all_categories=all_categories,
                            all_tags=all_tags,
                            page=page,
-                           total_pages=total_pages,
-                           per_page=PER_PAGE,
+                           total_pages=total_pages, # Passa para a template
+                           per_page=PER_PAGE, # Passa para a template
                            total_tasks_count=total_tasks_count,
                            pending_tasks_count=pending_tasks_count,
                            completed_tasks_count=completed_tasks_count,
@@ -465,7 +469,7 @@ def change_password():
 @app.route('/public_tasks')
 def public_tasks():
     search_query = request.args.get('search', '').strip()
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get('page', 1, type=int) # Paginação: Página atual
     
     public_tasks_query = Task.objects(is_public=True)
     
@@ -477,19 +481,15 @@ def public_tasks():
             {'tags': {'$regex': search_query, '$options': 'i'}}
         ]})
 
-    total_public_tasks = public_tasks_query.count()
-    total_public_pages = (total_public_tasks + PER_PAGE - 1) // PER_PAGE
+    total_public_tasks = public_tasks_query.count() # Contagem total ANTES da paginação
+    total_public_pages = math.ceil(total_public_tasks / PER_PAGE) # Cálculo do número total de páginas
 
+    # Aplica a paginação na query final
     public_tasks = public_tasks_query.order_by('-date_created').skip((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     
-    # DEBUG: Prints para ajudar a diagnosticar o que está a ser carregado
-    print(f"DEBUG_PUBLIC_TASKS: Carregando /public_tasks. URL: {request.url}")
-    print(f"DEBUG_PUBLIC_TASKS: Número de tarefas públicas carregadas do DB: {len(public_tasks)}")
-    for task in public_tasks:
-        print(f"DEBUG_PUBLIC_TASKS: ID da Tarefa: {task.id}, Título: '{task.title}', É Pública: {task.is_public}")
-
-    for task in public_tasks:
-        task.comments = Comment.objects(task=task).order_by('date_created').all()
+    # Comentários são carregados dentro da página de detalhes agora.
+    # Removi o loop que carregava os comentários aqui para melhor performance
+    # ao navegar pela lista de tarefas.
 
     current_user_obj = None
     if 'user_id' in session:
@@ -498,7 +498,26 @@ def public_tasks():
     return render_template('public_tasks.html', public_tasks=public_tasks, 
                            current_user=current_user_obj, search_query=search_query,
                            page=page,
-                           total_pages=total_public_pages)
+                           total_pages=total_public_pages) # Passa para a template
+
+# NOVO: Rota para a página de detalhes de uma tarefa pública
+@app.route('/public_task/<string:task_id>')
+def public_task_detail(task_id):
+    task = Task.objects(id=task_id).first_or_404()
+
+    if not task.is_public:
+        flash('Esta tarefa não é pública e não pode ser visualizada.', 'error')
+        return redirect(url_for('public_tasks'))
+    
+    task_comments = Comment.objects(task=task).order_by('date_created').all()
+
+    current_user_obj = None
+    if 'user_id' in session:
+        current_user_obj = User.objects(id=ObjectId(session['user_id'])).first()
+
+    return render_template('public_task_detail.html', task=task, 
+                           comments=task_comments, current_user=current_user_obj)
+
 
 @app.route('/task/<string:task_id>/add_comment', methods=['POST'])
 @login_required
@@ -507,12 +526,14 @@ def add_comment(task_id):
 
     if not task.is_public:
         flash('Não é possível comentar em tarefas privadas.', 'error')
-        return redirect(url_for('public_tasks'))
+        # Redireciona para a página de tarefas públicas (lista) se tentar comentar em privada na URL
+        return redirect(url_for('public_tasks')) 
 
     comment_content = request.form['comment_content'].strip()
     if not comment_content:
         flash('O comentário não pode estar vazio.', 'error')
-        return redirect(url_for('public_tasks'))
+        # Redireciona de volta para a página de detalhes da tarefa
+        return redirect(url_for('public_task_detail', task_id=task_id))
 
     user_id_obj = ObjectId(session['user_id'])
     current_user = User.objects(id=user_id_obj).first_or_404()
@@ -524,29 +545,57 @@ def add_comment(task_id):
     )
     new_comment.save()
     flash('Comentário adicionado com sucesso!', 'success')
-    return redirect(url_for('public_tasks'))
+    # Redireciona de volta para a página de detalhes da tarefa
+    return redirect(url_for('public_task_detail', task_id=task_id))
+
 
 @app.route('/comment/<string:comment_id>/delete')
 @login_required
 def delete_comment(comment_id):
     comment = Comment.objects(id=comment_id).first_or_404()
 
+    # Guarda o ID da tarefa para redirecionar de volta à página de detalhes da tarefa
+    task_id = str(comment.task.id) 
+
     if str(comment.user.id) != session['user_id']:
         flash('Você não tem permissão para apagar este comentário.', 'error')
-        return redirect(url_for('public_tasks'))
+        return redirect(url_for('public_task_detail', task_id=task_id))
 
     comment.delete()
     flash('Comentário apagado com sucesso!', 'success')
-    return redirect(url_for('public_tasks'))
+    return redirect(url_for('public_task_detail', task_id=task_id))
+
 
 # Rota para o Painel de Administração
 @app.route('/admin')
 @admin_required 
 def admin_dashboard():
-    all_users = User.objects().order_by('username').all()
-    all_tasks = Task.objects().order_by('-date_created').all() 
+    # Paginação para Utilizadores
+    users_page = request.args.get('users_page', 1, type=int)
+    users_query = User.objects().order_by('username')
+    total_users = users_query.count()
+    total_users_pages = math.ceil(total_users / PER_PAGE)
+    all_users = users_query.skip((users_page - 1) * PER_PAGE).limit(PER_PAGE).all()
+
+    # Paginação para Tarefas
+    tasks_page = request.args.get('tasks_page', 1, type=int)
+    tasks_query = Task.objects().order_by('-date_created')
+    total_tasks = tasks_query.count()
+    total_tasks_pages = math.ceil(total_tasks / PER_PAGE)
+    all_tasks = tasks_query.skip((tasks_page - 1) * PER_PAGE).limit(PER_PAGE).all()
+
     current_user = User.objects(id=ObjectId(session['user_id'])).first()
-    return render_template('admin_dashboard.html', all_users=all_users, all_tasks=all_tasks, current_user=current_user)
+    
+    return render_template('admin_dashboard.html', 
+                           all_users=all_users, 
+                           users_page=users_page, 
+                           total_users_pages=total_users_pages,
+                           all_tasks=all_tasks, 
+                           tasks_page=tasks_page, 
+                           total_tasks_pages=total_tasks_pages,
+                           current_user=current_user,
+                           per_page=PER_PAGE # Passa PER_PAGE para o template se necessário
+                           )
 
 # Rota para alternar o status de administrador de um utilizador
 @app.route('/admin/user/<string:user_id>/toggle_admin', methods=['POST'])
@@ -593,8 +642,18 @@ def admin_toggle_task_public_status(task_id):
     task.is_public = not task.is_public
     task.save()
     flash(f"Status de publicidade da tarefa '{task.title}' alterado para '{'Pública' if task.is_public else 'Privada'}'.", 'success')
-    # NOVO: Adiciona um timestamp ao redirecionamento para forçar o recarregamento completo da página
-    return redirect(url_for('public_tasks', _t=datetime.utcnow().timestamp())) 
+    # Redireciona para a página de onde veio, com um timestamp para forçar recarregamento.
+    # Se veio do admin_dashboard, usa o URL de admin_dashboard. Se veio de public_tasks, usa public_tasks.
+    # Melhoria: usar request.referrer ou passar um 'next' param. Por agora, redirecionar sempre para public_tasks
+    # (ou admin_dashboard se a tarefa foi toggled de lá).
+
+    # Uma abordagem mais robusta seria passar um parâmetro 'next' no formulário para onde redirecionar.
+    # Por simplicidade, vamos verificar de onde veio o pedido para redirecionar adequadamente.
+    referrer = request.referrer
+    if referrer and 'admin' in referrer:
+        return redirect(url_for('admin_dashboard', _t=datetime.utcnow().timestamp()))
+    else:
+        return redirect(url_for('public_tasks', _t=datetime.utcnow().timestamp()))
 
 # --- Error Handlers Personalizados ---
 

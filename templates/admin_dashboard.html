@@ -7,8 +7,9 @@
     <span class="d-inline-block p-2 border-bottom border-3 border-primary">Painel de Administração</span>
 </h2>
 
+{# SECÇÃO DE GESTÃO DE UTILIZADORES #}
 <div class="row justify-content-center mt-4">
-    <div class="col-lg-10 mb-5"> {# Adicionado mb-5 para espaçamento #}
+    <div class="col-lg-10 mb-5">
         <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
             <div class="card-header text-center">
                 <h3 class="card-title text-white mb-0"><i class="bi bi-people-fill me-2"></i>Gestão de Utilizadores</h3>
@@ -16,9 +17,9 @@
             <div class="card-body">
                 {% if all_users %}
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle">
-                        <thead>
-                            <tr class="text-primary">
+                    <table class="table table-dark table-hover align-middle rounded-3 overflow-hidden">
+                        <thead class="table-header-modern">
+                            <tr>
                                 <th scope="col">Avatar</th>
                                 <th scope="col">Username</th>
                                 <th scope="col">Email</th>
@@ -75,6 +76,26 @@
                         </tbody>
                     </table>
                 </div>
+
+                {# Paginação para Utilizadores #}
+                {% if total_users_pages > 1 %}
+                <nav aria-label="Paginação de Utilizadores">
+                    <ul class="pagination justify-content-center mt-4">
+                        <li class="page-item {% if users_page == 1 %}disabled{% endif %}">
+                            <a class="page-link bg-dark text-light border-secondary rounded-start-pill" href="{{ url_for('admin_dashboard', users_page=users_page-1, tasks_page=tasks_page) }}">&laquo; Anterior</a>
+                        </li>
+                        {% for p in range(1, total_users_pages + 1) %}
+                        <li class="page-item {% if p == users_page %}active{% endif %}">
+                            <a class="page-link {% if p == users_page %}bg-primary border-primary{% else %}bg-dark text-light border-secondary{% endif %}" href="{{ url_for('admin_dashboard', users_page=p, tasks_page=tasks_page) }}">{{ p }}</a>
+                        </li>
+                        {% endfor %}
+                        <li class="page-item {% if users_page == total_users_pages %}disabled{% endif %}">
+                            <a class="page-link bg-dark text-light border-secondary rounded-end-pill" href="{{ url_for('admin_dashboard', users_page=users_page+1, tasks_page=tasks_page) }}">Próximo &raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+
                 {% else %}
                     <div class="alert alert-info text-center bg-dark text-white border-0 py-4">
                         <i class="bi bi-info-circle display-4 mb-3"></i>
@@ -89,7 +110,7 @@
     </div>
 </div>
 
-{# NOVO: Seção de Gestão de Tarefas #}
+{# SECÇÃO DE GESTÃO DE TAREFAS #}
 <div class="row justify-content-center mt-4">
     <div class="col-lg-10">
         <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
@@ -99,9 +120,9 @@
             <div class="card-body">
                 {% if all_tasks %}
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle">
-                        <thead>
-                            <tr class="text-primary">
+                    <table class="table table-dark table-hover align-middle rounded-3 overflow-hidden">
+                        <thead class="table-header-modern">
+                            <tr>
                                 <th scope="col">Título</th>
                                 <th scope="col">Criado por</th>
                                 <th scope="col">Categoria</th>
@@ -139,18 +160,39 @@
                                         {% endif %}
                                     </form>
                                     {# Futura opção para apagar tarefa, se desejar #}
-                                    {# <form method="POST" action="{{ url_for('admin_delete_task', task_id=task.id) }}" class="d-inline ms-2">
+                                    {# Adicionando um botão de exclusão de tarefa no admin dashboard (protegido por admin_required) #}
+                                    <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" class="d-inline ms-2">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill" onclick="return confirm('Apagar tarefa \'{{ task.title }}\'?')" title="Apagar Tarefa">
-                                            <i class="bi bi-trash-fill"></i>
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill" onclick="return confirm('ATENÇÃO: Tem certeza que deseja apagar a tarefa \'{{ task.title }}\'? Esta ação é irreversível!')" title="Apagar Tarefa">
+                                            <i class="bi bi-trash-fill"></i> Apagar
                                         </button>
-                                    </form> #}
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+
+                {# Paginação para Tarefas #}
+                {% if total_tasks_pages > 1 %}
+                <nav aria-label="Paginação de Tarefas">
+                    <ul class="pagination justify-content-center mt-4">
+                        <li class="page-item {% if tasks_page == 1 %}disabled{% endif %}">
+                            <a class="page-link bg-dark text-light border-secondary rounded-start-pill" href="{{ url_for('admin_dashboard', tasks_page=tasks_page-1, users_page=users_page) }}">&laquo; Anterior</a>
+                        </li>
+                        {% for p in range(1, total_tasks_pages + 1) %}
+                        <li class="page-item {% if p == tasks_page %}active{% endif %}">
+                            <a class="page-link {% if p == tasks_page %}bg-primary border-primary{% else %}bg-dark text-light border-secondary{% endif %}" href="{{ url_for('admin_dashboard', tasks_page=p, users_page=users_page) }}">{{ p }}</a>
+                        </li>
+                        {% endfor %}
+                        <li class="page-item {% if tasks_page == total_tasks_pages %}disabled{% endif %}">
+                            <a class="page-link bg-dark text-light border-secondary rounded-end-pill" href="{{ url_for('admin_dashboard', tasks_page=tasks_page+1, users_page=users_page) }}">Próximo &raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+
                 {% else %}
                     <div class="alert alert-info text-center bg-dark text-white border-0 py-4">
                         <i class="bi bi-info-circle display-4 mb-3"></i>
@@ -159,7 +201,7 @@
                 {% endif %}
             </div>
             <div class="card-footer text-center text-muted small">
-                Este painel permite gerir a visibilidade de todas as tarefas na plataforma.
+                Este painel permite gerir a visibilidade e exclusão de todas as tarefas na plataforma.
             </div>
         </div>
     </div>

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Tarefa: {{ task.title }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-white display-5 fw-bold text-center text-uppercase tracking-wider">
+    <span class="d-inline-block p-2 border-bottom border-3 border-primary">Detalhes da Tarefa</span>
+</h2>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title text-white mb-0">{{ task.title }}</h3>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-info me-2 rounded-pill">{{ task.category }}</span>
+                    {% if current_user_is_admin %}
+                        {# Botão de Ação Admin para alternar visibilidade, visível apenas para admins #}
+                        <form method="POST" action="{{ url_for('admin_toggle_task_public_status', task_id=task.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if task.is_public %}
+                                <button type="submit" class="btn btn-sm btn-warning rounded-pill" 
+                                        onclick="return confirm('Tem certeza que deseja tornar a tarefa \\'{{ task.title }}\\' privada?')" 
+                                        title="Tornar Privada">
+                                    <i class="bi bi-eye-slash-fill"></i> Privada
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-sm btn-info rounded-pill" 
+                                        onclick="return confirm('Tem certeza que deseja tornar a tarefa \\'{{ task.title }}\\' pública?')" 
+                                        title="Tornar Pública">
+                                    <i class="bi bi-eye-fill"></i> Pública
+                                </button>
+                            {% endif %}
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text text-white-75 fs-5">{{ task.description or 'Sem descrição detalhada.' }}</p>
+                {% if task.tags %}
+                    <div class="mb-3">
+                        {% for tag in task.tags %}
+                            <span class="badge bg-primary me-1 rounded-pill px-3 py-2">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <ul class="list-unstyled mb-4 small text-muted">
+                    <li><i class="bi bi-person-fill me-2"></i> Criado por: 
+                        <img src="{{ task.user.avatar_url }}" alt="Avatar" class="rounded-circle me-1" style="width: 25px; height: 25px; object-fit: cover;">
+                        <strong>{{ task.user.username }}</strong>
+                    </li>
+                    <li><i class="bi bi-calendar me-2"></i> Data Limite: {{ task.due_date.strftime('%d/%m/%Y') }}</li>
+                    <li>
+                        {# Ícones para Prioridade #}
+                        {% if task.priority == 'alta' %}
+                            <span class="priority-icon priority-high" title="Prioridade Alta"><i class="bi bi-arrow-up-circle-fill me-2"></i></span>
+                        {% elif task.priority == 'media' %}
+                            <span class="priority-icon priority-medium" title="Prioridade Média"><i class="bi bi-dot me-2"></i></span>
+                        {% else %} {# baixa #}
+                            <span class="priority-icon priority-low" title="Prioridade Baixa"><i class="bi bi-arrow-down-circle-fill me-2"></i></span>
+                        {% endif %}
+                        Prioridade: {{ task.priority | capitalize }}
+                    </li>
+                    <li><i class="bi bi-clock me-2"></i> Criada em: {{ task.date_created.strftime('%d/%m/%Y %H:%M') }}</li>
+                    <li><i class="bi bi-flag-fill me-2"></i> Estado: 
+                        {% if task.is_completed %}
+                            <span class="badge bg-success rounded-pill">Concluída</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark rounded-pill">Pendente</span>
+                        {% endif %}
+                    </li>
+                </ul>
+
+                <hr class="border-secondary opacity-25">
+
+                <h4 class="text-white fw-bold mb-3"><i class="bi bi-chat-dots-fill me-2"></i>Comentários ({{ comments|length }}):</h4>
+                {% if comments %}
+                    <ul class="list-group list-group-flush mb-4">
+                        {% for comment in comments %}
+                            <li class="list-group-item bg-dark text-light border-secondary rounded mb-2 py-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                    <strong class="text-info">{{ comment.user.username }}</strong>
+                                    <small class="text-muted ms-auto">{{ comment.date_created.strftime('%d/%m/%Y %H:%M') }}</small>
+                                    {# Botão de Apagar Comentário (visível apenas para o autor ou para admins) #}
+                                    {% if current_user and (comment.user.id == current_user.id or current_user.is_admin) %}
+                                        <a href="{{ url_for('delete_comment', comment_id=comment.id) }}" 
+                                           class="btn btn-danger btn-sm ms-2 rounded-pill" 
+                                           onclick="return confirm('Tem certeza que deseja apagar este comentário?')" 
+                                           title="Apagar Comentário">
+                                            <i class="bi bi-trash"></i> Apagar
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-0 text-white-75">{{ comment.content }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="alert alert-info text-center bg-dark text-white border-0 py-3 rounded-pill" role="alert">
+                        <i class="bi bi-chat-left-text-fill me-2"></i> Seja o primeiro a comentar!
+                    </div>
+                {% endif %}
+
+                {# Formulário para Adicionar Comentário #}
+                {% if current_user %}
+                    <form method="POST" action="{{ url_for('add_comment', task_id=task.id) }}" class="mt-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="input-group">
+                            <input type="text" name="comment_content" class="form-control bg-dark text-light border-secondary rounded-start-pill" placeholder="Adicione um comentário..." required>
+                            <button class="btn btn-outline-info rounded-end-pill" type="submit"><i class="bi bi-chat-fill me-2"></i> Comentar</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <p class="text-muted small mt-4 text-center">Faça <a href="{{ url_for('login') }}" class="text-info">Login</a> para comentar.</p>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('public_tasks') }}" class="btn btn-outline-primary rounded-pill px-4 py-2"><i class="bi bi-arrow-left-circle me-2"></i> Voltar às Tarefas Públicas</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Estilos adicionais para os ícones de prioridade */
+    .priority-icon {
+        font-size: 1.1rem;
+        margin-right: 5px;
+    }
+    .priority-high { color: #dc3545; } /* Vermelho */
+    .priority-medium { color: #ffc107; } /* Amarelo */
+    .priority-low { color: #17a2b8; } /* Ciano */
+</style>
+{% endblock %}
