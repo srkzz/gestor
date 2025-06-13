@@ -9,8 +9,10 @@
     <!-- Bootstrap Icons (continuam a ser úteis para mais variedade de ícones) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- O SEU PRÓPRIO CSS (contém o gradiente de fundo e os estilos da navbar personalizada) -->
-    {# Adicionado um timestamp para forçar o navegador a carregar sempre a versão mais recente do CSS #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', _t=now.timestamp()) }}">
+    
+    {# NOVO: Link explícito para o Favicon com cache-buster #}
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico', _t=now.timestamp()) }}">
 </head>
 <body class="bg-dark text-light min-vh-100 d-flex flex-column position-relative">
     {# Este div será o fundo com o gradiente. A classe `gradient-background` está definida em style.css. #}
