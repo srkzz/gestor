@@ -6,29 +6,33 @@
     <title>{% block title %}Gestor de Tarefas{% endblock %}</title>
     <!-- MDBootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.2.0/mdb.min.css" rel="stylesheet"/>
-    <!-- Bootstrap Icons -->
+    <!-- Bootstrap Icons (continuam a ser úteis para mais variedade de ícones) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- O SEU PRÓPRIO CSS -->
+    <!-- O SEU PRÓPRIO CSS (contém o gradiente de fundo e os estilos da navbar personalizada) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}"> 
 </head>
 <body class="bg-dark text-light min-vh-100 d-flex flex-column position-relative">
+    {# Este div será o fundo com o gradiente. A classe `gradient-background` está definida em style.css. #}
     <div class="gradient-background"></div> 
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-mdb-navbar">
         <div class="container-fluid">
+            <!-- Navbar brand -->
             <a class="navbar-brand me-auto" href="{{ url_for('home') }}">
                 <strong>GESTOR DE TAREFAS</strong>
             </a>
+
+            <!-- Toggle button -->
             <button class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-target="#navbarContent"
                 aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                <i class="bi bi-list"></i>
+                <i class="bi bi-list"></i> {# Ícone de menu para mobile #}
             </button>
+
+            <!-- Collapsible wrapper -->
             <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <!-- Left links -->
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> {# Alinhado à direita #}
                     {% if 'user_id' in session %}
                         <li class="nav-item">
                             <a class="nav-link" aria-current="page" href="{{ url_for('user_dashboard') }}" data-mdb-ripple-init>
@@ -45,16 +49,11 @@
                                 <i class="bi bi-people-fill me-1"></i> Público
                             </a>
                         </li>
-                        {# NOVO: Link para o Painel de Administração (apenas para admins) #}
-                        {% if session.get('is_admin') %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}" data-mdb-ripple-init>
-                                    <i class="bi bi-gear-fill me-1"></i> Admin
-                                </a>
-                            </li>
-                        {% endif %}
+                        
+                        {# Dropdown do Utilizador (Perfil, Mudar Senha, Logout) #}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-mdb-dropdown-init aria-expanded="false">
+                                {# Avatar do Utilizador na Navbar #}
                                 <img src="{{ session.get('avatar_url', 'https://www.gravatar.com/avatar/?d=mp') }}" 
                                      alt="Avatar" 
                                      class="rounded-circle me-2 custom-avatar-small" 
@@ -70,6 +69,7 @@
                             </ul>
                         </li>
                     {% else %}
+                        {# Links visíveis para utilizadores não logados #}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('login') }}" data-mdb-ripple-init>
                                 <i class="bi bi-box-arrow-in-right me-1"></i> Login
@@ -82,28 +82,40 @@
                         </li>
                     {% endif %}
                 </ul>
+                <!-- Left links -->
             </div>
+            <!-- Collapsible wrapper -->
         </div>
+        <!-- Container wrapper -->
     </nav>
+    <!-- Navbar -->
 
     {# Conteúdo principal da página #}
     <main class="flex-grow-1 container mt-5 pt-5 position-relative z-1">
-        {# Contêiner para Notificações Toast #}
+        {# NOVO: Contêiner para Notificações Toast. Posicionado fixo no canto inferior direito. #}
         <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;"></div>
+
+        <!-- Mensagens Flash (feedback para o utilizador) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {# Esta div .flashes será temporária e removida pelo JS após criar os toasts #}
+                <div class="flashes d-none"> {# Adicionado d-none para que não seja visível antes do JS processar #}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" role="alert"> {# Removido fade show, gerido pelo JS #}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
         {% block content %}{% endblock %}
     </main>
-
-    <!-- Rodapé -->
-    <footer class="footer bg-dark text-light text-center py-3 mt-auto">
-        <div class="container">
-            <p class="mb-0 small">&copy; {{ now.year }} {{ 'Ruben Darluce e Partrick direitos reservados' }}. Todos os direitos reservados.</p>
-        </div>
-    </footer>
 
     <!-- MDBootstrap JS Bundle -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.2.0/mdb.umd.min.js"></script>
 
-    {# Script para exibir as Flash Messages como Toasts #}
+    {# NOVO: Script para exibir as Flash Messages como Toasts MDBootstrap #}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const flashes = document.querySelectorAll('.flashes .alert');
@@ -112,17 +124,17 @@
             flashes.forEach(flashEl => {
                 const message = flashEl.textContent.trim();
                 const category = flashEl.classList.contains('alert-success') ? 'success' : 
-                                 flashEl.classList.contains('alert-error') ? 'danger' : 
+                                 flashEl.classList.contains('alert-error') ? 'danger' : // Flask usa 'error' para a categoria
                                  flashEl.classList.contains('alert-warning') ? 'warning' : 
                                  flashEl.classList.contains('alert-info') ? 'info' : 'primary';
 
                 const toastEl = document.createElement('div');
-                toastEl.classList.add('toast', 'fade', 'show');
+                toastEl.classList.add('toast', 'fade'); // 'show' será adicionado por mdb.Toast().show()
                 toastEl.setAttribute('role', 'alert');
                 toastEl.setAttribute('aria-live', 'assertive');
                 toastEl.setAttribute('aria-atomic', 'true');
                 toastEl.setAttribute('data-mdb-autohide', 'true');
-                toastEl.setAttribute('data-mdb-delay', '5000');
+                toastEl.setAttribute('data-mdb-delay', '5000'); // Toast desaparece após 5 segundos
 
                 toastEl.innerHTML = `
                     <div class="toast-header bg-${category} text-white">
@@ -135,15 +147,17 @@
                 `;
                 
                 toastContainer.appendChild(toastEl);
+                // Inicializa e mostra o toast usando a API do MDBootstrap
                 new mdb.Toast(toastEl).show();
             });
 
+            // Opcional: remover a div original com as flashes para evitar duplicidade ou flashes "estranhas"
             const flashContainer = document.querySelector('.flashes');
             if (flashContainer) {
                 flashContainer.remove();
             }
         });
     </script>
-    {% block scripts %}{% endblock %} {# Permite que templates filhas adicionem scripts #}
+    {% block scripts %}{% endblock %}
 </body>
 </html>
