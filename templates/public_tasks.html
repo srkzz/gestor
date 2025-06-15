@@ -79,7 +79,7 @@
                                 {% endif %}
                                 Prioridade: {{ task.priority | capitalize }}
                             </li>
-                            <li>Comentários: ({{ task.comments|length }})</li> 
+                            <li><h4 class="text-white fw-bold mb-3"><i class="bi bi-chat-dots-fill me-2"></i>Comentários ({{ comments|length }}):</h4></li>
                         </ul>
                         <div class="d-flex justify-content-between align-items-center mt-auto">
                             <a href="{{ url_for('public_task_detail', task_id=task.id) }}" class="btn btn-primary rounded-pill">
