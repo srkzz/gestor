@@ -20,7 +20,7 @@ app = Flask(__name__)
 # --- Configuração da Aplicação ---
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', '000d88cd9d44446ebdd237eb6b0db000')
 app.config['MONGODB_SETTINGS'] = {
-    'host': os.getenv('MONGO_URI', "mongodb+srv://patrickribeiropt:zVMwTybneJ3WKBis@cluster0.jyjqmhv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+    'host': os.getenv('MONGO_URI', "mongodb+srv://srkz:<Puta23Ideia0923*>@s1.bd9hrwc.mongodb.net/?appName=S1")
 }
 
 # Constante para o número de itens por página
