@@ -32,13 +32,14 @@ load_dotenv()
 
 
 # Inicializa as extensões sem associá-las imediatamente à aplicação
+# Extensões
 db = MongoEngine()
 bcrypt = Bcrypt()
 csrf = CSRFProtect()
 
 
 def create_app():
-    app = Flask(__name__)
+    flask_app = Flask(__name__)
 
     mongo_uri = os.getenv("MONGO_URI")
     secret_key = os.getenv("SECRET_KEY")
@@ -46,23 +47,29 @@ def create_app():
     if not mongo_uri:
         raise RuntimeError("A variável MONGO_URI não está configurada.")
 
+    if not mongo_uri.startswith(("mongodb://", "mongodb+srv://")):
+        raise RuntimeError(
+            "MONGO_URI inválida. Deve começar por mongodb:// ou mongodb+srv://"
+        )
+
     if not secret_key:
         raise RuntimeError("A variável SECRET_KEY não está configurada.")
 
-    app.config["SECRET_KEY"] = secret_key
-    app.config["MONGODB_SETTINGS"] = {
-        "host": mongo_uri
+    flask_app.config["SECRET_KEY"] = secret_key
+    flask_app.config["MONGODB_SETTINGS"] = {
+        "host": mongo_uri,
+        "serverSelectionTimeoutMS": 5000,
+        "connectTimeoutMS": 5000
     }
 
-    # Associa as extensões à aplicação Flask
-    db.init_app(app)
-    bcrypt.init_app(app)
-    csrf.init_app(app)
+    db.init_app(flask_app)
+    bcrypt.init_app(flask_app)
+    csrf.init_app(flask_app)
 
-    return app
+    return flask_app
 
 
-# A Vercel procura esta variável global
+# IMPORTANTE: tem de estar fora da função e sem espaços antes
 app = create_app()
 
 PER_PAGE = 10
