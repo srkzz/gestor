@@ -1,10 +1,20 @@
 # app.py (Versão com Aprovação de Admin, Criação em Lote, Assinaturas e Exportação PDF)
-
 import os
 import math
 from datetime import datetime, date
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, Response
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session,
+    abort,
+    Response
+)
 from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
@@ -12,27 +22,45 @@ from dotenv import load_dotenv
 from mongoengine.fields import ObjectId
 from fpdf import FPDF
 
-# Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
+
+# Carrega o .env apenas quando estiver disponível
 load_dotenv()
 
-db = MongoEngine(app)
-bcrypt = Bcrypt(app)
-csrf = CSRFProtect(app)
+
+# Inicializa as extensões sem associá-las imediatamente à aplicação
+db = MongoEngine()
+bcrypt = Bcrypt()
+csrf = CSRFProtect()
+
 
 def create_app():
     app = Flask(__name__)
 
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    mongo_uri = os.getenv("MONGO_URI")
+    secret_key = os.getenv("SECRET_KEY")
+
+    if not mongo_uri:
+        raise RuntimeError("A variável MONGO_URI não está configurada.")
+
+    if not secret_key:
+        raise RuntimeError("A variável SECRET_KEY não está configurada.")
+
+    app.config["SECRET_KEY"] = secret_key
     app.config["MONGODB_SETTINGS"] = {
-        "host": os.getenv("MONGO_URI")
+        "host": mongo_uri
     }
 
+    # Associa as extensões à aplicação Flask
     db.init_app(app)
+    bcrypt.init_app(app)
+    csrf.init_app(app)
 
     return app
 
 
+# A Vercel procura esta variável global
 app = create_app()
+
 PER_PAGE = 10
 
 @app.context_processor
