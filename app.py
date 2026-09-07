@@ -39,7 +39,7 @@ csrf = CSRFProtect()
 
 
 def create_app():
-    flask_app = Flask(__name__)
+    app = Flask(__name__)
 
     mongo_uri = os.getenv("MONGO_URI")
     secret_key = os.getenv("SECRET_KEY")
