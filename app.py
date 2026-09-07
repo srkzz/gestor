@@ -14,9 +14,6 @@ from fpdf import FPDF
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
-from flask import Flask
-from flask_mongoengine import MongoEngine
-import os
 
 db = MongoEngine()
 bcrypt = Bcrypt(app)
