@@ -23,16 +23,18 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'muda-esta-chave-em-producao'
 # IMPORTANTE: a connection string vem SEMPRE da variável de ambiente MONGO_URI.
 # Nunca colocar aqui um valor por defeito com password real — isso expõe a
 # credencial a quem tiver acesso ao código (ex: repositório público no GitHub).
-mongo_uri = os.getenv('MONGO_URI')
-if not mongo_uri:
-    raise RuntimeError(
-        "A variável de ambiente MONGO_URI não está definida. "
-        "Configura-a no .env (local) ou nas Environment Variables do Vercel (produção)."
-    )
+mongo_uri = os.getenv("MONGO_URI")
 
-app.config['MONGODB_SETTINGS'] = {
-    'host': mongo_uri
+if not mongo_uri:
+raise RuntimeError("MONGO_URI não está configurada")
+
+app.config["MONGODB_SETTINGS"] = {
+
+"host": mongo_uri
+
 }
+
+db = MongoEngine(app)
 
 PER_PAGE = 10
 
