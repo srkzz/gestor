@@ -174,6 +174,105 @@ class RequisitionItem(db.EmbeddedDocument):
         default="UN"
     )
 
+class Requisition(db.Document):
+    machine_reference = db.StringField(
+        required=True,
+        max_length=100
+    )
+
+    brand = db.StringField(
+        required=True,
+        max_length=100
+    )
+
+    model = db.StringField(
+        required=True,
+        max_length=100
+    )
+
+    serial_number = db.StringField(
+        required=False,
+        max_length=150
+    )
+
+    items = db.EmbeddedDocumentListField(
+        RequisitionItem,
+        required=True
+    )
+
+    priority = db.StringField(
+        required=True,
+        default="media",
+        choices=["baixa", "media", "alta"]
+    )
+
+    due_date = db.DateField(required=True)
+
+    description = db.StringField(required=False)
+
+    user = db.ReferenceField(
+        User,
+        required=True,
+        reverse_delete_rule=2
+    )
+
+    date_created = db.DateTimeField(
+        default=datetime.utcnow
+    )
+
+    status = db.StringField(
+        required=True,
+        default="rascunho",
+        choices=[
+            "rascunho",
+            "submetida",
+            "aprovada",
+            "rejeitada"
+        ]
+    )
+
+    requester_signature = db.StringField()
+    requester_signed_at = db.DateTimeField()
+
+    approved_by = db.ReferenceField(User)
+    approver_signature = db.StringField()
+    approved_at = db.DateTimeField()
+
+    rejection_reason = db.StringField()
+
+    meta = {
+        "indexes": [
+            "status",
+            "user",
+            "brand",
+            "model",
+            "machine_reference",
+            "-date_created"
+        ]
+    }
+
+    @property
+    def requisition_number(self):
+        created = self.date_created or datetime.utcnow()
+
+        return (
+            f"REQ-{created.strftime('%Y%m%d')}-"
+            f"{str(self.id)[-6:].upper()}"
+        )
+
+    @property
+    def can_be_edited(self):
+        return self.status in ["rascunho", "rejeitada"]
+
+    def __repr__(self):
+        return (
+            f"<Requisition "
+            f"id={self.id}, "
+            f"machine={self.machine_reference}, "
+            f"status={self.status}>"
+        )
+
+
 class Suggestion(db.Document):
     field_name = db.StringField(
         required=True,
@@ -810,6 +909,313 @@ def export_tasks_pdf():
         pdf_output,
         mimetype='application/pdf',
         headers={'Content-Disposition': 'attachment; filename=tarefas_aprovadas.pdf'}
+    )
+
+@app.route("/requisitions/new", methods=["GET", "POST"])
+@login_required
+def add_requisition():
+    user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    suggestion_fields = [
+        "machine_reference",
+        "brand",
+        "model",
+        "part_code",
+        "part_description",
+        "unit"
+    ]
+
+    suggestions = {
+        field: Suggestion.objects(
+            field_name=field
+        ).order_by("value")
+        for field in suggestion_fields
+    }
+
+    if request.method == "POST":
+        machine_reference = request.form.get(
+            "machine_reference",
+            ""
+        ).strip()
+
+        brand = request.form.get(
+            "brand",
+            ""
+        ).strip()
+
+        model = request.form.get(
+            "model",
+            ""
+        ).strip()
+
+        serial_number = request.form.get(
+            "serial_number",
+            ""
+        ).strip()
+
+        priority = request.form.get(
+            "priority",
+            "media"
+        ).strip()
+
+        due_date_raw = request.form.get(
+            "due_date",
+            ""
+        ).strip()
+
+        description = request.form.get(
+            "description",
+            ""
+        ).strip()
+
+        signature = request.form.get(
+            "requester_signature",
+            ""
+        ).strip()
+
+        submit_action = request.form.get(
+            "submit_action",
+            "draft"
+        )
+
+        part_codes = request.form.getlist("part_code[]")
+        part_descriptions = request.form.getlist(
+            "part_description[]"
+        )
+        quantities = request.form.getlist("quantity[]")
+        units = request.form.getlist("unit[]")
+
+        if not all([
+            machine_reference,
+            brand,
+            model,
+            due_date_raw
+        ]):
+            flash(
+                "Preencha a referência da máquina, marca, "
+                "modelo e data necessária.",
+                "error"
+            )
+
+            return render_template(
+                "add_requisition.html",
+                user=user,
+                suggestions=suggestions
+            )
+
+        try:
+            due_date = datetime.strptime(
+                due_date_raw,
+                "%Y-%m-%d"
+            ).date()
+        except ValueError:
+            flash(
+                "A data necessária não é válida.",
+                "error"
+            )
+
+            return render_template(
+                "add_requisition.html",
+                user=user,
+                suggestions=suggestions
+            )
+
+        items = []
+
+        for index, part_code in enumerate(part_codes):
+            part_code = part_code.strip()
+
+            part_description = (
+                part_descriptions[index].strip()
+                if index < len(part_descriptions)
+                else ""
+            )
+
+            quantity_raw = (
+                quantities[index].strip()
+                if index < len(quantities)
+                else "1"
+            )
+
+            unit = (
+                units[index].strip().upper()
+                if index < len(units)
+                else "UN"
+            )
+
+            if not part_code and not part_description:
+                continue
+
+            if not part_code or not part_description:
+                flash(
+                    f"Material {index + 1}: indique o código "
+                    "e a descrição da peça.",
+                    "error"
+                )
+
+                return render_template(
+                    "add_requisition.html",
+                    user=user,
+                    suggestions=suggestions
+                )
+
+            try:
+                quantity = int(quantity_raw)
+
+                if quantity < 1:
+                    raise ValueError
+            except ValueError:
+                flash(
+                    f"Material {index + 1}: quantidade inválida.",
+                    "error"
+                )
+
+                return render_template(
+                    "add_requisition.html",
+                    user=user,
+                    suggestions=suggestions
+                )
+
+            items.append(
+                RequisitionItem(
+                    part_code=part_code,
+                    part_description=part_description,
+                    quantity=quantity,
+                    unit=unit or "UN"
+                )
+            )
+
+        if not items:
+            flash(
+                "Adicione pelo menos uma peça ou material.",
+                "error"
+            )
+
+            return render_template(
+                "add_requisition.html",
+                user=user,
+                suggestions=suggestions
+            )
+
+        if submit_action == "submit" and not signature:
+            flash(
+                "Assine a requisição antes de a submeter.",
+                "error"
+            )
+
+            return render_template(
+                "add_requisition.html",
+                user=user,
+                suggestions=suggestions
+            )
+
+        status = (
+            "submetida"
+            if submit_action == "submit"
+            else "rascunho"
+        )
+
+        requisition = Requisition(
+            machine_reference=machine_reference,
+            brand=brand,
+            model=model,
+            serial_number=serial_number,
+            items=items,
+            priority=priority,
+            due_date=due_date,
+            description=description,
+            user=user,
+            status=status
+        )
+
+        if status == "submetida":
+            requisition.requester_signature = signature
+            requisition.requester_signed_at = datetime.utcnow()
+
+        try:
+            requisition.save()
+
+            Suggestion.save_suggestion(
+                "machine_reference",
+                machine_reference,
+                user
+            )
+            Suggestion.save_suggestion("brand", brand, user)
+            Suggestion.save_suggestion("model", model, user)
+
+            for item in items:
+                Suggestion.save_suggestion(
+                    "part_code",
+                    item.part_code,
+                    user
+                )
+                Suggestion.save_suggestion(
+                    "part_description",
+                    item.part_description,
+                    user
+                )
+                Suggestion.save_suggestion(
+                    "unit",
+                    item.unit,
+                    user
+                )
+
+            if status == "submetida":
+                flash(
+                    f"Requisição {requisition.requisition_number} "
+                    "assinada e enviada para aprovação.",
+                    "success"
+                )
+            else:
+                flash(
+                    f"Requisição {requisition.requisition_number} "
+                    "guardada como rascunho.",
+                    "success"
+                )
+
+            return redirect(
+                url_for("requisition_detail", requisition_id=requisition.id)
+            )
+
+        except Exception as error:
+            app.logger.exception(
+                "Erro ao guardar a requisição"
+            )
+
+            flash(
+                f"Não foi possível guardar a requisição: {error}",
+                "error"
+            )
+
+    return render_template(
+        "add_requisition.html",
+        user=user,
+        suggestions=suggestions
+    )
+
+@app.route("/requisitions/<string:requisition_id>")
+@login_required
+def requisition_detail(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    current_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    if (
+        str(requisition.user.id) != str(current_user.id)
+        and not current_user.is_admin
+    ):
+        abort(403)
+
+    return render_template(
+        "requisition_detail.html",
+        requisition=requisition,
+        current_user=current_user
     )
 
 
