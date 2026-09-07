@@ -15,7 +15,7 @@ from fpdf import FPDF
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
 
-db = MongoEngine()
+db = MongoEngine(app)
 bcrypt = Bcrypt(app)
 csrf = CSRFProtect(app)
 
