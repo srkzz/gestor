@@ -4,7 +4,6 @@ import os
 import math
 from datetime import datetime, date
 from functools import wraps
-
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, Response
 from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
