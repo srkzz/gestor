@@ -1,6 +1,9 @@
 # app.py (Versão com Aprovação de Admin, Criação em Lote, Assinaturas e Exportação PDF)
 import os
 import math
+import base64
+import tempfile
+import re
 from datetime import datetime, date
 from functools import wraps
 
@@ -20,6 +23,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
 from dotenv import load_dotenv
 from mongoengine.fields import ObjectId
+from mongoengine import EmbeddedDocument
 from fpdf import FPDF
 
 
@@ -65,9 +69,26 @@ PER_PAGE = 10
 
 @app.context_processor
 def inject_global_variables():
+    current_user_is_admin = False
+
+    if session.get("user_id"):
+        try:
+            current_user = User.objects(
+                id=ObjectId(session["user_id"])
+            ).first()
+
+            if current_user:
+                current_user_is_admin = bool(
+                    current_user.is_admin
+                )
+
+                session["is_admin"] = current_user_is_admin
+        except Exception:
+            current_user_is_admin = False
+
     return {
-        'now': datetime.utcnow(),
-        'current_user_is_admin': session.get('is_admin', False)
+        "now": datetime.utcnow(),
+        "current_user_is_admin": current_user_is_admin
     }
 
 
@@ -94,6 +115,132 @@ class User(db.Document):
     def __repr__(self):
         return f'<User {self.username}>'
 
+class RequisitionItem(db.EmbeddedDocument):
+    part_code = db.StringField(
+        required=True,
+        max_length=100
+    )
+
+    part_description = db.StringField(
+        required=True,
+        max_length=250
+    )
+
+    quantity = db.IntField(
+        required=True,
+        min_value=1,
+        default=1
+    )
+
+    unit = db.StringField(
+        required=True,
+        max_length=20,
+        default="UN"
+    )
+
+class RequisitionItem(db.EmbeddedDocument):
+    part_code = db.StringField(
+        required=True,
+        max_length=100
+    )
+
+    part_description = db.StringField(
+        required=True,
+        max_length=250
+    )
+
+    quantity = db.IntField(
+        required=True,
+        min_value=1,
+        default=1
+    )
+
+    unit = db.StringField(
+        required=True,
+        max_length=20,
+        default="UN"
+    )
+
+class Suggestion(db.Document):
+    field_name = db.StringField(
+        required=True,
+        choices=[
+            "machine_reference",
+            "brand",
+            "model",
+            "part_code",
+            "part_description",
+            "unit"
+        ]
+    )
+
+    value = db.StringField(
+        required=True,
+        max_length=250
+    )
+
+    normalized_value = db.StringField(
+        required=True,
+        max_length=250
+    )
+
+    created_by = db.ReferenceField(
+        User,
+        required=False
+    )
+
+    date_created = db.DateTimeField(
+        default=datetime.utcnow
+    )
+
+    meta = {
+        "indexes": [
+            {
+                "fields": [
+                    "field_name",
+                    "normalized_value"
+                ],
+                "unique": True
+            }
+        ]
+    }
+
+    @staticmethod
+    def normalize(value):
+        value = value.strip()
+        value = re.sub(r"\s+", " ", value)
+        return value.casefold()
+
+    @classmethod
+    def save_suggestion(cls, field_name, value, user=None):
+        value = value.strip()
+
+        if not value:
+            return None
+
+        normalized = cls.normalize(value)
+
+        existing = cls.objects(
+            field_name=field_name,
+            normalized_value=normalized
+        ).first()
+
+        if existing:
+            return existing
+
+        try:
+            return cls(
+                field_name=field_name,
+                value=value,
+                normalized_value=normalized,
+                created_by=user
+            ).save()
+        except Exception:
+            return cls.objects(
+                field_name=field_name,
+                normalized_value=normalized
+            ).first()
+``
 
 class Task(db.Document):
     title = db.StringField(required=True, max_length=100)
@@ -763,5 +910,5 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
