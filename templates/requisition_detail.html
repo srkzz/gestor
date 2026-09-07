@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ requisition.requisition_number }}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-xl-10">
+        <div class="card bg-secondary text-light shadow-lg glassmorphism-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-white mb-1">
+                        {{ requisition.requisition_number }}
+                    </h2>
+
+                    <small class="text-muted">
+                        Criada por {{ requisition.user.username }}
+                    </small>
+                </div>
+
+                {% if requisition.status == "rascunho" %}
+                    <span class="badge bg-secondary">
+                        Rascunho
+                    </span>
+                {% elif requisition.status == "submetida" %}
+                    <span class="badge bg-warning text-dark">
+                        A aguardar aprovação
+                    </span>
+                {% elif requisition.status == "aprovada" %}
+                    <span class="badge bg-success">
+                        Aprovada
+                    </span>
+                {% else %}
+                    <span class="badge bg-danger">
+                        Rejeitada
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <strong>Referência</strong>
+                        <div>{{ requisition.machine_reference }}</div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Marca</strong>
+                        <div>{{ requisition.brand }}</div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Modelo</strong>
+                        <div>{{ requisition.model }}</div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <strong>Número de série</strong>
+                        <div>{{ requisition.serial_number or "-" }}</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Peça ou material</th>
+                                <th>Quantidade</th>
+                                <th>Unidade</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in requisition.items %}
+                                <tr>
+                                    <td>{{ item.part_code }}</td>
+                                    <td>{{ item.part_description }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.unit }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row g-3 mt-3">
+                    <div class="col-md-4">
+                        <strong>Urgência</strong>
+                        <div>{{ requisition.priority|capitalize }}</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Data necessária</strong>
+                        <div>
+                            {{ requisition.due_date.strftime("%d/%m/%Y") }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if requisition.description %}
+                    <hr>
+
+                    <strong>Descrição ou observações</strong>
+                    <p class="mt-2">{{ requisition.description }}</p>
+                {% endif %}
+
+                {% if requisition.requester_signature %}
+                    <hr>
+
+                    <h5>Assinatura do requerente</h5>
+
+                    {{ requisition.requester_signature }}
+
+                    <div class="small text-muted mt-2">
+                        {{ requisition.user.username }}
+
+                        {% if requisition.requester_signed_at %}
+                            ,
+                            {{ requisition.requester_signed_at.strftime(
+                                "%d/%m/%Y %H:%M"
+                            ) }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if requisition.status == "rejeitada" %}
+                    <div class="alert alert-danger mt-4">
+                        <strong>Motivo da rejeição:</strong>
+                        {{ requisition.rejection_reason or "Não indicado." }}
+                    </div>
+                {% endif %}
+
+                <div class="mt-4">
+                     }}"
+                        class="btn btn-outline-light rounded-pill"
+                    >
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
