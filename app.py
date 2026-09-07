@@ -39,21 +39,28 @@ csrf = CSRFProtect()
 
 
 def create_app():
-    app = Flask(__name__)
+    flask_app = Flask(__name__)
 
     mongo_uri = os.getenv("MONGO_URI")
     secret_key = os.getenv("SECRET_KEY")
 
     if not mongo_uri:
-        raise RuntimeError("A variável MONGO_URI não está configurada.")
-
-    if not mongo_uri.startswith(("mongodb://", "mongodb+srv://")):
         raise RuntimeError(
-            "MONGO_URI inválida. Deve começar por mongodb:// ou mongodb+srv://"
+            "A variável MONGO_URI não está configurada."
+        )
+
+    if not mongo_uri.startswith(
+        ("mongodb://", "mongodb+srv://")
+    ):
+        raise RuntimeError(
+            "MONGO_URI inválida. Deve começar por "
+            "mongodb:// ou mongodb+srv://"
         )
 
     if not secret_key:
-        raise RuntimeError("A variável SECRET_KEY não está configurada.")
+        raise RuntimeError(
+            "A variável SECRET_KEY não está configurada."
+        )
 
     flask_app.config["SECRET_KEY"] = secret_key
     flask_app.config["MONGODB_SETTINGS"] = {
@@ -69,7 +76,6 @@ def create_app():
     return flask_app
 
 
-# IMPORTANTE: tem de estar fora da função e sem espaços antes
 app = create_app()
 
 PER_PAGE = 10
@@ -247,7 +253,6 @@ class Suggestion(db.Document):
                 field_name=field_name,
                 normalized_value=normalized
             ).first()
-``
 
 class Task(db.Document):
     title = db.StringField(required=True, max_length=100)
