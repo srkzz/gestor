@@ -14,34 +14,29 @@ from fpdf import FPDF
 
 # Carrega as variáveis de ambiente do ficheiro .env para desenvolvimento local
 load_dotenv()
+from flask import Flask
+from flask_mongoengine import MongoEngine
+import os
 
-app = Flask(__name__)
-
-# --- Configuração da Aplicação ---
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'muda-esta-chave-em-producao')
-
-# IMPORTANTE: a connection string vem SEMPRE da variável de ambiente MONGO_URI.
-# Nunca colocar aqui um valor por defeito com password real — isso expõe a
-# credencial a quem tiver acesso ao código (ex: repositório público no GitHub).
-mongo_uri = os.getenv("MONGO_URI")
-
-if not mongo_uri:
-raise RuntimeError("MONGO_URI não está configurada")
-
-app.config["MONGODB_SETTINGS"] = {
-
-"host": mongo_uri
-
-}
-
-db = MongoEngine(app)
-
-PER_PAGE = 10
-
-db = MongoEngine(app)
+db = MongoEngine()
 bcrypt = Bcrypt(app)
 csrf = CSRFProtect(app)
 
+def create_app():
+    app = Flask(__name__)
+
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    app.config["MONGODB_SETTINGS"] = {
+        "host": os.getenv("MONGO_URI")
+    }
+
+    db.init_app(app)
+
+    return app
+
+
+app = create_app()
+PER_PAGE = 10
 
 @app.context_processor
 def inject_global_variables():
