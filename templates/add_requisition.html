@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Requisição{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-xl-11">
+        <div class="card bg-secondary text-light shadow-lg glassmorphism-card">
+            <div class="card-header text-center">
+                <h2 class="text-white mb-1">
+                    <i class="bi bi-file-earmark-plus-fill me-2"></i>
+                    Nova Requisição
+                </h2>
+
+                <p class="text-muted mb-0">
+                    Adicione um ou vários materiais à mesma requisição.
+                </p>
+            </div>
+
+            <div class="card-body">
+                <form method="POST" id="requisition-form">
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="requester_signature"
+                        id="requester-signature"
+                    >
+
+                    <h5 class="text-info mb-3">
+                        <i class="bi bi-truck me-2"></i>
+                        Identificação da máquina
+                    </h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                Referência da máquina
+                            </label>
+
+                            <input
+                                type="text"
+                                name="machine_reference"
+                                class="form-control bg-dark text-light"
+                                list="machine-reference-list"
+                                placeholder="Ex.: RW97/6340"
+                                required
+                            >
+
+                            <datalist id="machine-reference-list">
+                                {% for item in suggestions.machine_reference %}
+                                    <option value="{{ item.value }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Marca</label>
+
+                            <input
+                                type="text"
+                                name="brand"
+                                class="form-control bg-dark text-light"
+                                list="brand-list"
+                                placeholder="Ex.: Mitsubishi"
+                                required
+                            >
+
+                            <datalist id="brand-list">
+                                {% for item in suggestions.brand %}
+                                    <option value="{{ item.value }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Modelo</label>
+
+                            <input
+                                type="text"
+                                name="model"
+                                class="form-control bg-dark text-light"
+                                list="model-list"
+                                placeholder="Ex.: L 200 2.5D DC"
+                                required
+                            >
+
+                            <datalist id="model-list">
+                                {% for item in suggestions.model %}
+                                    <option value="{{ item.value }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                Número de série
+                            </label>
+
+                            <input
+                                type="text"
+                                name="serial_number"
+                                class="form-control bg-dark text-light"
+                                placeholder="Opcional"
+                            >
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-info mb-0">
+                            <i class="bi bi-gear-wide-connected me-2"></i>
+                            Materiais ou peças
+                        </h5>
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-info rounded-pill"
+                            id="add-item-button"
+                        >
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Adicionar material
+                        </button>
+                    </div>
+
+                    <div id="items-container">
+                        <div class="requisition-item card bg-dark border-secondary mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <strong class="item-number">
+                                        Material 1
+                                    </strong>
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-danger remove-item"
+                                        disabled
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">
+                                            Código da peça
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="part_code[]"
+                                            class="form-control bg-secondary text-light"
+                                            list="part-code-list"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="col-md-5">
+                                        <label class="form-label">
+                                            Peça a requisitar
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="part_description[]"
+                                            class="form-control bg-secondary text-light"
+                                            list="part-description-list"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label">
+                                            Quantidade
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="quantity[]"
+                                            class="form-control bg-secondary text-light"
+                                            value="1"
+                                            min="1"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label">
+                                            Unidade
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="unit[]"
+                                            class="form-control bg-secondary text-light"
+                                            list="unit-list"
+                                            value="UN"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <datalist id="part-code-list">
+                        {% for item in suggestions.part_code %}
+                            <option value="{{ item.value }}">
+                        {% endfor %}
+                    </datalist>
+
+                    <datalist id="part-description-list">
+                        {% for item in suggestions.part_description %}
+                            <option value="{{ item.value }}">
+                        {% endfor %}
+                    </datalist>
+
+                    <datalist id="unit-list">
+                        {% for item in suggestions.unit %}
+                            <option value="{{ item.value }}">
+                        {% endfor %}
+                    </datalist>
+
+                    <hr class="my-4">
+
+                    <h5 class="text-info mb-3">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Prazo e urgência
+                    </h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Urgência</label>
+
+                            <select
+                                name="priority"
+                                class="form-select bg-dark text-light"
+                                required
+                            >
+                                <option value="baixa">Baixa</option>
+                                <option value="media" selected>Média</option>
+                                <option value="alta">Alta</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                Data necessária
+                            </label>
+
+                            <input
+                                type="date"
+                                name="due_date"
+                                class="form-control bg-dark text-light"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="form-label">
+                            Descrição ou observações
+                        </label>
+
+                        <textarea
+                            name="description"
+                            class="form-control bg-dark text-light"
+                            rows="4"
+                            placeholder="Informação adicional sobre a requisição..."
+                        ></textarea>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="text-info mb-3">
+                        <i class="bi bi-pen me-2"></i>
+                        Assinatura do requerente
+                    </h5>
+
+                    <div class="signature-wrapper bg-white rounded">
+                        <canvas
+                            id="signature-canvas"
+                            width="800"
+                            height="220"
+                        ></canvas>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-warning mt-2"
+                        id="clear-signature"
+                    >
+                        <i class="bi bi-eraser me-1"></i>
+                        Limpar assinatura
+                    </button>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button
+                            type="submit"
+                            name="submit_action"
+                            value="draft"
+                            class="btn btn-outline-light rounded-pill"
+                        >
+                            <i class="bi bi-save me-1"></i>
+                            Guardar rascunho
+                        </button>
+
+                        <button
+                            type="submit"
+                            name="submit_action"
+                            value="submit"
+                            class="btn btn-success rounded-pill"
+                        >
+                            <i class="bi bi-send-check me-1"></i>
+                            Assinar e submeter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ url_for('static', filename='js/requisition_form.js') }}script>
+ }}"></script>
+{% endblock %}
