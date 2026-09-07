@@ -5,3 +5,4 @@ Flask-MongoEngine
 pymongo
 python-dotenv
 gunicorn
+dnspython
