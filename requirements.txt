@@ -6,3 +6,4 @@ pymongo
 python-dotenv
 gunicorn
 dnspython
+fpdf2==2.8.8
