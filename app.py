@@ -515,7 +515,11 @@ def user_dashboard():
     if page < 1:
         page = 1
 
-    requisitions_query = Requisition.objects(user=user)
+    # Lista completa, permanece sempre disponível
+    all_requisitions_query = Requisition.objects(user=user)
+
+    # Consulta separada para pesquisa e filtros
+    filtered_query = Requisition.objects(user=user)
 
     valid_statuses = [
         "rascunho",
@@ -525,7 +529,7 @@ def user_dashboard():
     ]
 
     if status_filter in valid_statuses:
-        requisitions_query = requisitions_query(
+        filtered_query = filtered_query(
             status=status_filter
         )
 
@@ -536,7 +540,7 @@ def user_dashboard():
     ]
 
     if priority_filter in valid_priorities:
-        requisitions_query = requisitions_query(
+        filtered_query = filtered_query(
             priority=priority_filter
         )
 
@@ -544,7 +548,7 @@ def user_dashboard():
     if search_query:
         safe_search = re.escape(search_query)
 
-        requisitions_query = requisitions_query(
+        filtered_query = filtered_query(
             __raw__={
                 "$or": [
                     {
@@ -622,20 +626,29 @@ def user_dashboard():
         else sort_by
     )
 
-    total_filtered_requisitions = requisitions_query.count()
-
-    total_pages = math.ceil(
-        total_filtered_requisitions / PER_PAGE
+    filters_active = (
+    status_filter != "all"
+    or priority_filter != "all"
+    or bool(search_query)
     )
 
+    total_filtered_requisitions = filtered_query.count()
+
+    # Todas as requisições ficam sempre visíveis na tabela principal
     requisitions = (
-        requisitions_query
+        all_requisitions_query
+        .order_by("-date_created")
+        .all()
+    )
+
+    # Resultados específicos da pesquisa e filtros
+    filtered_requisitions = (
+        filtered_query
         .order_by(sort_field)
         .skip((page - 1) * PER_PAGE)
         .limit(PER_PAGE)
         .all()
     )
-
     # Contadores gerais
     total_requisitions_count = Requisition.objects(
         user=user
@@ -678,7 +691,9 @@ def user_dashboard():
         draft_requisitions_count=draft_requisitions_count,
         submitted_requisitions_count=submitted_requisitions_count,
         approved_requisitions_count=approved_requisitions_count,
-        rejected_requisitions_count=rejected_requisitions_count
+        rejected_requisitions_count=rejected_requisitions_count,
+        filtered_requisitions=filtered_requisitions,
+        filters_active=filters_active,
     )
 
 @app.route('/add_task', methods=['GET', 'POST'])

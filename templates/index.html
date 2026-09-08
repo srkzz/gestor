@@ -5,16 +5,11 @@
 {% block content %}
 {# Aplicação da classe glassmorphism-card #}
 <div class="text-center p-5 mb-5 glassmorphism-card"> 
-    <h1 class="display-4 text-white mb-3 fw-bold">Bem-vindo ao Gestor de Tarefas!</h1>
-    <p class="lead text-light mb-4">Organize a sua vida, uma tarefa de cada vez.</p>
+    <h1 class="display-4 text-white mb-3 fw-bold">Bem-vindo ao DEQ Rwanda Requisitions!</h1>
     <hr class="my-4 border-light">
-    <p class="text-light mb-4">Comece já a gerir as suas tarefas.</p>
     {% if 'user_id' not in session %}
         <p class="lead">
             {# Botões mais apelativos com rounded-pill e shadow #}
-            <a class="btn btn-outline-light btn-lg m-2 rounded-pill shadow-sm" href="{{ url_for('register') }}" role="button">
-                <i class="bi bi-person-plus-fill me-2"></i>Registar Agora
-            </a>
             <a class="btn btn-outline-light btn-lg m-2 rounded-pill shadow-sm" href="{{ url_for('login') }}" role="button">
                 <i class="bi bi-box-arrow-in-right me-2"></i>Login
             </a>
@@ -22,7 +17,7 @@
     {% else %}
         {# Mensagem de boas-vindas mais personalizada para utilizadores logados #}
         <p class="lead text-success fw-semibold">
-            <i class="bi bi-star-fill me-2"></i>Olá, {{ session['username'] }}! Que bom vê-lo novamente.
+            <i class="bi bi-star-fill me-2"></i>Olá, {{ session['username'] }}! Bom vê-lo novamente.
         </p>
         <p class="lead">
             <a class="btn btn-info btn-lg m-2 rounded-pill shadow-sm" href="{{ url_for('user_dashboard') }}" role="button">
@@ -32,40 +27,5 @@
     {% endif %}
 </div>
 
-{# Secção de Tarefas Públicas Recentes #}
-<div class="card bg-secondary text-light shadow-lg mt-4">
-    <div class="card-header">
-        <h3 class="card-title text-white mb-0">Tarefas Públicas Recentes</h3>
-    </div>
-    <div class="card-body">
-        {% if recent_public_tasks %}
-            <ul class="list-group list-group-flush">
-                {% for task in recent_public_tasks %}
-                    <li class="list-group-item bg-dark text-light border-secondary mb-2 rounded">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ task.title }}</h5>
-                            <small class="text-muted">{{ task.date_created.strftime('%d/%m/%Y') }}</small>
-                        </div>
-                        <p class="mb-1">{{ task.description or 'Sem descrição.' }}</p>
-                        {# Exibição de Tags na Public Task Card #}
-                        {% if task.tags %}
-                            <div class="mb-2">
-                                {% for tag in task.tags %}
-                                    <span class="badge bg-primary me-1">{{ tag }}</span>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <small class="text-info">Criada por: {{ task.user.username }}</small>
-                        <br>
-                        {# Botão com estilo arredondado #}
-                        <a href="{{ url_for('public_tasks') }}" class="btn btn-sm btn-outline-info mt-2 rounded-pill">Ver todas as tarefas públicas</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-muted">Nenhuma tarefa pública encontrada. Seja o primeiro a criar uma!</p>
-        {% endif %}
-    </div>
-</div>
 
 {% endblock %}
