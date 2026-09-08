@@ -517,7 +517,6 @@ def user_dashboard():
 
     requisitions_query = Requisition.objects(user=user)
 
-    # Filtro pelo estado da aprovação
     valid_statuses = [
         "rascunho",
         "submetida",
@@ -530,7 +529,6 @@ def user_dashboard():
             status=status_filter
         )
 
-    # Filtro por urgência
     valid_priorities = [
         "baixa",
         "media",
@@ -542,8 +540,7 @@ def user_dashboard():
             priority=priority_filter
         )
 
-    # Pesquisa nos dados da máquina e nos materiais
-   # Pesquisa global em todos os campos relevantes
+    # Pesquisa global
     if search_query:
         safe_search = re.escape(search_query)
 
@@ -602,88 +599,87 @@ def user_dashboard():
             }
         )
 
-        # Evita a utilização de campos de ordenação inválidos
-        allowed_sort_fields = [
-            "date_created",
-            "due_date",
-            "machine_reference",
-            "brand",
-            "model",
-            "priority",
-            "status"
-        ]
+    # Esta parte deve ficar fora do if search_query
+    allowed_sort_fields = [
+        "date_created",
+        "due_date",
+        "machine_reference",
+        "brand",
+        "model",
+        "priority",
+        "status"
+    ]
 
-        if sort_by not in allowed_sort_fields:
-            sort_by = "date_created"
+    if sort_by not in allowed_sort_fields:
+        sort_by = "date_created"
 
-        if sort_order not in ["asc", "desc"]:
-            sort_order = "desc"
+    if sort_order not in ["asc", "desc"]:
+        sort_order = "desc"
 
-        sort_field = (
-            f"-{sort_by}"
-            if sort_order == "desc"
-            else sort_by
-        )
+    sort_field = (
+        f"-{sort_by}"
+        if sort_order == "desc"
+        else sort_by
+    )
 
-        # Paginação da lista filtrada
-        total_filtered_requisitions = requisitions_query.count()
+    total_filtered_requisitions = requisitions_query.count()
 
-        total_pages = math.ceil(
-            total_filtered_requisitions / PER_PAGE
-        )
+    total_pages = math.ceil(
+        total_filtered_requisitions / PER_PAGE
+    )
 
-        requisitions = (
-            requisitions_query
-            .order_by(sort_field)
-            .skip((page - 1) * PER_PAGE)
-            .limit(PER_PAGE)
-            .all()
-        )
+    requisitions = (
+        requisitions_query
+        .order_by(sort_field)
+        .skip((page - 1) * PER_PAGE)
+        .limit(PER_PAGE)
+        .all()
+    )
 
-        # Contadores gerais, sem depender dos filtros
-        total_requisitions_count = Requisition.objects(
-            user=user
-        ).count()
+    # Contadores gerais
+    total_requisitions_count = Requisition.objects(
+        user=user
+    ).count()
 
-        draft_requisitions_count = Requisition.objects(
-            user=user,
-            status="rascunho"
-        ).count()
+    draft_requisitions_count = Requisition.objects(
+        user=user,
+        status="rascunho"
+    ).count()
 
-        submitted_requisitions_count = Requisition.objects(
-            user=user,
-            status="submetida"
-        ).count()
+    submitted_requisitions_count = Requisition.objects(
+        user=user,
+        status="submetida"
+    ).count()
 
-        approved_requisitions_count = Requisition.objects(
-            user=user,
-            status="aprovada"
-        ).count()
+    approved_requisitions_count = Requisition.objects(
+        user=user,
+        status="aprovada"
+    ).count()
 
-        rejected_requisitions_count = Requisition.objects(
-            user=user,
-            status="rejeitada"
-        ).count()
+    rejected_requisitions_count = Requisition.objects(
+        user=user,
+        status="rejeitada"
+    ).count()
 
     return render_template(
-                "user_dashboard.html",
-                user=user,
-                requisitions=requisitions,
-                status_filter=status_filter,
-                priority_filter=priority_filter,
-                sort_by=sort_by,
-                sort_order=sort_order,
-                search_query=search_query,
-                page=page,
-                total_pages=total_pages,
-                per_page=PER_PAGE,
-                total_filtered_requisitions=total_filtered_requisitions,
-                total_requisitions_count=total_requisitions_count,
-                draft_requisitions_count=draft_requisitions_count,
-                submitted_requisitions_count=submitted_requisitions_count,
-                approved_requisitions_count=approved_requisitions_count,
-                rejected_requisitions_count=rejected_requisitions_count
-            )
+        "user_dashboard.html",
+        user=user,
+        requisitions=requisitions,
+        status_filter=status_filter,
+        priority_filter=priority_filter,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        search_query=search_query,
+        page=page,
+        total_pages=total_pages,
+        per_page=PER_PAGE,
+        total_filtered_requisitions=total_filtered_requisitions,
+        total_requisitions_count=total_requisitions_count,
+        draft_requisitions_count=draft_requisitions_count,
+        submitted_requisitions_count=submitted_requisitions_count,
+        approved_requisitions_count=approved_requisitions_count,
+        rejected_requisitions_count=rejected_requisitions_count
+    )
 
 @app.route('/add_task', methods=['GET', 'POST'])
 @login_required
