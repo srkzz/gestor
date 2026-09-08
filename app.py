@@ -1365,23 +1365,6 @@ def delete_user(user_id):
     return redirect(url_for('admin_dashboard'))
 
 @app.route("/admin/requisitions/<string:requisition_id>/review")
-        @admin_required
-        def review_requisition(requisition_id):
-            requisition = Requisition.objects(
-                id=requisition_id
-            ).first_or_404()
-        
-            current_user = User.objects(
-                id=ObjectId(session["user_id"])
-            ).first_or_404()
-        
-            return render_template(
-                "review_requisition.html",
-                requisition=requisition,
-                current_user=current_user
-            )
-
-@app.route("/admin/requisitions/<string:requisition_id>/review")
 @admin_required
 def review_requisition(requisition_id):
     requisition = Requisition.objects(
