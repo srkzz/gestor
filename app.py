@@ -536,33 +536,12 @@ def user_dashboard():
     completed_tasks_count = Task.objects(user=user, is_completed=True).count()
     approved_tasks_count = Task.objects(user=user, status='aprovada').count()
     awaiting_approval_count = Task.objects(user=user, status='pendente').count()
-                requisitions = Requisition.objects(
-                    user=user
-                ).order_by("-date_created").all()
-                
-                total_requisitions_count = Requisition.objects(
-                    user=user
-                ).count()
-                
-                draft_requisitions_count = Requisition.objects(
-                    user=user,
-                    status="rascunho"
-                ).count()
-                
-                submitted_requisitions_count = Requisition.objects(
-                    user=user,
-                    status="submetida"
-                ).count()
-                
-                approved_requisitions_count = Requisition.objects(
-                    user=user,
-                    status="aprovada"
-                ).count()
-                
-                rejected_requisitions_count = Requisition.objects(
-                    user=user,
-                    status="rejeitada"
-                ).count()
+    requisitions = Requisition.objects(user=user).order_by("-date_created").all()
+    total_requisitions_count = Requisition.objects(user=user).count()
+    draft_requisitions_count = Requisition.objects(user=user,status="rascunho").count()
+    submitted_requisitions_count = Requisition.objects(user=user,status="submetida").count()
+    approved_requisitions_count = Requisition.objects(user=user,status="aprovada").count()
+    rejected_requisitions_count = Requisition.objects(user=user,status="rejeitada").count()
     return render_template('user_dashboard.html', user=user, tasks=tasks,
                             status_filter=status_filter,
                             priority_filter=priority_filter,
@@ -580,7 +559,7 @@ def user_dashboard():
                             pending_tasks_count=pending_tasks_count,
                             completed_tasks_count=completed_tasks_count,
                             approved_tasks_count=approved_tasks_count,
-                            awaiting_approval_count=awaiting_approval_count
+                            awaiting_approval_count=awaiting_approval_count,
                             requisitions=requisitions,
                             total_requisitions_count=total_requisitions_count,
                             draft_requisitions_count=draft_requisitions_count,
@@ -1278,24 +1257,18 @@ def admin_dashboard():
 
     current_user = User.objects(id=ObjectId(session['user_id'])).first()
 
-            pending_requisitions = Requisition.objects(
-            status="submetida"
-        ).order_by("-date_created").all()
+    pending_requisitions = Requisition.objects(status="submetida").order_by("-date_created").all()
         
-        all_requisitions = Requisition.objects().order_by(
-            "-date_created"
-        ).all()
+    all_requisitions = Requisition.objects().order_by("-date_created").all()
         
-        total_pending_requisitions = Requisition.objects(
-            status="submetida"
-        ).count()
+    total_pending_requisitions = Requisition.objects(status="submetida").count()
 
     return render_template('admin_dashboard.html',
                             all_users=all_users, users_page=users_page, total_users_pages=total_users_pages,
                             all_tasks=all_tasks, tasks_page=tasks_page, total_tasks_pages=total_tasks_pages,
                             pending_tasks=pending_tasks, pending_page=pending_page,
                             total_pending_pages=total_pending_pages, total_pending=total_pending,
-                            current_user=current_user, per_page=PER_PAGE
+                            current_user=current_user, per_page=PER_PAGE,
                             pending_requisitions=pending_requisitions,
                             all_requisitions=all_requisitions,
                             total_pending_requisitions=total_pending_requisitions,
@@ -1363,6 +1336,153 @@ def delete_user(user_id):
     target_user.delete()
     flash(f"Utilizador '{username_to_delete}' e todos os seus dados apagados com sucesso.", 'success')
     return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/requisitions/<string:requisition_id>/review")
+@admin_required
+def review_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    current_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    return render_template(
+        "review_requisition.html",
+        requisition=requisition,
+        current_user=current_user
+    )
+
+
+@app.route(
+    "/admin/requisitions/<string:requisition_id>/approve",
+    methods=["POST"]
+)
+@admin_required
+def approve_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    admin_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    approver_signature = request.form.get(
+        "approver_signature",
+        ""
+    ).strip()
+
+    if requisition.status != "submetida":
+        flash(
+            "Esta requisição já foi analisada ou ainda não foi submetida.",
+            "warning"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    if not requisition.requester_signature:
+        flash(
+            "A requisição não possui assinatura do requerente.",
+            "error"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    if not approver_signature:
+        flash(
+            "O administrador deve assinar antes de aprovar.",
+            "error"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    requisition.status = "aprovada"
+    requisition.approved_by = admin_user
+    requisition.approver_signature = approver_signature
+    requisition.approved_at = datetime.utcnow()
+    requisition.rejection_reason = None
+    requisition.save()
+
+    flash(
+        f"Requisição {requisition.requisition_number} "
+        f"aprovada por {admin_user.username}.",
+        "success"
+    )
+
+    return redirect(
+        url_for(
+            "review_requisition",
+            requisition_id=requisition.id
+        )
+    )
+
+
+@app.route(
+    "/admin/requisitions/<string:requisition_id>/reject",
+    methods=["POST"]
+)
+@admin_required
+def reject_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    rejection_reason = request.form.get(
+        "rejection_reason",
+        ""
+    ).strip()
+
+    if requisition.status != "submetida":
+        flash(
+            "Esta requisição já foi analisada ou ainda não foi submetida.",
+            "warning"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    if not rejection_reason:
+        flash(
+            "Indique o motivo da rejeição.",
+            "error"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    requisition.status = "rejeitada"
+    requisition.rejection_reason = rejection_reason
+    requisition.approved_by = None
+    requisition.approver_signature = None
+    requisition.approved_at = None
+    requisition.save()
+
+    flash(
+        f"Requisição {requisition.requisition_number} rejeitada.",
+        "info"
+    )
+
+    return redirect(url_for("admin_dashboard"))
 
 # --- Error Handlers ---
 
