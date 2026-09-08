@@ -1381,6 +1381,154 @@ def delete_user(user_id):
                 current_user=current_user
             )
 
+@app.route("/admin/requisitions/<string:requisition_id>/review")
+@admin_required
+def review_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    current_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    return render_template(
+        "review_requisition.html",
+        requisition=requisition,
+        current_user=current_user
+    )
+
+
+@app.route(
+    "/admin/requisitions/<string:requisition_id>/approve",
+    methods=["POST"]
+)
+@admin_required
+def approve_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    admin_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    approver_signature = request.form.get(
+        "approver_signature",
+        ""
+    ).strip()
+
+    if requisition.status != "submetida":
+        flash(
+            "Esta requisição já foi analisada ou ainda não foi submetida.",
+            "warning"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    if not requisition.requester_signature:
+        flash(
+            "A requisição não possui assinatura do requerente.",
+            "error"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    if not approver_signature:
+        flash(
+            "O administrador deve assinar antes de aprovar.",
+            "error"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    requisition.status = "aprovada"
+    requisition.approved_by = admin_user
+    requisition.approver_signature = approver_signature
+    requisition.approved_at = datetime.utcnow()
+    requisition.rejection_reason = None
+    requisition.save()
+
+    flash(
+        f"Requisição {requisition.requisition_number} "
+        f"aprovada por {admin_user.username}.",
+        "success"
+    )
+
+    return redirect(
+        url_for(
+            "review_requisition",
+            requisition_id=requisition.id
+        )
+    )
+
+
+@app.route(
+    "/admin/requisitions/<string:requisition_id>/reject",
+    methods=["POST"]
+)
+@admin_required
+def reject_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    rejection_reason = request.form.get(
+        "rejection_reason",
+        ""
+    ).strip()
+
+    if requisition.status != "submetida":
+        flash(
+            "Esta requisição já foi analisada ou ainda não foi submetida.",
+            "warning"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    if not rejection_reason:
+        flash(
+            "Indique o motivo da rejeição.",
+            "error"
+        )
+        return redirect(
+            url_for(
+                "review_requisition",
+                requisition_id=requisition.id
+            )
+        )
+
+    requisition.status = "rejeitada"
+    requisition.rejection_reason = rejection_reason
+    requisition.approved_by = None
+    requisition.approver_signature = None
+    requisition.approved_at = None
+    requisition.save()
+
+    flash(
+        f"Requisição {requisition.requisition_number} rejeitada.",
+        "info"
+    )
+
+    return redirect(url_for("admin_dashboard"))
+
+
 # --- Error Handlers ---
 
 @app.errorhandler(404)
