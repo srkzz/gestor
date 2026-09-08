@@ -245,7 +245,9 @@ Analisar {{ requisition.requisition_number }}
                 </div>
 
                 <div class="card-body">
-                     }}"
+                    <form
+                        method="POST"
+                        action="{{ url_for('approve_requisition', requisition_id=requisition.id) }}"
                         id="approval-form"
                     >
                         <input
@@ -295,7 +297,9 @@ Analisar {{ requisition.requisition_number }}
 
                     <hr class="my-4">
 
-                     }}"
+                    <form
+                        method="POST"
+                        action="{{ url_for('reject_requisition', requisition_id=requisition.id) }}"
                     >
                         <input
                             type="hidden"
@@ -385,7 +389,8 @@ Analisar {{ requisition.requisition_number }}
         {% endif %}
 
         <div class="mb-5">
-             }}"
+            <a
+                href="{{ url_for('admin_dashboard') }}"
                 class="btn btn-outline-light rounded-pill"
             >
                 <i class="bi bi-arrow-left me-2"></i>
