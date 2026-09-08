@@ -1407,14 +1407,41 @@ def admin_dashboard():
     total_pending = pending_query.count()
     total_pending_pages = math.ceil(total_pending / PER_PAGE)
     pending_tasks = pending_query.skip((pending_page - 1) * PER_PAGE).limit(PER_PAGE).all()
+    current_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first()
 
-    current_user = User.objects(id=ObjectId(session['user_id'])).first()
+    pending_requisitions = Requisition.objects(
+        status="submetida"
+    ).order_by("-date_created").all()
 
-    pending_requisitions = Requisition.objects(status="submetida").order_by("-date_created").all()
-        
-    all_requisitions = Requisition.objects().order_by("-date_created").all()
-        
-    total_pending_requisitions = Requisition.objects(status="submetida").count()
+    total_pending_requisitions = Requisition.objects(
+        status="submetida"
+    ).count()
+
+    all_requisitions = Requisition.objects().order_by(
+        "-date_created"
+    ).all()
+
+    total_requisitions = Requisition.objects().count()
+
+    total_submitted_requisitions = Requisition.objects(
+        status="submetida"
+    ).count()
+
+    total_approved_requisitions = Requisition.objects(
+        status="aprovada"
+    ).count()
+
+    total_rejected_requisitions = Requisition.objects(
+        status="rejeitada"
+    ).count()
+
+    total_draft_requisitions = Requisition.objects(
+        status="rascunho"
+    ).count()
+
+   
 
     return render_template('admin_dashboard.html',
                             all_users=all_users, users_page=users_page, total_users_pages=total_users_pages,
@@ -1425,6 +1452,11 @@ def admin_dashboard():
                             pending_requisitions=pending_requisitions,
                             all_requisitions=all_requisitions,
                             total_pending_requisitions=total_pending_requisitions,
+                            total_requisitions=total_requisitions,
+                            total_submitted_requisitions=total_submitted_requisitions,
+                            total_approved_requisitions=total_approved_requisitions,
+                            total_rejected_requisitions=total_rejected_requisitions,
+                            total_draft_requisitions=total_draft_requisitions,
                           )
 
 
@@ -2417,6 +2449,27 @@ def edit_requisition(requisition_id):
     return render_template(
         "edit_requisition.html",
         requisition=requisition
+    )
+
+@app.route("/admin/requisitions/<string:requisition_id>/delete",
+    methods=["POST"])
+@admin_required
+def delete_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    requisition_number = requisition.requisition_number
+
+    requisition.delete()
+
+    flash(
+        f"Requisição {requisition_number} eliminada com sucesso.",
+        "success"
+    )
+
+    return redirect(
+        request.referrer or url_for("admin_dashboard")
     )
 # --- Error Handlers ---
 
