@@ -1278,12 +1278,28 @@ def admin_dashboard():
 
     current_user = User.objects(id=ObjectId(session['user_id'])).first()
 
+            pending_requisitions = Requisition.objects(
+            status="submetida"
+        ).order_by("-date_created").all()
+        
+        all_requisitions = Requisition.objects().order_by(
+            "-date_created"
+        ).all()
+        
+        total_pending_requisitions = Requisition.objects(
+            status="submetida"
+        ).count()
+
     return render_template('admin_dashboard.html',
                             all_users=all_users, users_page=users_page, total_users_pages=total_users_pages,
                             all_tasks=all_tasks, tasks_page=tasks_page, total_tasks_pages=total_tasks_pages,
                             pending_tasks=pending_tasks, pending_page=pending_page,
                             total_pending_pages=total_pending_pages, total_pending=total_pending,
-                            current_user=current_user, per_page=PER_PAGE)
+                            current_user=current_user, per_page=PER_PAGE
+                            pending_requisitions=pending_requisitions,
+                            all_requisitions=all_requisitions,
+                            total_pending_requisitions=total_pending_requisitions,
+                          )
 
 
 @app.route('/admin/task/<string:task_id>/approve', methods=['POST'])
@@ -1348,6 +1364,22 @@ def delete_user(user_id):
     flash(f"Utilizador '{username_to_delete}' e todos os seus dados apagados com sucesso.", 'success')
     return redirect(url_for('admin_dashboard'))
 
+@app.route("/admin/requisitions/<string:requisition_id>/review")
+        @admin_required
+        def review_requisition(requisition_id):
+            requisition = Requisition.objects(
+                id=requisition_id
+            ).first_or_404()
+        
+            current_user = User.objects(
+                id=ObjectId(session["user_id"])
+            ).first_or_404()
+        
+            return render_template(
+                "review_requisition.html",
+                requisition=requisition,
+                current_user=current_user
+            )
 
 # --- Error Handlers ---
 
