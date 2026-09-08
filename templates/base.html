@@ -18,12 +18,14 @@
     {# Este div será o fundo com o gradiente. A classe `gradient-background` está definida em style.css. #}
     <div class="gradient-background"></div> 
     <!-- Navbar -->
-                    <a class="navbar-brand d-flex align-items-center gap-2"
+     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2"
                 href="{{ url_for('home') }}">
                     <img
                         src="{{ url_for('static', filename='img/logo.png') }}"
                         alt="Mota-Engil Rwanda"
-                        style="height: 45px; width: auto; object-fit: contain;"
+                        style="height: 60px; width: auto; object-fit: contain;"
                     >
                     <span>Gestor de Requisições</span>
                 </a>
@@ -35,9 +37,9 @@
             </button>
 
             <!-- Collapsible wrapper -->
-            <div class="collapse navbar-collapse" id="navbarContent">
+            <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
                 <!-- Left links -->
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> {# Alinhado à direita #}
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center"> {# Alinhado à direita #}
                     {% if 'user_id' in session %}
                         <li class="nav-item">
                             <a class="nav-link" aria-current="page" href="{{ url_for('user_dashboard') }}" data-mdb-ripple-init>
