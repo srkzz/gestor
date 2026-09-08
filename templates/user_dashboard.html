@@ -224,10 +224,13 @@
                                             </span>
                                         {% endif %}
                                     </td>
-
-                                    <td>
-                                        {{ url_for('requisition_detail', requisition_id=requisition.id) }}
-                                            <i class="bi bi-eye-fill"></i>
+                                    <td class="text-center">
+                                        <a href="{{ url_for('requisition_detail', requisition_id=requisition.id) }}"
+                                        class="btn btn-sm btn-outline-info rounded-circle d-inline-flex align-items-center justify-content-center"
+                                        style="width: 34px; height: 34px;"
+                                        title="Ver requisição"
+                                        aria-label="Ver requisição">
+                                        <i class="bi bi-eye-fill"></i>
                                         </a>
                                     </td>
                                 </tr>
@@ -257,14 +260,10 @@
             Nova Requisição
         </a>
     </div>
-    <h3 class="text-white mt-5 mb-3">
-    <i class="bi bi-list-ul me-2"></i>
-    Todas as minhas requisições
-    </h3>
     <div class="card-body">
         {% if requisitions %}
-            <div class="table-responsive">
-                <table class="table table-dark table-hover align-middle">
+            <div class="requisitions-table-wrapper">
+                <table class="table table-dark table-hover table-sm align-middle mb-0 requisitions-table">
                     <thead>
                         <tr>
                             <th>Número</th>
@@ -532,5 +531,36 @@
     .priority-high { color: #dc3545; } /* Vermelho */
     .priority-medium { color: #ffc107; } /* Amarelo */
     .priority-low { color: #17a2b8; } /* Ciano */
+    .requisitions-table-wrapper {
+        width: 100%;
+        overflow: visible;
+    }
+
+    .requisitions-table {
+        width: 100%;
+        table-layout: auto;
+        font-size: 0.88rem;
+    }
+
+    .requisitions-table th,
+    .requisitions-table td {
+        padding: 0.55rem 0.45rem;
+        vertical-align: middle;
+    }
+
+    .requisitions-table .actions-column {
+        width: 90px;
+        min-width: 90px;
+    }
+
+    @media (max-width: 991.98px) {
+        .requisitions-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .requisitions-table {
+            min-width: 950px;
+        }
+    }
 </style>
 {% endblock %}
