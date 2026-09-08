@@ -633,6 +633,15 @@ def user_dashboard():
     )
 
     total_filtered_requisitions = filtered_query.count()
+    total_pages = math.ceil(
+    total_filtered_requisitions / PER_PAGE
+    )
+
+    if total_pages < 1:
+        total_pages = 1
+
+    if page > total_pages:
+        page = total_pages
 
     # Todas as requisições ficam sempre visíveis na tabela principal
     requisitions = (
