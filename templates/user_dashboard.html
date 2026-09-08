@@ -386,47 +386,71 @@
         </table>
     </div>
 {% else %}
-    <div class="alert alert-info text-center">
-        Nenhuma requisição encontrada.
-    </div>
-{% endif %}
+    <div class="alert alert-info bg-secondary text-light border-0 py-4 d-flex flex-column align-items-center justify-content-center"
+         role="alert">
 
-    {# Controles de Paginação para o Dashboard do Usuário #}
-    {% if total_pages > 1 %}
-    <nav aria-label="Paginação de Requisições">
-        <ul class="pagination justify-content-center mt-4">
-            {# Botão Anterior #}
-            <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                <a class="page-link bg-dark text-light border-secondary rounded-start-pill" href="{{ url_for('user_dashboard', page=page-1, status=status_filter, priority=priority_filter, category=category_filter, tag=tag_filter, sort_by=sort_by, sort_order=sort_order, search=search_query) }}">&laquo; Anterior</a>
-            </li>
-            
-            {# Números das Páginas #}
-            {% for p in range(1, total_pages + 1) %}
-            <li class="page-item {% if p == page %}active{% endif %}">
-                <a class="page-link {% if p == page %}bg-primary border-primary{% else %}bg-dark text-light border-secondary{% endif %}" href="{{ url_for('user_dashboard', page=p, status=status_filter, priority=priority_filter, category=category_filter, tag=tag_filter, sort_by=sort_by, sort_order=sort_order, search=search_query) }}">{{ p }}</a>
-            </li>
-            {% endfor %}
-            
-            {# Botão Próximo #}
-            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                <a class="page-link bg-dark text-light border-secondary rounded-end-pill" href="{{ url_for('user_dashboard', page=page+1, status=status_filter, priority=priority_filter, category=category_filter, tag=tag_filter, sort_by=sort_by, sort_order=sort_order, search=search_query) }}">Próximo &raquo;</a>
-            </li>
-        </ul>
-    </nav>
-    {% endif %}
-
-{% else %}
-    <div class="alert alert-info bg-secondary text-light border-0 py-4 d-flex flex-column align-items-center justify-content-center" role="alert">
         <i class="bi bi-info-circle display-4 mb-3"></i>
-        {% if status_filter != 'all' or priority_filter != 'all' or category_filter != 'all' or tag_filter != 'all' or search_query %}
-            <p class="mb-2 fs-5">Nenhuma requisição encontrada com os filtros e pesquisa aplicados.</p>
-            <a href="{{ url_for('user_dashboard') }}" class="alert-link text-info fw-bold">Limpar filtros para ver todas as requisições</a>
+
+        {% if status_filter != "all"
+              or priority_filter != "all"
+              or search_query %}
+
+            <p class="mb-2 fs-5">
+                Nenhuma requisição encontrada com os filtros e pesquisa aplicados.
+            </p>
+
+             }}"
+               class="alert-link text-info fw-bold">
+                Limpar filtros para ver todas as requisições
+            </a>
+
         {% else %}
-            <p class="mb-2 fs-5">Não tem requisições registadas.</p>
-            <a href="{{ url_for('add_requisition') }}" class="alert-link text-info fw-bold">Adicione uma requisição agora!</a>
+
+            <p class="mb-2 fs-5">
+                Não tem requisições registadas.
+            </p>
+
+             }}"
+               class="alert-link text-info fw-bold">
+                Adicione uma requisição agora!
+            </a>
+
         {% endif %}
     </div>
 {% endif %}
+
+
+{% if total_pages > 1 %}
+    <nav aria-label="Paginação de Requisições">
+        <ul class="pagination justify-content-center mt-4">
+
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                 }}"
+                   class="page-link bg-dark text-light border-secondary rounded-start-pill">
+                    &laquo; Anterior
+                </a>
+            </li>
+
+            {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                     }}"
+                       class="page-link {% if p == page %}bg-primary border-primary{% else %}bg-dark text-light border-secondary{% endif %}">
+                        {{ p }}
+                    </a>
+                </li>
+            {% endfor %}
+
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                 }}"
+                   class="page-link bg-dark text-light border-secondary rounded-end-pill">
+                    Próximo &raquo;
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
