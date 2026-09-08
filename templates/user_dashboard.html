@@ -4,7 +4,7 @@
 
 {% block content %}
 <h2 class="mb-4 text-white display-5 fw-bold text-center text-uppercase tracking-wider">
-    <span class="d-inline-block p-2 border-bottom border-3 border-primary">As Suas Tarefas, {{ user.username }}!</span>
+    <span class="d-inline-block p-2 border-bottom border-3 border-primary">As Suas Requisições, {{ user.username }}!</span>
 </h2>
 
 <a href="{{ url_for('add_task') }}" class="btn btn-success mb-4 rounded-pill px-4 py-2 shadow-sm"><i class="bi bi-plus-circle-fill me-2"></i> Adicionar Nova Tarefa</a>
@@ -14,7 +14,7 @@
     <div class="col-md-3">
         <div class="card bg-info text-dark shadow-lg rounded-3 border-0 py-3 text-center">
             <div class="card-body">
-                <h5 class="card-title fw-bold mb-1"><i class="bi bi-list-task me-2"></i>Total de Tarefas</h5>
+                <h5 class="card-title fw-bold mb-1"><i class="bi bi-list-task me-2"></i>Total de Requisições</h5>
                 <p class="card-text display-6 fw-bold">{{ total_tasks_count }}</p>
             </div>
         </div>
@@ -22,7 +22,7 @@
     <div class="col-md-3">
         <div class="card bg-warning text-dark shadow-lg rounded-3 border-0 py-3 text-center">
             <div class="card-body">
-                <h5 class="card-title fw-bold mb-1"><i class="bi bi-hourglass-split me-2"></i>Tarefas Pendentes</h5>
+                <h5 class="card-title fw-bold mb-1"><i class="bi bi-hourglass-split me-2"></i>Requisições Pendentes</h5>
                 <p class="card-text display-6 fw-bold">{{ pending_tasks_count }}</p>
             </div>
         </div>
@@ -30,7 +30,7 @@
     <div class="col-md-3">
         <div class="card bg-success text-dark shadow-lg rounded-3 border-0 py-3 text-center">
             <div class="card-body">
-                <h5 class="card-title fw-bold mb-1"><i class="bi bi-check-circle-fill me-2"></i>Tarefas Concluídas</h5>
+                <h5 class="card-title fw-bold mb-1"><i class="bi bi-check-circle-fill me-2"></i>Requisições Concluídas</h5>
                 <p class="card-text display-6 fw-bold">{{ completed_tasks_count }}</p>
             </div>
         </div>
@@ -38,7 +38,7 @@
     <div class="col-md-3">
         <div class="card bg-primary text-dark shadow-lg rounded-3 border-0 py-3 text-center">
             <div class="card-body">
-                <h5 class="card-title fw-bold mb-1"><i class="bi bi-globe me-2"></i>Tarefas Públicas</h5>
+                <h5 class="card-title fw-bold mb-1"><i class="bi bi-globe me-2"></i>Requisições Aceites</h5>
                 <p class="card-text display-6 fw-bold">{{ public_tasks_count }}</p>
             </div>
         </div>
@@ -48,7 +48,7 @@
 {# Formulário de Filtros e Ordenação #}
 <div class="card bg-secondary text-light shadow-lg mb-4 rounded-3 glassmorphism-card-small">
     <div class="card-body">
-        <h5 class="card-title text-white mb-3"><i class="bi bi-funnel-fill me-2"></i>Filtrar e Ordenar Tarefas</h5>
+        <h5 class="card-title text-white mb-3"><i class="bi bi-funnel-fill me-2"></i>Filtrar e Ordenar Requisições</h5>
         <form action="{{ url_for('user_dashboard') }}" method="GET">
             <div class="row g-3">
                 {# Filtro de Estado #}
@@ -348,9 +348,9 @@
         <i class="bi bi-info-circle display-4 mb-3"></i>
         {% if status_filter != 'all' or priority_filter != 'all' or category_filter != 'all' or tag_filter != 'all' or search_query %}
             <p class="mb-2 fs-5">Nenhuma tarefa encontrada com os filtros e pesquisa aplicados.</p>
-            <a href="{{ url_for('user_dashboard') }}" class="alert-link text-info fw-bold">Limpar filtros para ver todas as tarefas</a>
+            <a href="{{ url_for('user_dashboard') }}" class="alert-link text-info fw-bold">Limpar filtros para ver todas as requisições</a>
         {% else %}
-            <p class="mb-2 fs-5">Não tem tarefas registadas.</p>
+            <p class="mb-2 fs-5">Não tem requisições registadas.</p>
             <p class="mb-2 fs-6 text-muted">Comece já a organizar a sua vida!</p>
             <a href="{{ url_for('add_task') }}" class="alert-link text-info fw-bold">Adicione uma tarefa agora!</a>
         {% endif %}

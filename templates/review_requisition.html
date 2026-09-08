@@ -399,28 +399,17 @@ Analisar {{ requisition.requisition_number }}
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const canvas = document.getElementById(
-        "approver-signature-canvas"
-    );
+    const canvas = document.getElementById("approver-signature-canvas");
+    const form = document.getElementById("approval-form");
+    const signatureInput = document.getElementById("approver-signature");
+    const clearButton = document.getElementById("clear-approver-signature");
 
-    const signatureInput = document.getElementById(
-        "approver-signature"
-    );
-
-    const clearButton = document.getElementById(
-        "clear-approver-signature"
-    );
-
-    const approvalForm = document.getElementById(
-        "approval-form"
-    );
-
-    if (!canvas || !signatureInput || !approvalForm) {
+    if (!canvas || !form || !signatureInput) {
+        console.error("Elementos da assinatura do administrador não encontrados.");
         return;
     }
 
     const context = canvas.getContext("2d");
-
     let drawing = false;
     let hasSignature = false;
 
@@ -429,24 +418,18 @@ document.addEventListener("DOMContentLoaded", function () {
     context.lineCap = "round";
     context.lineJoin = "round";
 
+    canvas.style.touchAction = "none";
+
     function getPosition(event) {
-        const rectangle = canvas.getBoundingClientRect();
+        const rect = canvas.getBoundingClientRect();
 
         return {
-            x: (
-                (event.clientX - rectangle.left)
-                * canvas.width
-                / rectangle.width
-            ),
-            y: (
-                (event.clientY - rectangle.top)
-                * canvas.height
-                / rectangle.height
-            )
+            x: (event.clientX - rect.left) * canvas.width / rect.width,
+            y: (event.clientY - rect.top) * canvas.height / rect.height
         };
     }
 
-    function startDrawing(event) {
+    canvas.addEventListener("pointerdown", function (event) {
         event.preventDefault();
 
         drawing = true;
@@ -457,12 +440,10 @@ document.addEventListener("DOMContentLoaded", function () {
         context.beginPath();
         context.moveTo(position.x, position.y);
 
-        if (canvas.setPointerCapture) {
-            canvas.setPointerCapture(event.pointerId);
-        }
-    }
+        canvas.setPointerCapture(event.pointerId);
+    });
 
-    function draw(event) {
+    canvas.addEventListener("pointermove", function (event) {
         if (!drawing) {
             return;
         }
@@ -473,47 +454,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
         context.lineTo(position.x, position.y);
         context.stroke();
-    }
+    });
 
-    function stopDrawing(event) {
-        if (!drawing) {
-            return;
-        }
-
-        if (event) {
-            event.preventDefault();
-        }
-
+    function stopDrawing() {
         drawing = false;
         context.closePath();
     }
 
-    canvas.addEventListener("pointerdown", startDrawing);
-    canvas.addEventListener("pointermove", draw);
     canvas.addEventListener("pointerup", stopDrawing);
     canvas.addEventListener("pointercancel", stopDrawing);
 
-    if (clearButton) {
-        clearButton.addEventListener("click", function () {
-            context.clearRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+    clearButton.addEventListener("click", function () {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        signatureInput.value = "";
+        hasSignature = false;
+    });
 
-            signatureInput.value = "";
-            hasSignature = false;
-        });
-    }
-
-    approvalForm.addEventListener("submit", function (event) {
+    form.addEventListener("submit", function (event) {
         if (!hasSignature) {
             event.preventDefault();
 
-            alert(
-                "O administrador tem de assinar antes de aprovar."
-            );
+            alert("O administrador tem de assinar antes de aprovar.");
 
             canvas.scrollIntoView({
                 behavior: "smooth",

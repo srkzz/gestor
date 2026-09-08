@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block container_class %}container-fluid px-4{% endblock %}
+
 {% block title %}Painel de Administração{% endblock %}
 
 {% block content %}
@@ -100,7 +102,7 @@
 
 {# SECÇÃO DE GESTÃO DE UTILIZADORES #}
 <div class="row justify-content-center mt-4">
-    <div class="col-lg-10 mb-5">
+    <div class="col-12 mb-5">
         <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
             <div class="card-header text-center">
                 <h3 class="card-title text-white mb-0"><i class="bi bi-people-fill me-2"></i>Gestão de Utilizadores</h3>
@@ -203,7 +205,7 @@
 
 {# SECÇÃO DE GESTÃO DE TAREFAS #}
 <div class="row justify-content-center mt-4">
-    <div class="col-lg-10">
+    <div class="col-12">
         <div class="card bg-secondary text-light shadow-lg rounded-3 glassmorphism-card">
             <div class="card-header text-center">
                 <h3 class="card-title text-white mb-0"><i class="bi bi-list-task me-2"></i>Gestão de Tarefas</h3>
