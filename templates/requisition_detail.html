@@ -108,19 +108,20 @@
 
                 {% if requisition.requester_signature %}
                     <hr>
-
-                    <h5>Assinatura do requerente</h5>
-
+                
+                    <h5 class="text-info">
+                        <i class="bi bi-pen me-2"></i>
+                        Assinatura do requerente
+                    </h5>
+                
                     {{ requisition.requester_signature }}
-
+                
                     <div class="small text-muted mt-2">
-                        {{ requisition.user.username }}
-
+                        Assinado por {{ requisition.user.username }}
+                
                         {% if requisition.requester_signed_at %}
-                            ,
-                            {{ requisition.requester_signed_at.strftime(
-                                "%d/%m/%Y %H:%M"
-                            ) }}
+                            em
+                            {{ requisition.requester_signed_at.strftime('%d/%m/%Y %H:%M') }}
                         {% endif %}
                     </div>
                 {% endif %}
