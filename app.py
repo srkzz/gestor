@@ -536,7 +536,33 @@ def user_dashboard():
     completed_tasks_count = Task.objects(user=user, is_completed=True).count()
     approved_tasks_count = Task.objects(user=user, status='aprovada').count()
     awaiting_approval_count = Task.objects(user=user, status='pendente').count()
-
+                requisitions = Requisition.objects(
+                    user=user
+                ).order_by("-date_created").all()
+                
+                total_requisitions_count = Requisition.objects(
+                    user=user
+                ).count()
+                
+                draft_requisitions_count = Requisition.objects(
+                    user=user,
+                    status="rascunho"
+                ).count()
+                
+                submitted_requisitions_count = Requisition.objects(
+                    user=user,
+                    status="submetida"
+                ).count()
+                
+                approved_requisitions_count = Requisition.objects(
+                    user=user,
+                    status="aprovada"
+                ).count()
+                
+                rejected_requisitions_count = Requisition.objects(
+                    user=user,
+                    status="rejeitada"
+                ).count()
     return render_template('user_dashboard.html', user=user, tasks=tasks,
                             status_filter=status_filter,
                             priority_filter=priority_filter,
@@ -554,7 +580,14 @@ def user_dashboard():
                             pending_tasks_count=pending_tasks_count,
                             completed_tasks_count=completed_tasks_count,
                             approved_tasks_count=approved_tasks_count,
-                            awaiting_approval_count=awaiting_approval_count)
+                            awaiting_approval_count=awaiting_approval_count
+                            requisitions=requisitions,
+                            total_requisitions_count=total_requisitions_count,
+                            draft_requisitions_count=draft_requisitions_count,
+                            submitted_requisitions_count=submitted_requisitions_count,
+                            approved_requisitions_count=approved_requisitions_count,
+                            rejected_requisitions_count=rejected_requisitions_count,
+                           )
 
 
 @app.route('/add_task', methods=['GET', 'POST'])
