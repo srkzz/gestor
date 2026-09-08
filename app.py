@@ -741,8 +741,6 @@ def add_task():
             return redirect(url_for('user_dashboard'))
         return render_template('add_task.html', user=user)
 
-    return render_template('add_task.html', user=user)
-
 
 @app.route('/task/<string:task_id>/edit', methods=['GET', 'POST'])
 @login_required
