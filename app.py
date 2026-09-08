@@ -388,6 +388,18 @@ class Comment(db.Document):
     def __repr__(self):
         return f"<Comment(id={self.id}, user={self.user.username}, task={self.task.title})>"
 
+def get_current_user():
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return None
+
+    try:
+        return User.objects(
+            id=ObjectId(user_id)
+        ).first()
+    except Exception:
+        return None
 
 # --- Decoradores ---
 
