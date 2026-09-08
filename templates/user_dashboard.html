@@ -344,7 +344,15 @@
                                     title="Ver requisição">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-
+                                    {% if requisition.status == "rascunho" %}
+                                        <a href="{{ url_for('edit_requisition', requisition_id=requisition.id) }}"
+                                        class="btn btn-sm btn-outline-warning rounded-circle d-inline-flex align-items-center justify-content-center"
+                                        style="width: 34px; height: 34px;"
+                                        title="Editar rascunho"
+                                        aria-label="Editar rascunho">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>    
+                                    {% endif %}
                                     {% if requisition.status == "aprovada" %}
                                         <a href="{{ url_for('requisition_pdf', requisition_id=requisition.id) }}"
                                         class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -355,7 +363,6 @@
                                             <i class="bi bi-file-earmark-pdf-fill"></i>
                                         </a>
                                     {% endif %}
-
                                 </div>
                             </td>
                         {% endfor %}

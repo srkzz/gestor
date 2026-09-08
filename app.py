@@ -2182,7 +2182,242 @@ def requisition_pdf(requisition_id):
         }
     )
 
+@app.route(
+    "/requisitions/<string:requisition_id>/edit",
+    methods=["GET", "POST"]
+)
+@login_required
+def edit_requisition(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
 
+    current_user = get_current_user()
+
+    if not current_user:
+        return redirect(url_for("login"))
+
+    # Apenas quem criou pode editar
+    if str(requisition.user.id) != str(current_user.id):
+        abort(403)
+
+    # Apenas rascunhos podem ser editados
+    if requisition.status != "rascunho":
+        flash(
+            "Só é possível editar requisições em rascunho.",
+            "warning"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    if request.method == "POST":
+        machine_reference = request.form.get(
+            "machine_reference",
+            ""
+        ).strip()
+
+        brand = request.form.get(
+            "brand",
+            ""
+        ).strip()
+
+        model = request.form.get(
+            "model",
+            ""
+        ).strip()
+
+        serial_number = request.form.get(
+            "serial_number",
+            ""
+        ).strip()
+
+        priority = request.form.get(
+            "priority",
+            "media"
+        ).strip()
+
+        due_date_raw = request.form.get(
+            "due_date",
+            ""
+        ).strip()
+
+        description = request.form.get(
+            "description",
+            ""
+        ).strip()
+
+        if not all([
+            machine_reference,
+            brand,
+            model,
+            due_date_raw
+        ]):
+            flash(
+                "Preencha a referência, marca, modelo e data necessária.",
+                "error"
+            )
+
+            return render_template(
+                "edit_requisition.html",
+                requisition=requisition
+            )
+
+        try:
+            due_date = datetime.strptime(
+                due_date_raw,
+                "%Y-%m-%d"
+            ).date()
+        except ValueError:
+            flash(
+                "A data necessária não é válida.",
+                "error"
+            )
+
+            return render_template(
+                "edit_requisition.html",
+                requisition=requisition
+            )
+
+        part_codes = request.form.getlist("part_code[]")
+        part_descriptions = request.form.getlist(
+            "part_description[]"
+        )
+        quantities = request.form.getlist("quantity[]")
+        units = request.form.getlist("unit[]")
+
+        items = []
+
+        for index, part_code in enumerate(part_codes):
+            part_code = part_code.strip()
+
+            part_description = (
+                part_descriptions[index].strip()
+                if index < len(part_descriptions)
+                else ""
+            )
+
+            quantity_raw = (
+                quantities[index].strip()
+                if index < len(quantities)
+                else "1"
+            )
+
+            unit = (
+                units[index].strip().upper()
+                if index < len(units)
+                else "UN"
+            )
+
+            if not part_code and not part_description:
+                continue
+
+            if not part_code or not part_description:
+                flash(
+                    f"Material {index + 1}: indique o código e a descrição.",
+                    "error"
+                )
+
+                return render_template(
+                    "edit_requisition.html",
+                    requisition=requisition
+                )
+
+            try:
+                quantity = int(quantity_raw)
+
+                if quantity < 1:
+                    raise ValueError
+            except ValueError:
+                flash(
+                    f"Material {index + 1}: quantidade inválida.",
+                    "error"
+                )
+
+                return render_template(
+                    "edit_requisition.html",
+                    requisition=requisition
+                )
+
+            items.append(
+                RequisitionItem(
+                    part_code=part_code,
+                    part_description=part_description,
+                    quantity=quantity,
+                    unit=unit or "UN"
+                )
+            )
+
+        if not items:
+            flash(
+                "Adicione pelo menos um material.",
+                "error"
+            )
+
+            return render_template(
+                "edit_requisition.html",
+                requisition=requisition
+            )
+
+        requisition.machine_reference = machine_reference
+        requisition.brand = brand
+        requisition.model = model
+        requisition.serial_number = serial_number
+        requisition.priority = priority
+        requisition.due_date = due_date
+        requisition.description = description
+        requisition.items = items
+        submit_action = request.form.get(
+            "submit_action",
+            "draft"
+        )
+
+        requester_signature = request.form.get(
+            "requester_signature",
+            ""
+        ).strip()
+
+        if submit_action == "submit":
+            if not requester_signature:
+                flash(
+                    "Tem de assinar antes de submeter a requisição.",
+                    "error"
+                )
+
+                return render_template(
+                    "edit_requisition.html",
+                    requisition=requisition
+                )
+
+            requisition.requester_signature = requester_signature
+            requisition.requester_signed_at = datetime.utcnow()
+            requisition.status = "submetida"
+
+        else:
+            requisition.status = "rascunho"
+
+        requisition.save()
+
+        flash(
+            f"Requisição {requisition.requisition_number} atualizada.",
+            "success"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    return render_template(
+        "edit_requisition.html",
+        requisition=requisition
+    )
 # --- Error Handlers ---
 
 @app.errorhandler(404)

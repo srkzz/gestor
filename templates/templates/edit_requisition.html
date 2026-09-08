@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Requisição{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-xl-11">
+        <div class="card bg-secondary text-light shadow-lg glassmorphism-card">
+
+            <div class="card-header text-center">
+                <h2 class="text-white mb-1">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Editar Requisição
+                </h2>
+
+                <p class="text-muted mb-0">
+                    {{ requisition.requisition_number }}
+                </p>
+            </div>
+
+            <div class="card-body">
+                {{ url_for('edit_requisition', requisition_id=requisition.id) }}
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="requester_signature"
+                        id="requester-signature"
+                    >
+
+                    <h5 class="text-info mb-3">
+                        <i class="bi bi-truck me-2"></i>
+                        Identificação da máquina
+                    </h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="machine_reference" class="form-label">
+                                Referência da máquina
+                            </label>
+
+                            <input
+                                type="text"
+                                id="machine_reference"
+                                name="machine_reference"
+                                class="form-control bg-dark text-light border-secondary"
+                                value="{{ requisition.machine_reference }}"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="brand" class="form-label">
+                                Marca
+                            </label>
+
+                            <input
+                                type="text"
+                                id="brand"
+                                name="brand"
+                                class="form-control bg-dark text-light border-secondary"
+                                value="{{ requisition.brand }}"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="model" class="form-label">
+                                Modelo
+                            </label>
+
+                            <input
+                                type="text"
+                                id="model"
+                                name="model"
+                                class="form-control bg-dark text-light border-secondary"
+                                value="{{ requisition.model }}"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="serial_number" class="form-label">
+                                Número de série
+                            </label>
+
+                            <input
+                                type="text"
+                                id="serial_number"
+                                name="serial_number"
+                                class="form-control bg-dark text-light border-secondary"
+                                value="{{ requisition.serial_number or '' }}"
+                                placeholder="Opcional"
+                            >
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-info mb-0">
+                            <i class="bi bi-gear-wide-connected me-2"></i>
+                            Materiais ou peças
+                        </h5>
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-info rounded-pill"
+                            id="add-item-button"
+                        >
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Adicionar material
+                        </button>
+                    </div>
+
+                    <div id="items-container">
+                        {% for item in requisition.items %}
+                            <div class="requisition-item card bg-dark border-secondary mb-3">
+                                <div class="card-body">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <strong class="item-number">
+                                            Material {{ loop.index }}
+                                        </strong>
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger remove-item"
+                                            {% if requisition.items|length == 1 %}disabled{% endif %}
+                                            title="Remover material"
+                                        >
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">
+                                                Código da peça
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="part_code[]"
+                                                class="form-control bg-secondary text-light border-secondary"
+                                                value="{{ item.part_code }}"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="col-md-5">
+                                            <label class="form-label">
+                                                Peça a requisitar
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="part_description[]"
+                                                class="form-control bg-secondary text-light border-secondary"
+                                                value="{{ item.part_description }}"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="col-md-2">
+                                            <label class="form-label">
+                                                Quantidade
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                name="quantity[]"
+                                                class="form-control bg-secondary text-light border-secondary"
+                                                value="{{ item.quantity }}"
+                                                min="1"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="col-md-2">
+                                            <label class="form-label">
+                                                Unidade
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="unit[]"
+                                                class="form-control bg-secondary text-light border-secondary"
+                                                value="{{ item.unit }}"
+                                                required
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="text-info mb-3">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Prazo e urgência
+                    </h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="priority" class="form-label">
+                                Urgência
+                            </label>
+
+                            <select
+                                id="priority"
+                                name="priority"
+                                class="form-select bg-dark text-light border-secondary"
+                                required
+                            >
+                                <option
+                                    value="baixa"
+                                    {% if requisition.priority == "baixa" %}selected{% endif %}
+                                >
+                                    Baixa
+                                </option>
+
+                                <option
+                                    value="media"
+                                    {% if requisition.priority == "media" %}selected{% endif %}
+                                >
+                                    Média
+                                </option>
+
+                                <option
+                                    value="alta"
+                                    {% if requisition.priority == "alta" %}selected{% endif %}
+                                >
+                                    Alta
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="due_date" class="form-label">
+                                Data necessária
+                            </label>
+
+                            <input
+                                type="date"
+                                id="due_date"
+                                name="due_date"
+                                class="form-control bg-dark text-light border-secondary"
+                                value="{{ requisition.due_date.strftime('%Y-%m-%d') }}"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label for="description" class="form-label">
+                            Descrição ou observações
+                        </label>
+
+                        <textarea
+                            id="description"
+                            name="description"
+                            class="form-control bg-dark text-light border-secondary"
+                            rows="4"
+                            placeholder="Informação adicional sobre a requisição..."
+                        >{{ requisition.description or '' }}</textarea>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="text-info mb-3">
+                        <i class="bi bi-pen-fill me-2"></i>
+                        Assinatura do requerente
+                    </h5>
+
+                    <p class="text-muted">
+                        A assinatura só é obrigatória quando escolher
+                        “Assinar e submeter”.
+                    </p>
+
+                    <div class="bg-white rounded border">
+                        <canvas
+                            id="signature-canvas"
+                            width="800"
+                            height="220"
+                            style="width: 100%; height: 220px; display: block; cursor: crosshair; touch-action: none;"
+                        ></canvas>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-warning mt-2"
+                        id="clear-signature"
+                    >
+                        <i class="bi bi-eraser me-1"></i>
+                        Limpar assinatura
+                    </button>
+
+                    <div class="alert alert-info mt-4 mb-0">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Depois de assinar e submeter, a requisição deixa de poder
+                        ser editada e fica a aguardar aprovação.
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+                         }}"
+                            class="btn btn-outline-light rounded-pill"
+                        >
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancelar
+                        </a>
+
+                        <button
+                            type="submit"
+                            name="submit_action"
+                            value="draft"
+                            class="btn btn-warning rounded-pill"
+                        >
+                            <i class="bi bi-save-fill me-1"></i>
+                            Guardar rascunho
+                        </button>
+
+                        <button
+                            type="submit"
+                            name="submit_action"
+                            value="submit"
+                            class="btn btn-success rounded-pill"
+                        >
+                            <i class="bi bi-send-check-fill me-1"></i>
+                            Assinar e submeter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("requisition-form");
+
+    /*
+     * MATERIAIS
+     */
+    const itemsContainer = document.getElementById("items-container");
+    const addItemButton = document.getElementById("add-item-button");
+
+    function updateItems() {
+        if (!itemsContainer) {
+            return;
+        }
+
+        const items = itemsContainer.querySelectorAll(".requisition-item");
+
+        items.forEach(function (item, index) {
+            const number = item.querySelector(".item-number");
+            const removeButton = item.querySelector(".remove-item");
+
+            if (number) {
+                number.textContent = "Material " + (index + 1);
+            }
+
+            if (removeButton) {
+                removeButton.disabled = items.length === 1;
+            }
+        });
+    }
+
+    if (itemsContainer && addItemButton) {
+        addItemButton.addEventListener("click", function () {
+            const firstItem = itemsContainer.querySelector(
+                ".requisition-item"
+            );
+
+            if (!firstItem) {
+                return;
+            }
+
+            const newItem = firstItem.cloneNode(true);
+
+            newItem.querySelectorAll("input").forEach(function (input) {
+                if (input.name === "quantity[]") {
+                    input.value = "1";
+                } else if (input.name === "unit[]") {
+                    input.value = "UN";
+                } else {
+                    input.value = "";
+                }
+            });
+
+            itemsContainer.appendChild(newItem);
+            updateItems();
+
+            newItem.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        });
+
+        itemsContainer.addEventListener("click", function (event) {
+            const removeButton = event.target.closest(".remove-item");
+
+            if (!removeButton) {
+                return;
+            }
+
+            const items = itemsContainer.querySelectorAll(
+                ".requisition-item"
+            );
+
+            if (items.length <= 1) {
+                return;
+            }
+
+            const item = removeButton.closest(".requisition-item");
+
+            if (item) {
+                item.remove();
+                updateItems();
+            }
+        });
+
+        updateItems();
+    }
+
+    /*
+     * ASSINATURA
+     */
+    const canvas = document.getElementById("signature-canvas");
+    const signatureInput = document.getElementById("requester-signature");
+    const clearButton = document.getElementById("clear-signature");
+
+    if (!canvas || !signatureInput || !form) {
+        return;
+    }
+
+    const context = canvas.getContext("2d");
+
+    let drawing = false;
+    let hasSignature = false;
+
+    context.strokeStyle = "#000000";
+    context.lineWidth = 3;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+
+    function getPosition(event) {
+        const rectangle = canvas.getBoundingClientRect();
+
+        return {
+            x: (
+                (event.clientX - rectangle.left)
+                * canvas.width
+                / rectangle.width
+            ),
+            y: (
+                (event.clientY - rectangle.top)
+                * canvas.height
+                / rectangle.height
+            )
+        };
+    }
+
+    function startDrawing(event) {
+        event.preventDefault();
+
+        drawing = true;
+        hasSignature = true;
+
+        const position = getPosition(event);
+
+        context.beginPath();
+        context.moveTo(position.x, position.y);
+
+        if (canvas.setPointerCapture) {
+            canvas.setPointerCapture(event.pointerId);
+        }
+    }
+
+    function draw(event) {
+        if (!drawing) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const position = getPosition(event);
+
+        context.lineTo(position.x, position.y);
+        context.stroke();
+    }
+
+    function stopDrawing(event) {
+        if (!drawing) {
+            return;
+        }
+
+        if (event) {
+            event.preventDefault();
+        }
+
+        drawing = false;
+        context.closePath();
+    }
+
+    canvas.addEventListener("pointerdown", startDrawing);
+    canvas.addEventListener("pointermove", draw);
+    canvas.addEventListener("pointerup", stopDrawing);
+    canvas.addEventListener("pointercancel", stopDrawing);
+    canvas.addEventListener("pointerleave", stopDrawing);
+
+    if (clearButton) {
+        clearButton.addEventListener("click", function () {
+            context.clearRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            signatureInput.value = "";
+            hasSignature = false;
+        });
+    }
+
+    form.addEventListener("submit", function (event) {
+        const submitButton = event.submitter;
+
+        const isFinalSubmission = (
+            submitButton
+            && submitButton.name === "submit_action"
+            && submitButton.value === "submit"
+        );
+
+        if (isFinalSubmission && !hasSignature) {
+            event.preventDefault();
+
+            alert(
+                "Tem de assinar a requisição antes de a submeter."
+            );
+
+            canvas.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            return;
+        }
+
+        if (hasSignature) {
+            signatureInput.value = canvas.toDataURL("image/png");
+        }
+    });
+});
+</script>
+{% endblock %}

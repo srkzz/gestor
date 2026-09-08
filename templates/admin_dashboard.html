@@ -22,11 +22,10 @@
                     {{ total_pending_requisitions }}
                 </span>
             </div>
-
             <div class="card-body">
                 {% if pending_requisitions %}
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle">
+                    <div class="requisitions-table-wrapper">
+                        <table class="table table-dark table-hover table-sm align-middle mb-0 requisitions-table">
                             <thead>
                                 <tr>
                                     <th>Número</th>
@@ -299,5 +298,46 @@
         </div>
     </div>
 </div>
+{% block scripts %}
+<style>
+    /* Estilos adicionais para os ícones de prioridade no dashboard */
+    .priority-icon {
+        font-size: 1.1rem;
+        margin-right: 5px;
+    }
+    .priority-high { color: #dc3545; } /* Vermelho */
+    .priority-medium { color: #ffc107; } /* Amarelo */
+    .priority-low { color: #17a2b8; } /* Ciano */
+    .requisitions-table-wrapper {
+        width: 100%;
+        overflow: visible;
+    }
 
+    .requisitions-table {
+        width: 100%;
+        table-layout: auto;
+        font-size: 0.88rem;
+    }
+
+    .requisitions-table th,
+    .requisitions-table td {
+        padding: 0.55rem 0.45rem;
+        vertical-align: middle;
+    }
+
+    .requisitions-table .actions-column {
+        width: 90px;
+        min-width: 90px;
+    }
+
+    @media (max-width: 991.98px) {
+        .requisitions-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .requisitions-table {
+            min-width: 950px;
+        }
+    }
+</style>
 {% endblock %}
