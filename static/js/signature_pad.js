@@ -1,37 +1,33 @@
 document.addEventListener("DOMContentLoaded", function () {
     const canvas = document.getElementById("signature-canvas");
-    const clearButton = document.getElementById("clear-signature");
-    const signatureInput = document.getElementById("requester-signature");
     const form = document.getElementById("requisition-form");
+    const signatureInput = document.getElementById("requester-signature");
+    const clearButton = document.getElementById("clear-signature");
 
-    if (!canvas || !signatureInput || !form) {
+    if (!canvas || !form || !signatureInput) {
+        console.error("Elementos da assinatura não encontrados.");
         return;
     }
 
     const context = canvas.getContext("2d");
+
     let drawing = false;
     let hasSignature = false;
 
-    context.strokeStyle = "#111111";
-    context.lineWidth = 2;
+    context.strokeStyle = "#000000";
+    context.lineWidth = 3;
     context.lineCap = "round";
     context.lineJoin = "round";
 
     function getPosition(event) {
-        const rect = canvas.getBoundingClientRect();
-        const source = event.touches ? event.touches[0] : event;
+        const rectangle = canvas.getBoundingClientRect();
 
         return {
-            x: (
-                (source.clientX - rect.left)
-                * canvas.width
-                / rect.width
-            ),
-            y: (
-                (source.clientY - rect.top)
-                * canvas.height
-                / rect.height
-            )
+            x: (event.clientX - rectangle.left)
+                * (canvas.width / rectangle.width),
+
+            y: (event.clientY - rectangle.top)
+                * (canvas.height / rectangle.height)
         };
     }
 
@@ -45,9 +41,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         context.beginPath();
         context.moveTo(position.x, position.y);
+
+        canvas.setPointerCapture(event.pointerId);
     }
 
-    function draw(event) {
+    function continueDrawing(event) {
         if (!drawing) {
             return;
         }
@@ -61,33 +59,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function stopDrawing(event) {
-        if (event) {
-            event.preventDefault();
-        }
-
         if (!drawing) {
             return;
         }
+
+        event.preventDefault();
 
         drawing = false;
         context.closePath();
     }
 
-    canvas.addEventListener("mousedown", startDrawing);
-    canvas.addEventListener("mousemove", draw);
-    window.addEventListener("mouseup", stopDrawing);
-
-    canvas.addEventListener("touchstart", startDrawing, {
-        passive: false
-    });
-
-    canvas.addEventListener("touchmove", draw, {
-        passive: false
-    });
-
-    canvas.addEventListener("touchend", stopDrawing, {
-        passive: false
-    });
+    canvas.addEventListener("pointerdown", startDrawing);
+    canvas.addEventListener("pointermove", continueDrawing);
+    canvas.addEventListener("pointerup", stopDrawing);
+    canvas.addEventListener("pointercancel", stopDrawing);
+    canvas.addEventListener("pointerleave", stopDrawing);
 
     if (clearButton) {
         clearButton.addEventListener("click", function () {
@@ -98,24 +84,30 @@ document.addEventListener("DOMContentLoaded", function () {
                 canvas.height
             );
 
-            hasSignature = false;
             signatureInput.value = "";
+            hasSignature = false;
         });
     }
 
     form.addEventListener("submit", function (event) {
-        const clickedButton = event.submitter;
-        const isSubmission = (
-            clickedButton
-            && clickedButton.value === "submit"
-        );
+        const submitButton = event.submitter;
 
-        if (isSubmission && !hasSignature) {
+        const isFinalSubmission =
+            submitButton &&
+            submitButton.name === "submit_action" &&
+            submitButton.value === "submit";
+
+        if (isFinalSubmission && !hasSignature) {
             event.preventDefault();
 
             alert(
-                "É necessário assinar antes de submeter a requisição."
+                "Tem de assinar a requisição antes de submeter."
             );
+
+            canvas.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
 
             return;
         }
