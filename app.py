@@ -485,9 +485,6 @@ def logout():
     flash('Você fez logout com sucesso.', 'info')
     return redirect(url_for('home'))
 
-
-@app.route('/dashboard')
-@login_required
 @app.route("/dashboard")
 @login_required
 def user_dashboard():
