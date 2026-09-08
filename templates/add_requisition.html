@@ -331,9 +331,222 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block scripts %}
-< script src="{{ url_for('static', filename='js/requisition_form.js') }}"></script>
-< script src="{{ url_for('static', filename='js/signature_pad.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("requisition-form");
+    const canvas = document.getElementById("signature-canvas");
+    const signatureInput = document.getElementById("requester-signature");
+    const clearButton = document.getElementById("clear-signature");
+
+    const itemsContainer = document.getElementById("items-container");
+    const addItemButton = document.getElementById("add-item-button");
+
+    /*
+     * ASSINATURA
+     */
+    if (form && canvas && signatureInput) {
+        const context = canvas.getContext("2d");
+
+        let drawing = false;
+        let hasSignature = false;
+
+        context.strokeStyle = "#000000";
+        context.lineWidth = 3;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+
+        canvas.style.touchAction = "none";
+
+        function getPosition(event) {
+            const rect = canvas.getBoundingClientRect();
+
+            return {
+                x: (event.clientX - rect.left)
+                    * (canvas.width / rect.width),
+
+                y: (event.clientY - rect.top)
+                    * (canvas.height / rect.height)
+            };
+        }
+
+        function startDrawing(event) {
+            event.preventDefault();
+
+            drawing = true;
+            hasSignature = true;
+
+            const position = getPosition(event);
+
+            context.beginPath();
+            context.moveTo(position.x, position.y);
+
+            if (canvas.setPointerCapture) {
+                canvas.setPointerCapture(event.pointerId);
+            }
+        }
+
+        function draw(event) {
+            if (!drawing) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const position = getPosition(event);
+
+            context.lineTo(position.x, position.y);
+            context.stroke();
+        }
+
+        function stopDrawing(event) {
+            if (!drawing) {
+                return;
+            }
+
+            if (event) {
+                event.preventDefault();
+            }
+
+            drawing = false;
+            context.closePath();
+        }
+
+        canvas.addEventListener("pointerdown", startDrawing);
+        canvas.addEventListener("pointermove", draw);
+        canvas.addEventListener("pointerup", stopDrawing);
+        canvas.addEventListener("pointercancel", stopDrawing);
+
+        if (clearButton) {
+            clearButton.addEventListener("click", function () {
+                context.clearRect(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+                signatureInput.value = "";
+                hasSignature = false;
+            });
+        }
+
+        form.addEventListener("submit", function (event) {
+            const button = event.submitter;
+
+            const isFinalSubmission =
+                button &&
+                button.name === "submit_action" &&
+                button.value === "submit";
+
+            if (isFinalSubmission && !hasSignature) {
+                event.preventDefault();
+
+                alert(
+                    "Tem de assinar a requisição antes de submeter."
+                );
+
+                canvas.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                return;
+            }
+
+            if (hasSignature) {
+                signatureInput.value =
+                    canvas.toDataURL("image/png");
+            }
+        });
+    }
+
+    /*
+     * ADICIONAR VÁRIOS MATERIAIS
+     */
+    if (itemsContainer && addItemButton) {
+        function updateItems() {
+            const items = itemsContainer.querySelectorAll(
+                ".requisition-item"
+            );
+
+            items.forEach(function (item, index) {
+                const title = item.querySelector(".item-number");
+                const removeButton = item.querySelector(
+                    ".remove-item"
+                );
+
+                if (title) {
+                    title.textContent = "Material " + (index + 1);
+                }
+
+                if (removeButton) {
+                    removeButton.disabled = items.length === 1;
+                }
+            });
+        }
+
+        addItemButton.addEventListener("click", function () {
+            const firstItem = itemsContainer.querySelector(
+                ".requisition-item"
+            );
+
+            if (!firstItem) {
+                return;
+            }
+
+            const newItem = firstItem.cloneNode(true);
+
+            newItem.querySelectorAll("input").forEach(
+                function (input) {
+                    if (input.name === "quantity[]") {
+                        input.value = "1";
+                    } else if (input.name === "unit[]") {
+                        input.value = "UN";
+                    } else {
+                        input.value = "";
+                    }
+                }
+            );
+
+            itemsContainer.appendChild(newItem);
+
+            updateItems();
+
+            newItem.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        });
+
+        itemsContainer.addEventListener(
+            "click",
+            function (event) {
+                const removeButton = event.target.closest(
+                    ".remove-item"
+                );
+
+                if (!removeButton) {
+                    return;
+                }
+
+                const items = itemsContainer.querySelectorAll(
+                    ".requisition-item"
+                );
+
+                if (items.length > 1) {
+                    removeButton.closest(
+                        ".requisition-item"
+                    ).remove();
+
+                    updateItems();
+                }
+            }
+        );
+
+        updateItems();
+    }
+});
+</script>
 {% endblock %}
