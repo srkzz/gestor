@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Gestor de Tarefas{% endblock %}</title>
+    <title>{% block title %}DEQ RWANDA REQUISIÇÕES{% endblock %}</title>
     <!-- MDBootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.2.0/mdb.min.css" rel="stylesheet"/>
     <!-- Bootstrap Icons (continuam a ser úteis para mais variedade de ícones) -->
@@ -23,7 +23,7 @@
         <div class="container-fluid">
             <!-- Navbar brand -->
             <a class="navbar-brand me-auto" href="{{ url_for('home') }}">
-                <strong>GESTOR DE TAREFAS</strong>
+                <strong>GESTOR DE REQUISIÇÕES</strong>
             </a>
 
             <!-- Toggle button -->
@@ -48,14 +48,14 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('public_tasks') }}" data-mdb-ripple-init>
-                                <i class="bi bi-people-fill me-1"></i> Público
+                                <i class="bi bi-people-fill me-1"></i> REQUISIÇÕES ATIVAS
                             </a>
                         </li>
                         {# NOVO: Link para o Painel de Administração (apenas se for admin) #}
                         {% if current_user_is_admin %}
                             <li class="nav-item">
                                 <a class="nav-link text-warning" href="{{ url_for('admin_dashboard') }}" data-mdb-ripple-init>
-                                    <i class="bi bi-shield-fill me-1"></i> Admin
+                                    <i class="bi bi-shield-fill me-1"></i> ADMIN
                                 </a>
                             </li>
                         {% endif %}

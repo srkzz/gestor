@@ -7,7 +7,7 @@
     <span class="d-inline-block p-2 border-bottom border-3 border-primary">As Suas Requisições, {{ user.username }}!</span>
 </h2>
 
-<a href="{{ url_for('add_requisition') }}" class="btn btn-success mb-4 rounded-pill px-4 py-2 shadow-sm"><i class="bi bi-plus-circle-fill me-2"></i> Adicionar Nova Tarefa</a>
+<a href="{{ url_for('add_requisition') }}" class="btn btn-success mb-4 rounded-pill px-4 py-2 shadow-sm"><i class="bi bi-plus-circle-fill me-2"></i> Adicionar Requisição</a>
 
 {# NOVO: Cartões de Contadores #}
 <div class="row g-4 mb-5">
@@ -101,11 +101,14 @@
                 </div>
 
                 {# Pesquisa de Texto #}
-                <div class="col-md-6">
-                    <label for="search_query" class="form-label small text-muted">Pesquisar:</label>
-                    <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary rounded-pill" id="search_query" name="search" placeholder="Pesquisar referência, marca, modelo, código ou descrição da peça..." value="{{ search_query }}">
-                </div>
-
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ search_query }}"
+                    placeholder="Pesquisar referência, marca, modelo, código ou descrição..."
+                    class="form-control bg-light text-dark rounded-pill"
+                    style="flex: 1; min-width: 200px;"
+                />
                 {# Ordenar Por #}
                 <select
                     class="form-select bg-dark text-light border-secondary rounded-pill"
@@ -256,22 +259,28 @@
                                 </td>
 
                                 <td>
-                                <a href="{{ url_for('requisition_detail', requisition_id=requisition.id) }}"
-                                class="btn btn-sm btn-outline-info rounded-pill"
-                                title="Ver requisição">
-                                    <i class="bi bi-eye"></i>
-                                </a>
+                                <div class="d-flex align-items-center justify-content-center gap-2">
 
-                                {% if requisition.status == "aprovada" %}
-                                    <a href="{{ url_for('requisition_pdf', requisition_id=requisition.id) }}"
-                                    class="btn btn-sm btn-outline-danger rounded-circle ms-1"
-                                    title="Descarregar PDF"
-                                    aria-label="Descarregar PDF">
-                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    <a href="{{ url_for('requisition_detail', requisition_id=requisition.id) }}"
+                                    class="btn btn-sm btn-outline-info rounded-circle d-inline-flex align-items-center justify-content-center"
+                                    style="width: 36px; height: 36px;"
+                                    title="Ver requisição">
+                                        <i class="bi bi-eye-fill"></i>
                                     </a>
+
+                                    {% if requisition.status == "aprovada" %}
+                                        <a href="{{ url_for('requisition_pdf', requisition_id=requisition.id) }}"
+                                        class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center"
+                                        style="width: 36px; height: 36px;"
+                                        title="Abrir PDF"
+                                        target="_blank"
+                                        aria-label="Abrir PDF">
+                                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                                        </a>
                                     {% endif %}
-                                </td>
-                            </tr>
+
+                                </div>
+                            </td>
                         {% endfor %}
                     </tbody>
                 </table>
