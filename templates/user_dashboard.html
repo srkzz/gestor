@@ -23,23 +23,23 @@
         <div class="card bg-warning text-dark shadow-lg rounded-3 border-0 py-3 text-center">
             <div class="card-body">
                 <h5 class="card-title fw-bold mb-1"><i class="bi bi-hourglass-split me-2"></i>Requisições Pendentes</h5>
-                <p class="card-text display-6 fw-bold">{{ pending_requisitions_count }}</p>
+                <p class="card-text display-6 fw-bold">{{ submitted_requisitions_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-dark shadow-lg rounded-3 border-0 py-3 text-center">
+            <div class="card-body">
+                <h5 class="card-title fw-bold mb-1"><i class="bi bi-check-circle-fill me-2"></i>Requisições Rejeitadas</h5>
+                <p class="card-text display-6 fw-bold">{{ rejected_requisitions_count }}</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card bg-success text-dark shadow-lg rounded-3 border-0 py-3 text-center">
             <div class="card-body">
-                <h5 class="card-title fw-bold mb-1"><i class="bi bi-check-circle-fill me-2"></i>Requisições Concluídas</h5>
-                <p class="card-text display-6 fw-bold">{{ completed_requisitions_count }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-primary text-dark shadow-lg rounded-3 border-0 py-3 text-center">
-            <div class="card-body">
                 <h5 class="card-title fw-bold mb-1"><i class="bi bi-globe me-2"></i>Requisições Aceites</h5>
-                <p class="card-text display-6 fw-bold">{{ public_requisitions_count }}</p>
+                <p class="card-text display-6 fw-bold">{{ approved_requisitions_count }}</p>
             </div>
         </div>
     </div>
@@ -97,28 +97,6 @@
                         <option value="baixa" {% if priority_filter == 'baixa' %}selected{% endif %}>Baixa</option>
                         <option value="media" {% if priority_filter == 'media' %}selected{% endif %}>Média</option>
                         <option value="alta" {% if priority_filter == 'alta' %}selected{% endif %}>Alta</option>
-                    </select>
-                </div>
-
-                {# Filtro de Categoria #}
-                <div class="col-md-3">
-                    <label for="category_filter" class="form-label small text-muted">Categoria:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="category_filter">
-                        <option value="all" {% if category_filter == 'all' %}selected{% endif %}>Todas</option>
-                        {% for cat in all_categories %}
-                            <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat | capitalize }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                {# Filtro de Tags #}
-                <div class="col-md-3">
-                    <label for="tag_filter" class="form-label small text-muted">Tag:</label>
-                    <select class="form-select form-select-sm bg-dark text-light border-secondary rounded-pill" id="tag_filter">
-                        <option value="all" {% if tag_filter == 'all' %}selected{% endif %}>Todas</option>
-                        {% for tag in all_tags %}
-                            <option value="{{ tag }}" {% if tag_filter == tag %}selected{% endif %}>{{ tag }}</option>
-                        {% endfor %}
                     </select>
                 </div>
 
@@ -278,20 +256,19 @@
                                 </td>
 
                                 <td>
-                                     }}"
-                                        class="btn btn-sm btn-outline-info rounded-pill"
-                                    >
-                                        <i class="bi bi-eye me-1"></i>
-                                        Ver
-                                    </a>
+                                <a href="{{ url_for('requisition_detail', requisition_id=requisition.id) }}"
+                                class="btn btn-sm btn-outline-info rounded-pill"
+                                title="Ver requisição">
+                                    <i class="bi bi-eye"></i>
+                                </a>
 
-                                    {% if requisition.status == "aprovada" %}
-                                         }}"
-                                            class="btn btn-sm btn-outline-light rounded-pill"
-                                        >
-                                            <i class="bi bi-file-pdf me-1"></i>
-                                            PDF
-                                        </a>
+                                {% if requisition.status == "aprovada" %}
+                                    <a href="{{ url_for('requisition_pdf', requisition_id=requisition.id) }}"
+                                    class="btn btn-sm btn-outline-danger rounded-circle ms-1"
+                                    title="Descarregar PDF"
+                                    aria-label="Descarregar PDF">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </a>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -378,7 +355,13 @@
                         </td>
 
                         <td>
-                            <!-- Link Ver requisição -->
+                            <a href="{{ url_for('requisition_pdf', requisition_id=requisition.id) }}"
+                            class="btn btn-sm btn-outline-danger rounded-circle ms-1"
+                            title="Abrir PDF"
+                            target="_blank"
+                            aria-label="Abrir PDF">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                            </a>
                         </td>
                     </tr>
                 {% endfor %}

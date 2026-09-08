@@ -6,7 +6,7 @@ import tempfile
 import re
 from datetime import datetime, date
 from functools import wraps
-
+from io import BytesIO
 from flask import (
     Flask,
     render_template,
@@ -924,6 +924,23 @@ def _pdf_safe(text):
         return ''
     return str(text).encode('latin-1', 'replace').decode('latin-1')
 
+def signature_to_bytes(signature_data):
+    if not signature_data:
+        return None
+
+    try:
+        if "," in signature_data:
+            signature_data = signature_data.split(",", 1)[1]
+
+        image_bytes = base64.b64decode(signature_data)
+
+        return BytesIO(image_bytes)
+
+    except Exception:
+        app.logger.exception(
+            "Não foi possível converter a assinatura."
+        )
+        return None
 
 @app.route('/public_tasks/export_pdf')
 @login_required
@@ -1555,6 +1572,552 @@ def reject_requisition(requisition_id):
     )
 
     return redirect(url_for("admin_dashboard"))
+
+@app.route(
+    "/requisitions/<string:requisition_id>/pdf"
+)
+@login_required
+def requisition_pdf(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    current_user = get_current_user()
+
+    if not current_user:
+        return redirect(url_for("login"))
+
+    # Apenas o requerente ou um administrador pode abrir o PDF
+    is_owner = (
+        str(requisition.user.id)
+        == str(current_user.id)
+    )
+
+    if not is_owner and not current_user.is_admin:
+        abort(403)
+
+    if requisition.status != "aprovada":
+        flash(
+            "O PDF só está disponível para requisições aprovadas.",
+            "warning"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    pdf = FPDF(
+        orientation="P",
+        unit="mm",
+        format="A4"
+    )
+
+    pdf.set_auto_page_break(
+        auto=True,
+        margin=15
+    )
+
+    pdf.add_page()
+
+    # Cabeçalho
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        16
+    )
+
+    pdf.cell(
+        0,
+        10,
+        _pdf_safe("REQUISIÇÃO DE MATERIAL"),
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C"
+    )
+
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        11
+    )
+
+    pdf.cell(
+        0,
+        8,
+        _pdf_safe(
+            requisition.requisition_number
+        ),
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C"
+    )
+
+    pdf.ln(4)
+
+    # Estado
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        10
+    )
+
+    pdf.set_fill_color(
+        210,
+        245,
+        220
+    )
+
+    pdf.cell(
+        0,
+        8,
+        _pdf_safe("ESTADO: APROVADA"),
+        border=1,
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+        fill=True
+    )
+
+    pdf.ln(5)
+
+    # Equipamento
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        12
+    )
+
+    pdf.cell(
+        0,
+        8,
+        _pdf_safe("DADOS DO EQUIPAMENTO"),
+        new_x="LMARGIN",
+        new_y="NEXT"
+    )
+
+    pdf.set_font(
+        "Helvetica",
+        "",
+        10
+    )
+
+    equipment_lines = [
+        (
+            "Referência da máquina",
+            requisition.machine_reference
+        ),
+        (
+            "Marca",
+            requisition.brand
+        ),
+        (
+            "Modelo",
+            requisition.model
+        ),
+        (
+            "Número de série",
+            requisition.serial_number or "-"
+        ),
+        (
+            "Urgência",
+            requisition.priority.capitalize()
+        ),
+        (
+            "Data necessária",
+            requisition.due_date.strftime(
+                "%d/%m/%Y"
+            )
+        )
+    ]
+
+    for label, value in equipment_lines:
+        pdf.set_font(
+            "Helvetica",
+            "B",
+            10
+        )
+
+        pdf.cell(
+            45,
+            7,
+            _pdf_safe(f"{label}:")
+        )
+
+        pdf.set_font(
+            "Helvetica",
+            "",
+            10
+        )
+
+        pdf.cell(
+            0,
+            7,
+            _pdf_safe(value),
+            new_x="LMARGIN",
+            new_y="NEXT"
+        )
+
+    pdf.ln(5)
+
+    # Materiais
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        12
+    )
+
+    pdf.cell(
+        0,
+        8,
+        _pdf_safe("MATERIAIS REQUISITADOS"),
+        new_x="LMARGIN",
+        new_y="NEXT"
+    )
+
+    # Cabeçalho da tabela
+    pdf.set_fill_color(
+        50,
+        60,
+        70
+    )
+
+    pdf.set_text_color(
+        255,
+        255,
+        255
+    )
+
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        9
+    )
+
+    pdf.cell(
+        10,
+        8,
+        "#",
+        border=1,
+        align="C",
+        fill=True
+    )
+
+    pdf.cell(
+        38,
+        8,
+        _pdf_safe("Código"),
+        border=1,
+        align="C",
+        fill=True
+    )
+
+    pdf.cell(
+        92,
+        8,
+        _pdf_safe("Descrição"),
+        border=1,
+        align="C",
+        fill=True
+    )
+
+    pdf.cell(
+        25,
+        8,
+        _pdf_safe("Quantidade"),
+        border=1,
+        align="C",
+        fill=True
+    )
+
+    pdf.cell(
+        25,
+        8,
+        _pdf_safe("Unidade"),
+        border=1,
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+        fill=True
+    )
+
+    pdf.set_text_color(
+        0,
+        0,
+        0
+    )
+
+    pdf.set_font(
+        "Helvetica",
+        "",
+        9
+    )
+
+    for index, item in enumerate(
+        requisition.items,
+        start=1
+    ):
+        pdf.cell(
+            10,
+            8,
+            str(index),
+            border=1,
+            align="C"
+        )
+
+        pdf.cell(
+            38,
+            8,
+            _pdf_safe(item.part_code),
+            border=1
+        )
+
+        description = _pdf_safe(
+            item.part_description
+        )
+
+        if len(description) > 52:
+            description = (
+                description[:49] + "..."
+            )
+
+        pdf.cell(
+            92,
+            8,
+            description,
+            border=1
+        )
+
+        pdf.cell(
+            25,
+            8,
+            str(item.quantity),
+            border=1,
+            align="C"
+        )
+
+        pdf.cell(
+            25,
+            8,
+            _pdf_safe(item.unit),
+            border=1,
+            new_x="LMARGIN",
+            new_y="NEXT",
+            align="C"
+        )
+
+    # Observações
+    if requisition.description:
+        pdf.ln(6)
+
+        pdf.set_font(
+            "Helvetica",
+            "B",
+            11
+        )
+
+        pdf.cell(
+            0,
+            7,
+            _pdf_safe("DESCRIÇÃO OU OBSERVAÇÕES"),
+            new_x="LMARGIN",
+            new_y="NEXT"
+        )
+
+        pdf.set_font(
+            "Helvetica",
+            "",
+            10
+        )
+
+        pdf.multi_cell(
+            0,
+            6,
+            _pdf_safe(
+                requisition.description
+            ),
+            border=1
+        )
+
+    pdf.ln(8)
+
+    # Assinaturas
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        12
+    )
+
+    pdf.cell(
+        0,
+        8,
+        _pdf_safe("ASSINATURAS"),
+        new_x="LMARGIN",
+        new_y="NEXT"
+    )
+
+    signature_y = pdf.get_y() + 3
+
+    # Assinatura do requerente
+    requester_signature = signature_to_bytes(
+        requisition.requester_signature
+    )
+
+    if requester_signature:
+        try:
+            pdf.image(
+                requester_signature,
+                x=20,
+                y=signature_y,
+                w=70,
+                h=25,
+                keep_aspect_ratio=True
+            )
+        except Exception:
+            app.logger.exception(
+                "Erro ao inserir assinatura do requerente no PDF."
+            )
+
+    # Assinatura do aprovador
+    approver_signature = signature_to_bytes(
+        requisition.approver_signature
+    )
+
+    if approver_signature:
+        try:
+            pdf.image(
+                approver_signature,
+                x=120,
+                y=signature_y,
+                w=70,
+                h=25,
+                keep_aspect_ratio=True
+            )
+        except Exception:
+            app.logger.exception(
+                "Erro ao inserir assinatura do aprovador no PDF."
+            )
+
+    pdf.set_y(
+        signature_y + 28
+    )
+
+    pdf.set_font(
+        "Helvetica",
+        "B",
+        9
+    )
+
+    pdf.cell(
+        95,
+        6,
+        _pdf_safe(
+            requisition.user.username
+        ),
+        align="C"
+    )
+
+    approver_name = (
+        requisition.approved_by.username
+        if requisition.approved_by
+        else "-"
+    )
+
+    pdf.cell(
+        95,
+        6,
+        _pdf_safe(approver_name),
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C"
+    )
+
+    pdf.set_font(
+        "Helvetica",
+        "",
+        8
+    )
+
+    requester_date = (
+        requisition.requester_signed_at.strftime(
+            "%d/%m/%Y %H:%M"
+        )
+        if requisition.requester_signed_at
+        else "-"
+    )
+
+    approved_date = (
+        requisition.approved_at.strftime(
+            "%d/%m/%Y %H:%M"
+        )
+        if requisition.approved_at
+        else "-"
+    )
+
+    pdf.cell(
+        95,
+        5,
+        _pdf_safe(
+            f"Requerente | {requester_date}"
+        ),
+        align="C"
+    )
+
+    pdf.cell(
+        95,
+        5,
+        _pdf_safe(
+            f"Aprovador | {approved_date}"
+        ),
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C"
+    )
+
+    pdf.ln(8)
+
+    pdf.set_font(
+        "Helvetica",
+        "I",
+        8
+    )
+
+    pdf.set_text_color(
+        90,
+        90,
+        90
+    )
+
+    pdf.multi_cell(
+        0,
+        5,
+        _pdf_safe(
+            "Documento gerado automaticamente pelo "
+            "Sistema de Gestão de Requisições."
+        ),
+        align="C"
+    )
+
+    pdf_output = bytes(
+        pdf.output()
+    )
+
+    filename = (
+        f"{requisition.requisition_number}.pdf"
+    )
+
+    return Response(
+        pdf_output,
+        mimetype="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'inline; filename="{filename}"'
+            )
+        }
+    )
+
 
 # --- Error Handlers ---
 
