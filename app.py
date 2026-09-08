@@ -665,7 +665,7 @@ def user_dashboard():
             status="rejeitada"
         ).count()
 
-        return render_template(
+    return render_template(
                 "user_dashboard.html",
                 user=user,
                 requisitions=requisitions,
@@ -740,6 +740,8 @@ def add_task():
         if created_count:
             return redirect(url_for('user_dashboard'))
         return render_template('add_task.html', user=user)
+
+    return render_template('add_task.html', user=user)
 
 
 @app.route('/task/<string:task_id>/edit', methods=['GET', 'POST'])
