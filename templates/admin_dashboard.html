@@ -77,12 +77,10 @@
                                         </td>
 
                                         <td>
-                                             }}"
-                                                class="btn btn-sm btn-success rounded-pill"
-                                            >
+                                            <a href="{{ url_for('review_requisition', requisition_id=requisition.id) }}"
+                                            class="btn btn-sm btn-success rounded-pill">
                                                 <i class="bi bi-search me-1"></i>
                                                 Analisar
-                                            </a>
                                         </td>
                                     </tr>
                                 {% endfor %}

@@ -210,7 +210,10 @@ Analisar {{ requisition.requisition_number }}
             <div class="card-body">
                 {% if requisition.requester_signature %}
                     <div class="bg-white rounded p-3 text-center">
-                        {{ requisition.requester_signature }}
+                        <img src="{{ requisition.requester_signature }}"
+                        alt="Assinatura do requerente"
+                        class="img-fluid"
+                        style"display: block; max-width: 100%; max-height: 220px; margin: auto;">
                     </div>
 
                     <div class="text-muted small mt-2">
@@ -345,7 +348,10 @@ Analisar {{ requisition.requisition_number }}
 
                     {% if requisition.approver_signature %}
                         <div class="bg-white rounded p-3 text-center">
-                            {{ requisition.approver_signature }}
+                            <img src="{{ requisition.approver_signature }}"
+                        alt="Assinatura do aprovador"
+                        class="img-fluid"
+                        style"display: block; max-width: 100%; max-height: 220px; margin: auto;">
                         </div>
                     {% endif %}
 
