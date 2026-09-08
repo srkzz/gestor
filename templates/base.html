@@ -46,11 +46,6 @@
                             <a class="nav-link" href="{{ url_for('add_requisition') }}" data-mdb> Nova Requisição
                         </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('public_tasks') }}" data-mdb-ripple-init>
-                                <i class="bi bi-people-fill me-1"></i> REQUISIÇÕES ATIVAS
-                            </a>
-                        </li>
                         {# NOVO: Link para o Painel de Administração (apenas se for admin) #}
                         {% if current_user_is_admin %}
                             <li class="nav-item">
