@@ -128,7 +128,125 @@
     </div>
 </div>
 
+<div class="card bg-secondary text-light shadow-lg mb-5 glassmorphism-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="text-white mb-0">
+            <i class="bi bi-file-earmark-text-fill me-2"></i>
+            As minhas requisições
+        </h3>
 
+         }}"
+            class="btn btn-success rounded-pill"
+        >
+            <i class="bi bi-plus-circle me-1"></i>
+            Nova Requisição
+        </a>
+    </div>
+
+    <div class="card-body">
+        {% if requisitions %}
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Referência</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Materiais</th>
+                            <th>Urgência</th>
+                            <th>Data necessária</th>
+                            <th>Estado</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for requisition in requisitions %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        {{ requisition.requisition_number }}
+                                    </strong>
+                                </td>
+
+                                <td>{{ requisition.machine_reference }}</td>
+                                <td>{{ requisition.brand }}</td>
+                                <td>{{ requisition.model }}</td>
+                                <td>{{ requisition.items|length }}</td>
+
+                                <td>
+                                    {% if requisition.priority == "alta" %}
+                                        <span class="badge bg-danger">
+                                            Alta
+                                        </span>
+                                    {% elif requisition.priority == "media" %}
+                                        <span class="badge bg-warning text-dark">
+                                            Média
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-info text-dark">
+                                            Baixa
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ requisition.due_date.strftime('%d/%m/%Y') }}
+                                </td>
+
+                                <td>
+                                    {% if requisition.status == "rascunho" %}
+                                        <span class="badge bg-secondary border">
+                                            Rascunho
+                                        </span>
+
+                                    {% elif requisition.status == "submetida" %}
+                                        <span class="badge bg-warning text-dark">
+                                            A aguardar aprovação
+                                        </span>
+
+                                    {% elif requisition.status == "aprovada" %}
+                                        <span class="badge bg-success">
+                                            Aprovada
+                                        </span>
+
+                                    {% elif requisition.status == "rejeitada" %}
+                                        <span class="badge bg-danger">
+                                            Rejeitada
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                     }}"
+                                        class="btn btn-sm btn-outline-info rounded-pill"
+                                    >
+                                        <i class="bi bi-eye me-1"></i>
+                                        Ver
+                                    </a>
+
+                                    {% if requisition.status == "aprovada" %}
+                                         }}"
+                                            class="btn btn-sm btn-outline-light rounded-pill"
+                                        >
+                                            <i class="bi bi-file-pdf me-1"></i>
+                                            PDF
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center mb-0">
+                Ainda não criou nenhuma requisição.
+            </div>
+        {% endif %}
+    </div>
+</div>
 {% if tasks %}
     <div class="table-responsive">
         <table class="table table-dark table-striped table-hover align-middle rounded-3 overflow-hidden">
