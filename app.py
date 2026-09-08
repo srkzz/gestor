@@ -1717,8 +1717,27 @@ def requisition_pdf(requisition_id):
     )
 
     pdf.add_page()
-
+    
     # Cabeçalho
+    # Logótipo no canto superior esquerdo
+    logo_path = os.path.join(
+        app.root_path,
+        "static",
+        "img",
+        "mota_engil_rwanda.png"
+    )
+
+    if os.path.exists(logo_path):
+        pdf.image(
+            logo_path,
+            x=10,
+            y=8,
+            w=55
+        )
+
+    # Título alinhado à direita do logótipo
+    pdf.set_xy(70, 11)
+
     pdf.set_font(
         "Helvetica",
         "B",
@@ -1726,13 +1745,13 @@ def requisition_pdf(requisition_id):
     )
 
     pdf.cell(
-        0,
-        10,
+        130,
+        9,
         _pdf_safe("REQUISIÇÃO DE MATERIAL"),
-        new_x="LMARGIN",
-        new_y="NEXT",
         align="C"
     )
+
+    pdf.set_xy(70, 21)
 
     pdf.set_font(
         "Helvetica",
@@ -1741,17 +1760,15 @@ def requisition_pdf(requisition_id):
     )
 
     pdf.cell(
-        0,
-        8,
-        _pdf_safe(
-            requisition.requisition_number
-        ),
-        new_x="LMARGIN",
-        new_y="NEXT",
+        130,
+        7,
+        _pdf_safe(requisition.requisition_number),
         align="C"
     )
 
-    pdf.ln(4)
+    # Continua o documento abaixo do cabeçalho
+    pdf.set_y(38)
+
 
     # Estado
     pdf.set_font(
