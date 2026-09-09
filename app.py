@@ -3531,9 +3531,13 @@ def reset_password(token):
             "Já pode iniciar sessão.",
             "success"
         )
-
+        
         return redirect(url_for("login"))
     
+    return render_template(
+        "reset_password.html",
+        token=token
+     )
 
 # --- Error Handlers ---
 
