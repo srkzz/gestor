@@ -1527,9 +1527,6 @@ def admin_dashboard():
 
         search_filter = (
             Q(
-                requisition_number__icontains=requisition_search
-            )
-            | Q(
                 machine_reference__icontains=requisition_search
             )
             | Q(
