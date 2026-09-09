@@ -4,6 +4,9 @@ import math
 import base64
 import tempfile
 import re
+import boto3
+from botocore.config import Config
+from botocore.exceptions import BotoCoreError, ClientError
 from datetime import datetime, date
 from functools import wraps
 from io import BytesIO
@@ -78,6 +81,34 @@ def create_app():
 
 app = create_app()
 
+def get_r2_client():
+    endpoint_url = os.environ.get("R2_ENDPOINT_URL")
+    access_key_id = os.environ.get("R2_ACCESS_KEY_ID")
+    secret_access_key = os.environ.get("R2_SECRET_ACCESS_KEY")
+
+    if not all([
+        endpoint_url,
+        access_key_id,
+        secret_access_key
+    ]):
+        raise RuntimeError(
+            "As credenciais do Cloudflare R2 não estão configuradas."
+        )
+
+    return boto3.client(
+        service_name="s3",
+        endpoint_url=endpoint_url,
+        aws_access_key_id=access_key_id,
+        aws_secret_access_key=secret_access_key,
+        region_name="auto",
+        config=Config(
+            signature_version="s3v4",
+            retries={
+                "max_attempts": 3,
+                "mode": "standard"
+            }
+        )
+    )
 PER_PAGE = 10
 
 @app.context_processor
@@ -2488,6 +2519,53 @@ def delete_requisition(requisition_id):
     return redirect(
         request.referrer or url_for("admin_dashboard")
     )
+
+
+@app.route("/admin/r2/test")
+@admin_required
+def test_r2_connection():
+    bucket_name = os.environ.get("R2_BUCKET_NAME")
+
+    if not bucket_name:
+        flash(
+            "A variável R2_BUCKET_NAME não está configurada.",
+            "error"
+        )
+        return redirect(url_for("admin_dashboard"))
+
+    try:
+        r2_client = get_r2_client()
+
+        r2_client.head_bucket(
+            Bucket=bucket_name
+        )
+
+        flash(
+            "Ligação ao Cloudflare R2 confirmada com sucesso.",
+            "success"
+        )
+
+    except (BotoCoreError, ClientError):
+        app.logger.exception(
+            "Erro ao testar a ligação ao Cloudflare R2."
+        )
+
+        flash(
+            "Não foi possível ligar ao Cloudflare R2. "
+            "Verifique as credenciais e o nome do bucket.",
+            "error"
+        )
+
+    except RuntimeError as error:
+        app.logger.error(str(error))
+
+        flash(
+            str(error),
+            "error"
+        )
+
+    return redirect(url_for("admin_dashboard"))
+
 # --- Error Handlers ---
 
 @app.errorhandler(404)
