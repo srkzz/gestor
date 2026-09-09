@@ -409,7 +409,7 @@ Analisar {{ requisition.requisition_number }}
                     {% endif %}
                 </div>
                 <a
-                    href="{{ url_for('download_attachment', requisition_id=requisition.id) }}"
+                    href="{{ url_for('view_requisition_quotation', requisition_id=requisition.id) }}"
                     class="btn btn-dark rounded-pill text-nowrap"
                     target="_blank"
                     rel="noopener noreferrer"
