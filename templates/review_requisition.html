@@ -5,360 +5,377 @@ Analisar {{ requisition.requisition_number }}
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-xl-10">
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-10">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="text-white mb-1">
-                    <i class="bi bi-clipboard-check-fill me-2"></i>
-                    Analisar Requisição
-                </h2>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="text-white mb-1">
+                        <i class="bi bi-clipboard-check-fill me-2"></i>
+                        Analisar Requisição
+                    </h2>
 
-                <div class="text-muted">
-                    {{ requisition.requisition_number }}
-                </div>
-            </div>
-
-            <div>
-                {% if requisition.status == "rascunho" %}
-                    <span class="badge bg-secondary fs-6">
-                        Rascunho
-                    </span>
-
-                {% elif requisition.status == "submetida" %}
-                    <span class="badge bg-warning text-dark fs-6">
-                        A aguardar aprovação
-                    </span>
-
-                {% elif requisition.status == "aprovada" %}
-                    <span class="badge bg-success fs-6">
-                        Aprovada
-                    </span>
-
-                {% elif requisition.status == "rejeitada" %}
-                    <span class="badge bg-danger fs-6">
-                        Rejeitada
-                    </span>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
-            <div class="card-header">
-                <h4 class="text-white mb-0">
-                    <i class="bi bi-truck me-2"></i>
-                    Equipamento
-                </h4>
-            </div>
-
-            <div class="card-body">
-                <div class="row g-4">
-                    <div class="col-md-3">
-                        <div class="text-muted small">
-                            Referência da máquina
-                        </div>
-
-                        <strong>
-                            {{ requisition.machine_reference }}
-                        </strong>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="text-muted small">
-                            Marca
-                        </div>
-
-                        <strong>{{ requisition.brand }}</strong>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="text-muted small">
-                            Modelo
-                        </div>
-
-                        <strong>{{ requisition.model }}</strong>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="text-muted small">
-                            Número de série
-                        </div>
-
-                        <strong>
-                            {{ requisition.serial_number or "-" }}
-                        </strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
-            <div class="card-header">
-                <h4 class="text-white mb-0">
-                    <i class="bi bi-gear-wide-connected me-2"></i>
-                    Materiais solicitados
-                </h4>
-            </div>
-
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Código da peça</th>
-                                <th>Material ou peça</th>
-                                <th>Quantidade</th>
-                                <th>Unidade</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {% for item in requisition.items %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>
-                                        <strong>{{ item.part_code }}</strong>
-                                    </td>
-                                    <td>{{ item.part_description }}</td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>{{ item.unit }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
-            <div class="card-header">
-                <h4 class="text-white mb-0">
-                    <i class="bi bi-info-circle-fill me-2"></i>
-                    Informações da requisição
-                </h4>
-            </div>
-
-            <div class="card-body">
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="text-muted small">
-                            Requerente
-                        </div>
-
-                        <strong>
-                            {{ requisition.user.username }}
-                        </strong>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="text-muted small">
-                            Urgência
-                        </div>
-
-                        {% if requisition.priority == "alta" %}
-                            <span class="badge bg-danger">
-                                Alta
-                            </span>
-
-                        {% elif requisition.priority == "media" %}
-                            <span class="badge bg-warning text-dark">
-                                Média
-                            </span>
-
-                        {% else %}
-                            <span class="badge bg-info text-dark">
-                                Baixa
-                            </span>
-                        {% endif %}
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="text-muted small">
-                            Data necessária
-                        </div>
-
-                        <strong>
-                            {{ requisition.due_date.strftime("%d/%m/%Y") }}
-                        </strong>
+                    <div class="text-muted">
+                        {{ requisition.requisition_number }}
                     </div>
                 </div>
 
-                {% if requisition.description %}
-                    <hr>
+                <div>
+                    {% if requisition.status == "rascunho" %}
+                        <span class="badge bg-secondary fs-6">
+                            Rascunho
+                        </span>
 
-                    <div class="text-muted small mb-2">
-                        Descrição ou observações
-                    </div>
+                    {% elif requisition.status == "submetida" %}
+                        <span class="badge bg-warning text-dark fs-6">
+                            A aguardar aprovação
+                        </span>
 
-                    <p class="mb-0">
-                        {{ requisition.description }}
-                    </p>
-                {% endif %}
+                    {% elif requisition.status == "aprovada" %}
+                        <span class="badge bg-success fs-6">
+                            Aprovada
+                        </span>
+
+                    {% elif requisition.status == "rejeitada" %}
+                        <span class="badge bg-danger fs-6">
+                            Rejeitada
+                        </span>
+                    {% endif %}
+                </div>
             </div>
-        </div>
 
-        <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
-            <div class="card-header">
-                <h4 class="text-white mb-0">
-                    <i class="bi bi-pen-fill me-2"></i>
-                    Assinatura do requerente
-                </h4>
-            </div>
-
-            <div class="card-body">
-                {% if requisition.requester_signature %}
-                    <div class="bg-white rounded p-3 text-center">
-                        <img src="{{ requisition.requester_signature }}"
-                        alt="Assinatura do requerente"
-                        class="img-fluid"
-                        style"display: block; max-width: 100%; max-height: 220px; margin: auto;">
-                    </div>
-
-                    <div class="text-muted small mt-2">
-                        Assinado por
-                        <strong>{{ requisition.user.username }}</strong>
-
-                        {% if requisition.requester_signed_at %}
-                            em
-                            {{ requisition.requester_signed_at.strftime(
-                                "%d/%m/%Y %H:%M"
-                            ) }}
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <div class="alert alert-danger mb-0">
-                        Esta requisição não possui assinatura do requerente.
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-        {% if requisition.status == "submetida" %}
             <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
                 <div class="card-header">
                     <h4 class="text-white mb-0">
-                        <i class="bi bi-shield-check me-2"></i>
-                        Decisão do administrador
+                        <i class="bi bi-truck me-2"></i>
+                        Equipamento
                     </h4>
                 </div>
 
                 <div class="card-body">
-                    <form
-                        method="POST"
-                        action="{{ url_for('approve_requisition', requisition_id=requisition.id) }}"
-                        id="approval-form"
-                    >
-                        <input
-                            type="hidden"
-                            name="csrf_token"
-                            value="{{ csrf_token() }}"
-                        >
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <div class="text-muted small">
+                                Referência da máquina
+                            </div>
 
-                        <input
-                            type="hidden"
-                            name="approver_signature"
-                            id="approver-signature"
-                        >
-
-                        <label class="form-label">
-                            Assinatura do aprovador
-                        </label>
-
-                        <div class="bg-white rounded">
-                            <canvas
-                                id="approver-signature-canvas"
-                                width="800"
-                                height="220"
-                                style="width: 100%; height: 220px; display: block; cursor: crosshair; touch-action: none;"
-                            ></canvas>
+                            <strong>
+                                {{ requisition.machine_reference }}
+                            </strong>
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-warning mt-2"
-                            id="clear-approver-signature"
-                        >
-                            <i class="bi bi-eraser me-1"></i>
-                            Limpar assinatura
-                        </button>
-                        {% if requisition.quotation_storage_key %}
-                        <div class="d-flex justify-content-end mt-4">
-                            <button
-                                type="submit"
-                                class="btn btn-success rounded-pill px-4"
-                            >
-                                <i class="bi bi-check-circle-fill me-2"></i>
-                                Assinar e aprovar
-                            </button>
+                        <div class="col-md-3">
+                            <div class="text-muted small">
+                                Marca
+                            </div>
+
+                            <strong>{{ requisition.brand }}</strong>
                         </div>
-                    </form>
 
-                    <hr class="my-4">
+                        <div class="col-md-3">
+                            <div class="text-muted small">
+                                Modelo
+                            </div>
 
-                    <form
-                        method="POST"
-                        action="{{ url_for('reject_requisition', requisition_id=requisition.id) }}"
-                    >
-                        <input
-                            type="hidden"
-                            name="csrf_token"
-                            value="{{ csrf_token() }}"
-                        >
-
-                        <label
-                            for="rejection_reason"
-                            class="form-label"
-                        >
-                            Motivo da rejeição
-                        </label>
-
-                        <textarea
-                            id="rejection_reason"
-                            name="rejection_reason"
-                            class="form-control bg-dark text-light border-secondary"
-                            rows="3"
-                            placeholder="Indique o motivo da rejeição..."
-                        ></textarea>
-
-                        <div class="d-flex justify-content-end mt-3">
-                            <button
-                                type="submit"
-                                class="btn btn-danger rounded-pill px-4"
-                                onclick="return confirm('Rejeitar esta requisição?')"
-                            >
-                                <i class="bi bi-x-circle-fill me-2"></i>
-                                Rejeitar
-                            </button>
+                            <strong>{{ requisition.model }}</strong>
                         </div>
-                    </form>
+
+                        <div class="col-md-3">
+                            <div class="text-muted small">
+                                Número de série
+                            </div>
+
+                            <strong>
+                                {{ requisition.serial_number or "-" }}
+                            </strong>
+                        </div>
+                    </div>
                 </div>
             </div>
-        {% endif %}
 
-        {% if requisition.status == "aprovada" %}
-            <div class="card bg-success text-white shadow-lg mb-4">
-                <div class="card-body">
-                    <h4>
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        Requisição aprovada
+            <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
+                <div class="card-header">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-gear-wide-connected me-2"></i>
+                        Materiais solicitados
                     </h4>
+                </div>
 
-                    <p class="mb-3">
-                        Esta requisição está aprovada e pode ser apresentada
-                        no dashboard público.
-                    </p>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Código da peça</th>
+                                    <th>Material ou peça</th>
+                                    <th>Quantidade</th>
+                                    <th>Unidade</th>
+                                </tr>
+                            </thead>
 
-                    {% if requisition.approver_signature %}
+                            <tbody>
+                                {% for item in requisition.items %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>
+                                            <strong>{{ item.part_code }}</strong>
+                                        </td>
+                                        <td>{{ item.part_description }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>{{ item.unit }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
+                <div class="card-header">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Informações da requisição
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="text-muted small">
+                                Requerente
+                            </div>
+
+                            <strong>
+                                {{ requisition.user.username }}
+                            </strong>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-muted small">
+                                Urgência
+                            </div>
+
+                            {% if requisition.priority == "alta" %}
+                                <span class="badge bg-danger">
+                                    Alta
+                                </span>
+
+                            {% elif requisition.priority == "media" %}
+                                <span class="badge bg-warning text-dark">
+                                    Média
+                                </span>
+
+                            {% else %}
+                                <span class="badge bg-info text-dark">
+                                    Baixa
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-muted small">
+                                Data necessária
+                            </div>
+
+                            <strong>
+                                {{ requisition.due_date.strftime("%d/%m/%Y") }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    {% if requisition.description %}
+                        <hr>
+
+                        <div class="text-muted small mb-2">
+                            Descrição ou observações
+                        </div>
+
+                        <p class="mb-0">
+                            {{ requisition.description }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
+                <div class="card-header">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-pen-fill me-2"></i>
+                        Assinatura do requerente
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    {% if requisition.requester_signature %}
                         <div class="bg-white rounded p-3 text-center">
-                            <img src="{{ requisition.approver_signature }}"
-                        alt="Assinatura do aprovador"
-                        class="img-fluid"
-                        style"display: block; max-width: 100%; max-height: 220px; margin: auto;">
+                            <img src="{{ requisition.requester_signature }}"
+                            alt="Assinatura do requerente"
+                            class="img-fluid"
+                            style"display: block; max-width: 100%; max-height: 220px; margin: auto;">
+                        </div>
+
+                        <div class="text-muted small mt-2">
+                            Assinado por
+                            <strong>{{ requisition.user.username }}</strong>
+
+                            {% if requisition.requester_signed_at %}
+                                em
+                                {{ requisition.requester_signed_at.strftime(
+                                    "%d/%m/%Y %H:%M"
+                                ) }}
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger mb-0">
+                            Esta requisição não possui assinatura do requerente.
                         </div>
                     {% endif %}
-                    <div class="card bg-secondary text-light shadow-lg mt-4">
+                </div>
+            </div>
+    {% if requisition.status == "submetida" %}
+    <div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
+        <div class="card-header">
+            <h4 class="text-white mb-0">
+                <i class="bi bi-shield-check me-2"></i>
+                Decisão do administrador
+            </h4>
+        </div>
+
+        <div class="card-body">
+            {{ url_for('approve_requisition', requisition_id=requisition.id) }}
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <input
+                    type="hidden"
+                    name="approver_signature"
+                    id="approver-signature"
+                >
+
+                <label class="form-label">
+                    Assinatura do aprovador
+                </label>
+
+                <div class="bg-white rounded">
+                    <canvas
+                        id="approver-signature-canvas"
+                        width="800"
+                        height="220"
+                        style="width: 100%; height: 220px; display: block; cursor: crosshair; touch-action: none;"
+                    ></canvas>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-warning mt-2"
+                    id="clear-approver-signature"
+                >
+                    <i class="bi bi-eraser me-1"></i>
+                    Limpar assinatura
+                </button>
+
+                {% if requisition.quotation_storage_key %}
+                    <div class="d-flex justify-content-end mt-4">
+                        <button
+                            type="submit"
+                            class="btn btn-success rounded-pill px-4"
+                        >
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Assinar e aprovar
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mt-4 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        É necessário anexar uma cotação antes de aprovar.
+                    </div>
+                {% endif %}
+            </form>
+
+            <hr class="my-4">
+            <form
+                action="{{ url_for('reject_requisition', requisition_id=requisition.id) }}"
+                method="POST"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <label
+                    for="rejection_reason"
+                    class="form-label"
+                >
+                    Motivo da rejeição
+                </label>
+
+                <textarea
+                    id="rejection_reason"
+                    name="rejection_reason"
+                    class="form-control bg-dark text-light border-secondary"
+                    rows="3"
+                    placeholder="Indique o motivo da rejeição..."
+                ></textarea>
+
+                <div class="d-flex justify-content-end mt-3">
+                    <button
+                        type="submit"
+                        class="btn btn-danger rounded-pill px-4"
+                        onclick="return confirm('Rejeitar esta requisição?')"
+                    >
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        Rejeitar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
+
+{% if requisition.status == "aprovada" %}
+    <div class="card bg-success text-white shadow-lg mb-4">
+        <div class="card-body">
+            <h4>
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Requisição aprovada
+            </h4>
+
+            <p class="mb-3">
+                Esta requisição está aprovada.
+            </p>
+
+            {% if requisition.approver_signature %}
+                <div class="bg-white rounded p-3 text-center">
+                    {{ requisition.approver_signature }}
+                </div>
+            {% endif %}
+
+            {% if requisition.approved_by %}
+                <div class="mt-3">
+                    Aprovada por
+                    <strong>
+                        {{ requisition.approved_by.username }}
+                    </strong>
+
+                    {% if requisition.approved_at %}
+                        em
+                        {{ requisition.approved_at.strftime("%d/%m/%Y %H:%M") }}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+
+<div class="card bg-secondary text-light shadow-lg glassmorphism-card mb-4">
     <div class="card-header">
         <h4 class="text-white mb-0">
             <i class="bi bi-paperclip me-2"></i>
@@ -366,89 +383,79 @@ Analisar {{ requisition.requisition_number }}
         </h4>
     </div>
 
-        <div class="card-body">
-            {% if requisition.quotation_storage_key %}
-                <div class="alert alert-success d-flex flex-wrap align-items-center justify-content-between gap-3 mb-0">
-                    <div>
-                        <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+    <div class="card-body">
+        {% if requisition.quotation_storage_key %}
+            <div class="alert alert-success d-flex flex-wrap align-items-center justify-content-between gap-3 mb-0">
+                <div>
+                    <i class="bi bi-file-earmark-pdf-fill me-2"></i>
 
-                        <strong>
-                            {{ requisition.quotation_original_name or "Anexo.pdf" }}
-                        </strong>
+                    <strong>
+                        {{ requisition.quotation_original_name or "Anexo.pdf" }}
+                    </strong>
 
-                        {% if requisition.quotation_size %}
-                            <span class="ms-2 text-muted">
-                                {{ "%.2f"|format(
-                                    requisition.quotation_size / 1024 / 1024
-                                ) }} MB
-                            </span>
-                        {% endif %}
+                    {% if requisition.quotation_size %}
+                        <span class="ms-2 text-muted">
+                            {{ "%.2f"|format(
+                                requisition.quotation_size / 1024 / 1024
+                            ) }} MB
+                        </span>
+                    {% endif %}
 
-                        {% if requisition.quotation_uploaded_at %}
-                            <div class="small text-muted mt-1">
-                                Anexada em
-                                {{ requisition.quotation_uploaded_at.strftime("%d/%m/%Y %H:%M") }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    {{ url_for(
-                            'view_requisition_quotation',
-                            requisition_id=requisition.id
-                        ) }}
-                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>
-                        Abrir anexo
-                    </a>
+                    {% if requisition.quotation_uploaded_at %}
+                        <div class="small text-muted mt-1">
+                            Anexada em
+                            {{ requisition.quotation_uploaded_at.strftime("%d/%m/%Y %H:%M") }}
+                        </div>
+                    {% endif %}
                 </div>
-            {% else %}
-                <div class="alert alert-secondary mb-0">
-                    <i class="bi bi-paperclip me-2"></i>
-                    Esta requisição não possui anexos.
-                </div>
-            {% endif %}
-        </div>
-</div>
-                    <div class="mt-2">
-                        Aprovada por
-                        <strong>
-                            {{ requisition.approved_by.username }}
-                        </strong>
-
-                        {% if requisition.approved_at %}
-                            em
-                            {{ requisition.approved_at.strftime(
-                                "%d/%m/%Y %H:%M"
-                            ) }}
-                        {% endif %}
-                    </div>
-                </div>
+                <a
+                    href="{{ url_for('download_attachment', requisition_id=requisition.id) }}"
+                    class="btn btn-dark rounded-pill text-nowrap"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+                    Abrir anexo
+                </a>
+            </div>
+        {% else %}
+            <div class="alert alert-secondary mb-0">
+                <i class="bi bi-paperclip me-2"></i>
+                Esta requisição não possui anexos.
             </div>
         {% endif %}
-
-        {% if requisition.status == "rejeitada" %}
-            <div class="alert alert-danger shadow-lg">
-                <h4>
-                    <i class="bi bi-x-circle-fill me-2"></i>
-                    Requisição rejeitada
-                </h4>
-
-                <strong>Motivo:</strong>
-                {{ requisition.rejection_reason or "Não indicado." }}
-            </div>
-        {% endif %}
-
-        <div class="mb-5">
-            <a
-                href="{{ url_for('admin_dashboard') }}"
-                class="btn btn-outline-light rounded-pill"
-            >
-                <i class="bi bi-arrow-left me-2"></i>
-                Voltar ao painel administrativo
-            </a>
-        </div>
     </div>
 </div>
+
+
+{% if requisition.status == "rejeitada" %}
+    <div class="alert alert-danger shadow-lg mb-4">
+        <h4>
+            <i class="bi bi-x-circle-fill me-2"></i>
+            Requisição rejeitada
+        </h4>
+
+        <strong>Motivo:</strong>
+        {{ requisition.rejection_reason or "Não indicado." }}
+    </div>
+{% endif %}
+
+
+<div class="mb-5 mt-4">
+    <a
+        href="{{ url_for('admin_dashboard') }}"
+        class="btn btn-outline-light rounded-pill"
+    >
+        <i class="bi bi-arrow-left me-2"></i>
+        Voltar ao painel administrativo
+    </a>
+</div>
+
+        </div>
+    </div>
 {% endblock %}
+
+   
 
 {% block scripts %}
 <script>
