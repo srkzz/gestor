@@ -7,6 +7,9 @@ import re
 import boto3
 import uuid
 import smtplib
+import hashlib
+import secrets
+from datetime import datetime, timedelta
 from email.message import EmailMessage
 from werkzeug.utils import secure_filename
 from botocore.config import Config
@@ -162,6 +165,42 @@ class User(db.Document):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+class PasswordResetToken(db.Document):
+    user = db.ReferenceField(
+        User,
+        required=True
+    )
+
+    token_hash = db.StringField(
+        required=True,
+        unique=True
+    )
+
+    expires_at = db.DateTimeField(
+        required=True
+    )
+
+    used_at = db.DateTimeField()
+
+    created_at = db.DateTimeField(
+        default=datetime.utcnow
+    )
+
+    meta = {
+        "collection": "password_reset_tokens",
+        "indexes": [
+            "token_hash",
+            "expires_at",
+            "user"
+        ]
+    }
+
+    def is_valid(self):
+        return (
+            self.used_at is None
+            and self.expires_at > datetime.utcnow()
+        )
 
 class RequisitionItem(db.EmbeddedDocument):
     part_code = db.StringField(
@@ -2578,6 +2617,145 @@ def test_r2_connection():
 
     return redirect(url_for("admin_dashboard"))
 
+def send_password_reset_email(
+    recipient_email,
+    username,
+    reset_url
+):
+    smtp_host = os.environ.get(
+        "BREVO_SMTP_HOST",
+        "smtp-relay.brevo.com"
+    )
+
+    smtp_port = int(
+        os.environ.get(
+            "BREVO_SMTP_PORT",
+            "587"
+        )
+    )
+
+    smtp_user = os.environ.get(
+        "BREVO_SMTP_USER"
+    )
+
+    smtp_key = os.environ.get(
+        "BREVO_SMTP_KEY"
+    )
+
+    from_email = os.environ.get(
+        "BREVO_FROM_EMAIL"
+    )
+
+    if not all([
+        smtp_user,
+        smtp_key,
+        from_email
+    ]):
+        raise RuntimeError(
+            "A configuração SMTP do Brevo está incompleta."
+        )
+
+    message = EmailMessage()
+
+    message["Subject"] = (
+        "Recuperação da palavra-passe"
+    )
+
+    message["From"] = (
+        f"Gestor de Requisições <{from_email}>"
+    )
+
+    message["To"] = recipient_email
+
+    message.set_content(
+        f"Olá, {username}.\n\n"
+        "Foi solicitado um link para alterar a palavra-passe "
+        "da sua conta no Gestor de Requisições.\n\n"
+        f"Abra este endereço:\n{reset_url}\n\n"
+        "O link expira dentro de 30 minutos e só pode ser "
+        "utilizado uma vez.\n\n"
+        "Se não realizou este pedido, ignore esta mensagem."
+    )
+
+    message.add_alternative(
+        f"""
+        <!DOCTYPE html>
+        <html lang="pt">
+        <body style="
+            margin: 0;
+            padding: 30px;
+            background-color: #f4f6f8;
+            font-family: Arial, sans-serif;
+            color: #212529;
+        ">
+            <div style="
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 30px;
+                background-color: #ffffff;
+                border-radius: 12px;
+                border: 1px solid #e5e7eb;
+            ">
+                <h2 style="
+                    margin-top: 0;
+                    color: #111827;
+                ">
+                    Recuperação da palavra-passe
+                </h2>
+
+                <p>Olá, <strong>{username}</strong>.</p>
+
+                <p>
+                    Foi solicitado um link para alterar a
+                    palavra-passe da sua conta no Gestor de
+                    Requisições.
+                </p>
+
+                <p style="margin: 30px 0;">
+                    {reset_url}
+                        Alterar palavra-passe
+                    </a>
+                </p>
+
+                <p>
+                    Este link expira dentro de
+                    <strong>30 minutos</strong> e só pode ser
+                    utilizado uma vez.
+                </p>
+
+                <p style="
+                    margin-bottom: 0;
+                    color: #6b7280;
+                    font-size: 14px;
+                ">
+                    Se não realizou este pedido, ignore esta
+                    mensagem. A palavra-passe atual não será
+                    alterada.
+                </p>
+            </div>
+        </body>
+        </html>
+        """,
+        subtype="html"
+    )
+
+    with smtplib.SMTP(
+        smtp_host,
+        smtp_port,
+        timeout=20
+    ) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+
+        smtp.login(
+            smtp_user,
+            smtp_key
+        )
+
+        smtp.send_message(message)
+
+
 @app.route(
     "/requisitions/<string:requisition_id>/quotation/upload",
     methods=["POST"]
@@ -3149,7 +3327,197 @@ def test_brevo_email():
 
     return redirect(
         url_for("admin_dashboard")
-    )       
+    )   
+
+@app.route(
+    "/forgot-password",
+    methods=["GET", "POST"]
+)
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get(
+            "email",
+            ""
+        ).strip().lower()
+
+        # Mensagem sempre igual para não revelar
+        # se um email está ou não registado.
+        neutral_message = (
+            "Se existir uma conta associada a esse email, "
+            "receberá um link para alterar a palavra-passe."
+        )
+
+        if email:
+            user = User.objects(
+                email__iexact=email
+            ).first()
+
+            if user:
+                raw_token = secrets.token_urlsafe(32)
+
+                token_hash = hashlib.sha256(
+                    raw_token.encode("utf-8")
+                ).hexdigest()
+
+                # Invalida pedidos anteriores ainda disponíveis.
+                PasswordResetToken.objects(
+                    user=user,
+                    used_at=None
+                ).update(
+                    set__used_at=datetime.utcnow()
+                )
+
+                reset_token = PasswordResetToken(
+                    user=user,
+                    token_hash=token_hash,
+                    expires_at=(
+                        datetime.utcnow()
+                        + timedelta(minutes=30)
+                    )
+                )
+
+                reset_token.save()
+
+                reset_url = url_for(
+                    "reset_password",
+                    token=raw_token,
+                    _external=True,
+                    _scheme="https"
+                )
+
+                try:
+                    send_password_reset_email(
+                        recipient_email=user.email,
+                        username=user.username,
+                        reset_url=reset_url
+                    )
+
+                except Exception:
+                    app.logger.exception(
+                        "Erro ao enviar email de recuperação."
+                    )
+
+                    # Evita deixar um token ativo que nunca
+                    # chegou ao utilizador.
+                    reset_token.used_at = datetime.utcnow()
+                    reset_token.save()
+
+        flash(
+            neutral_message,
+            "info"
+        )
+
+        return redirect(
+            url_for("login")
+        )
+
+    return render_template(
+        "forgot_password.html"
+    )    
+
+@app.route(
+    "/reset-password/<string:token>",
+    methods=["GET", "POST"]
+)
+def reset_password(token):
+    token_hash = hashlib.sha256(
+        token.encode("utf-8")
+    ).hexdigest()
+
+    reset_token = PasswordResetToken.objects(
+        token_hash=token_hash
+    ).first()
+
+    if not reset_token or not reset_token.is_valid():
+        flash(
+            "O link de recuperação é inválido ou já expirou.",
+            "error"
+        )
+
+        return redirect(
+            url_for("forgot_password")
+        )
+
+    if request.method == "POST":
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        password_confirmation = request.form.get(
+            "password_confirmation",
+            ""
+        )
+
+        if len(password) < 8:
+            flash(
+                "A nova palavra-passe deve ter pelo menos "
+                "8 caracteres.",
+                "error"
+            )
+
+            return render_template(
+                "reset_password.html",
+                token=token
+            )
+
+        if password != password_confirmation:
+            flash(
+                "As palavras-passe não coincidem.",
+                "error"
+            )
+
+            return render_template(
+                "reset_password.html",
+                token=token
+            )
+
+        user = reset_token.user
+
+        if not user:
+            reset_token.used_at = datetime.utcnow()
+            reset_token.save()
+
+            flash(
+                "Não foi possível recuperar esta conta.",
+                "error"
+            )
+
+            return redirect(
+                url_for("login")
+            )
+
+        user.set_password(password)
+        user.save()
+
+        reset_token.used_at = datetime.utcnow()
+        reset_token.save()
+
+        # Invalida os restantes links do utilizador.
+        PasswordResetToken.objects(
+            user=user,
+            used_at=None
+        ).update(
+            set__used_at=datetime.utcnow()
+        )
+
+        session.clear()
+
+        flash(
+            "A palavra-passe foi alterada com sucesso. "
+            "Já pode iniciar sessão.",
+            "success"
+        )
+
+        return redirect(
+            url_for("login")
+        )
+
+    return render_template(
+        "reset_password.html",
+        token=token
+    )
+
 # --- Error Handlers ---
 
 @app.errorhandler(404)

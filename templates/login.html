@@ -21,6 +21,14 @@
                         <input type="password" class="form-control bg-dark text-light border-secondary rounded-pill" id="password" name="password" required> {# rounded-pill #}
                     </div>
                     <div class="d-grid gap-2">
+                        <div class="text-end mb-3">
+                            <a
+                                href="{{ url_for('forgot_password') }}"
+                                class="small text-decoration-none"
+                            >
+                                Esqueci-me da palavra-passe
+                            </a>
+                        </div>
                         <button type="submit" class="btn btn-primary btn-lg rounded-pill">Entrar</button> {# rounded-pill #}
                     </div>
                 </form>
