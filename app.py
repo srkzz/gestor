@@ -6,6 +6,8 @@ import tempfile
 import re
 import boto3
 import uuid
+import smtplib
+from email.message import EmailMessage
 from werkzeug.utils import secure_filename
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
@@ -3048,7 +3050,106 @@ def approved_requisitions():
         search_query=search_query,
         total_results=len(approved_requisitions_list)
     )
-        
+
+@app.route("/admin/email/test")
+@admin_required
+def test_brevo_email():
+    smtp_host = os.environ.get(
+        "BREVO_SMTP_HOST",
+        "smtp-relay.brevo.com"
+    )
+
+    smtp_port = int(
+        os.environ.get(
+            "BREVO_SMTP_PORT",
+            "587"
+        )
+    )
+
+    smtp_user = os.environ.get(
+        "BREVO_SMTP_USER"
+    )
+
+    smtp_key = os.environ.get(
+        "BREVO_SMTP_KEY"
+    )
+
+    from_email = os.environ.get(
+        "BREVO_FROM_EMAIL"
+    )
+
+    current_user = get_current_user()
+
+    if not all([
+        smtp_user,
+        smtp_key,
+        from_email,
+        current_user,
+        current_user.email
+    ]):
+        flash(
+            "A configuração do Brevo ou o email do admin está incompleto.",
+            "error"
+        )
+
+        return redirect(
+            url_for("admin_dashboard")
+        )
+
+    message = EmailMessage()
+
+    message["Subject"] = (
+        "Teste do Gestor de Requisições"
+    )
+
+    message["From"] = (
+        f"Gestor de Requisições <{from_email}>"
+    )
+
+    message["To"] = current_user.email
+
+    message.set_content(
+        "Teste concluído.\n\n"
+        "O Gestor de Requisições conseguiu enviar "
+        "uma mensagem através do Brevo."
+    )
+
+    try:
+        with smtplib.SMTP(
+            smtp_host,
+            smtp_port,
+            timeout=20
+        ) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+
+            smtp.login(
+                smtp_user,
+                smtp_key
+            )
+
+            smtp.send_message(message)
+
+        flash(
+            f"Email de teste enviado para {current_user.email}.",
+            "success"
+        )
+
+    except Exception:
+        app.logger.exception(
+            "Erro ao enviar email pelo Brevo."
+        )
+
+        flash(
+            "Não foi possível enviar o email de teste. "
+            "Consulte os logs da Vercel.",
+            "error"
+        )
+
+    return redirect(
+        url_for("admin_dashboard")
+    )       
 # --- Error Handlers ---
 
 @app.errorhandler(404)
