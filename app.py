@@ -197,10 +197,13 @@ class PasswordResetToken(db.Document):
     }
 
     def is_valid(self):
-        return (
-            self.used_at is None
-            and self.expires_at > datetime.utcnow()
-        )
+        if self.used_at is not None:
+            return False
+
+        if not self.expires_at:
+            return False
+
+        return datetime.utcnow() < self.expires_at
 
 class RequisitionItem(db.EmbeddedDocument):
     part_code = db.StringField(
@@ -2703,7 +2706,9 @@ def send_password_reset_email(
                     Recuperação da palavra-passe
                 </h2>
 
-                <p>Olá, <strong>{username}</strong>.</p>
+                <p>
+                    Olá, <strong>{username}</strong>.
+                </p>
 
                 <p>
                     Foi solicitado um link para alterar a
@@ -2711,11 +2716,15 @@ def send_password_reset_email(
                     Requisições.
                 </p>
 
-                <p style="margin: 30px 0;">
-                    {reset_url}
+                <div style="
+                    margin: 30px 0;
+                    text-align: center;
+                ">
+                <a href=
+                    "{reset_url}">
                         Alterar palavra-passe
                     </a>
-                </p>
+                </div>
 
                 <p>
                     Este link expira dentro de
@@ -3355,29 +3364,31 @@ def forgot_password():
             if user:
                 raw_token = secrets.token_urlsafe(32)
 
-                token_hash = hashlib.sha256(
-                    raw_token.encode("utf-8")
-                ).hexdigest()
+                now = datetime.utcnow()
 
-                # Invalida pedidos anteriores ainda disponíveis.
+                # Invalida os pedidos anteriores.
                 PasswordResetToken.objects(
                     user=user,
                     used_at=None
                 ).update(
-                    set__used_at=datetime.utcnow()
+                    set__used_at=now
                 )
+
+                raw_token = secrets.token_urlsafe(32)
+
+                token_hash = hashlib.sha256(
+                    raw_token.encode("utf-8")
+                ).hexdigest()
 
                 reset_token = PasswordResetToken(
                     user=user,
                     token_hash=token_hash,
-                    expires_at=(
-                        datetime.utcnow()
-                        + timedelta(minutes=30)
-                    )
+                    created_at=now,
+                    expires_at=now + timedelta(minutes=30),
+                    used_at=None
                 )
 
                 reset_token.save()
-
                 reset_url = url_for(
                     "reset_password",
                     token=raw_token,
@@ -3487,7 +3498,10 @@ def reset_password(token):
                 url_for("login")
             )
 
-        user.set_password(password)
+        user.password = bcrypt.generate_password_hash(
+        password
+        ).decode("utf-8")
+
         user.save()
 
         reset_token.used_at = datetime.utcnow()
