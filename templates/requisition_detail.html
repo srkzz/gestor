@@ -134,7 +134,96 @@
                         {{ requisition.rejection_reason or "Não indicado." }}
                     </div>
                 {% endif %}
+                <div class="card bg-secondary text-light shadow-lg mt-4">
+    <div class="card-header">
+        <h4 class="text-white mb-0">
+            <i class="bi bi-paperclip me-2"></i>
+            Anexo
+        </h4>
+    </div>
 
+    <div class="card-body">
+        {% if requisition.quotation_storage_key %}
+            <div class="alert alert-success">
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+
+                <strong>
+                    {{ requisition.quotation_original_name }}
+                </strong>
+
+                {% if requisition.quotation_size %}
+                    <span class="ms-2 text-muted">
+                        {{ "%.2f"|format(
+                            requisition.quotation_size / 1024 / 1024
+                        ) }} MB
+                    </span>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% set can_manage_quotation =
+            current_user_is_admin
+            or (
+                session.get("user_id")
+                == requisition.user.id|string
+            )
+        %}
+
+        {% if can_manage_quotation %}
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'upload_requisition_quotation',
+                    requisition_id=requisition.id
+                ) }}"
+                enctype="multipart/form-data"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <label
+                    for="quotation_file"
+                    class="form-label"
+                >
+                    {% if requisition.quotation_storage_key %}
+                        Substituir cotação
+                    {% else %}
+                        Anexar cotação
+                    {% endif %}
+                </label>
+
+                <input
+                    type="file"
+                    id="quotation_file"
+                    name="quotation_file"
+                    class="form-control bg-dark text-light border-secondary"
+                    accept="application/pdf,.pdf"
+                    required
+                >
+
+                <div class="form-text text-light opacity-75">
+                    Apenas PDF, máximo 5 MB.
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-outline-info rounded-pill mt-3"
+                >
+                    <i class="bi bi-cloud-arrow-up-fill me-1"></i>
+
+                    {% if requisition.quotation_storage_key %}
+                        Substituir cotação
+                    {% else %}
+                        Anexar cotação
+                    {% endif %}
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
                 <div class="mt-4">
                     <a href="{{ url_for('user_dashboard') }}"   
                         class="btn btn-outline-light rounded-pill"

@@ -5,6 +5,8 @@ import base64
 import tempfile
 import re
 import boto3
+import uuid
+from werkzeug.utils import secure_filename
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 from datetime import datetime, date
@@ -2573,6 +2575,280 @@ def test_r2_connection():
         )
 
     return redirect(url_for("admin_dashboard"))
+
+@app.route(
+    "/requisitions/<string:requisition_id>/quotation/upload",
+    methods=["POST"]
+)
+@login_required
+def upload_requisition_quotation(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
+
+    current_user = get_current_user()
+
+    if not current_user:
+        return redirect(url_for("login"))
+
+    is_owner = (
+        str(requisition.user.id)
+        == str(current_user.id)
+    )
+
+    if not is_owner and not current_user.is_admin:
+        abort(403)
+
+    quotation_file = request.files.get("quotation_file")
+
+    if not quotation_file or not quotation_file.filename:
+        flash(
+            "Selecione um ficheiro PDF para anexar.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    original_name = secure_filename(
+        quotation_file.filename
+    )
+
+    if not original_name:
+        flash(
+            "O nome do ficheiro não é válido.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    if not original_name.lower().endswith(".pdf"):
+        flash(
+            "A cotação tem de ser um ficheiro PDF.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    # Confirma que o conteúdo começa com a assinatura de um PDF.
+    file_header = quotation_file.stream.read(5)
+    quotation_file.stream.seek(0)
+
+    if file_header != b"%PDF-":
+        flash(
+            "O ficheiro selecionado não parece ser um PDF válido.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    quotation_file.stream.seek(
+        0,
+        os.SEEK_END
+    )
+
+    file_size = quotation_file.stream.tell()
+    quotation_file.stream.seek(0)
+
+    max_file_size = 5 * 1024 * 1024
+
+    if file_size <= 0:
+        flash(
+            "O ficheiro selecionado está vazio.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    if file_size > max_file_size:
+        flash(
+            "A cotação não pode exceder 5 MB.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    bucket_name = os.environ.get("R2_BUCKET_NAME")
+
+    if not bucket_name:
+        app.logger.error(
+            "R2_BUCKET_NAME não está configurada."
+        )
+
+        flash(
+            "O armazenamento de cotações não está disponível.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    new_storage_key = (
+        f"requisitions/{requisition.id}/quotations/"
+        f"{uuid.uuid4().hex}.pdf"
+    )
+
+    old_storage_key = (
+        requisition.quotation_storage_key
+    )
+
+    r2_client = None
+    new_file_uploaded = False
+
+    try:
+        r2_client = get_r2_client()
+
+        r2_client.upload_fileobj(
+            quotation_file.stream,
+            bucket_name,
+            new_storage_key,
+            ExtraArgs={
+                "ContentType": "application/pdf",
+                "ContentDisposition": (
+                    f'inline; filename="{original_name}"'
+                )
+            }
+        )
+
+        new_file_uploaded = True
+
+        requisition.quotation_storage_key = (
+            new_storage_key
+        )
+
+        requisition.quotation_original_name = (
+            original_name
+        )
+
+        requisition.quotation_content_type = (
+            "application/pdf"
+        )
+
+        requisition.quotation_size = file_size
+
+        requisition.quotation_uploaded_at = (
+            datetime.utcnow()
+        )
+
+        requisition.quotation_uploaded_by = (
+            current_user
+        )
+
+        requisition.save()
+
+        # Só elimina a cotação anterior depois de a nova
+        # estar carregada e os metadados estarem guardados.
+        if (
+            old_storage_key
+            and old_storage_key != new_storage_key
+        ):
+            try:
+                r2_client.delete_object(
+                    Bucket=bucket_name,
+                    Key=old_storage_key
+                )
+            except (BotoCoreError, ClientError):
+                app.logger.exception(
+                    "Não foi possível eliminar a "
+                    "cotação anterior do R2."
+                )
+
+        flash(
+            "Cotação anexada com sucesso.",
+            "success"
+        )
+
+    except (BotoCoreError, ClientError):
+        app.logger.exception(
+            "Erro ao carregar a cotação no R2."
+        )
+
+        if (
+            new_file_uploaded
+            and r2_client
+        ):
+            try:
+                r2_client.delete_object(
+                    Bucket=bucket_name,
+                    Key=new_storage_key
+                )
+            except (BotoCoreError, ClientError):
+                app.logger.exception(
+                    "Não foi possível limpar o upload "
+                    "incompleto no R2."
+                )
+
+        flash(
+            "Não foi possível carregar a cotação. "
+            "Tente novamente.",
+            "error"
+        )
+
+    except Exception:
+        app.logger.exception(
+            "Erro inesperado ao guardar a cotação."
+        )
+
+        if (
+            new_file_uploaded
+            and r2_client
+        ):
+            try:
+                r2_client.delete_object(
+                    Bucket=bucket_name,
+                    Key=new_storage_key
+                )
+            except (BotoCoreError, ClientError):
+                app.logger.exception(
+                    "Não foi possível limpar o ficheiro "
+                    "após erro."
+                )
+
+        flash(
+            "Não foi possível guardar a cotação.",
+            "error"
+        )
+
+    return redirect(
+        url_for(
+            "requisition_detail",
+            requisition_id=requisition.id
+        )
+    )
+
 
 # --- Error Handlers ---
 
