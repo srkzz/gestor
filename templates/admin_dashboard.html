@@ -82,6 +82,7 @@
                                             class="btn btn-sm btn-success rounded-pill">
                                                 <i class="bi bi-search me-1"></i>
                                                 Analisar
+                                            </a>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -217,17 +218,6 @@
             </div>
 
             <div class="card-body">
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md">
-                        <div class="card bg-dark text-center">
-                            <div class="card-body">
-                                <div class="text-muted small">Rascunhos</div>
-                                <strong class="fs-4">{{ total_draft_requisitions }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="col-md">
                         <div class="card bg-warning text-dark text-center">
                             <div class="card-body">
@@ -255,7 +245,55 @@
                         </div>
                     </div>
                 </div>
+                <form
+                    method="GET"
+                    action="{{ url_for('admin_dashboard') }}"
+                    class="mb-4"
+                >
+                    <div class="input-group">
 
+                        <span class="input-group-text bg-dark text-white border-dark">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input
+                            type="text"
+                            id="requisition_search"
+                            name="requisition_search"
+                            value="{{ requisition_search }}"
+                            class="form-control bg-white text-dark border-secondary"
+                            placeholder="Pesquisar número, requerente, máquina, marca, modelo ou material..."
+                            autocomplete="off"
+                        >
+
+                        <button
+                            type="submit"
+                            class="btn btn-dark px-4"
+                        >
+                            Pesquisar
+                        </button>
+
+                    </div>
+
+                    {% if requisition_search %}
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+
+                            <small class="text-light opacity-75">
+                                Resultados para:
+                                <strong>{{ requisition_search }}</strong>
+                            </small>
+
+                            <a
+                                href="{{ url_for('admin_dashboard') }}"
+                                class="btn btn-sm btn-outline-light rounded-pill"
+                            >
+                                <i class="bi bi-x-circle me-1"></i>
+                                Limpar pesquisa
+                            </a>
+
+                        </div>
+                    {% endif %}
+                </form>
                 {% if all_requisitions %}
                     <div class="table-responsive">
                         <table class="table table-dark table-hover table-sm align-middle mb-0">
@@ -290,12 +328,7 @@
                                         <td>{{ requisition.priority|capitalize }}</td>
 
                                         <td>
-                                            {% if requisition.status == "rascunho" %}
-                                                <span class="badge bg-secondary">
-                                                    Rascunho
-                                                </span>
-
-                                            {% elif requisition.status == "submetida" %}
+                                            {% if requisition.status == "submetida" %}}
                                                 <span class="badge bg-warning text-dark">
                                                     A aguardar aprovação
                                                 </span>

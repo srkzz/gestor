@@ -9,6 +9,7 @@ import uuid
 import smtplib
 import hashlib
 import secrets
+from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
 from email.message import EmailMessage
 from werkzeug.utils import secure_filename
@@ -1504,11 +1505,74 @@ def admin_dashboard():
         status="submetida"
     ).count()
 
-    all_requisitions = Requisition.objects().order_by(
-        "-date_created"
-    ).all()
+    requisition_search = request.args.get(
+        "requisition_search",
+        ""
+    ).strip()
 
-    total_requisitions = Requisition.objects().count()
+    all_requisitions_query = Requisition.objects(
+        status__ne="rascunho"
+    )
+
+    if requisition_search:
+        matching_users = User.objects(
+            Q(username__icontains=requisition_search)
+            | Q(email__icontains=requisition_search)
+        ).only("id")
+
+        matching_user_ids = [
+            user.id
+            for user in matching_users
+        ]
+
+        search_filter = (
+            Q(
+                requisition_number__icontains=requisition_search
+            )
+            | Q(
+                machine_reference__icontains=requisition_search
+            )
+            | Q(
+                brand__icontains=requisition_search
+            )
+            | Q(
+                model__icontains=requisition_search
+            )
+            | Q(
+                serial_number__icontains=requisition_search
+            )
+            | Q(
+                description__icontains=requisition_search
+            )
+            | Q(
+                items__part_code__icontains=requisition_search
+            )
+            | Q(
+                items__part_description__icontains=requisition_search
+            )
+        )
+
+        if matching_user_ids:
+            search_filter = (
+                search_filter
+                | Q(user__in=matching_user_ids)
+            )
+
+        all_requisitions_query = (
+            all_requisitions_query.filter(
+                search_filter
+            )
+        )
+
+    all_requisitions = (
+        all_requisitions_query
+        .order_by("-date_created")
+        .all()
+    )
+
+    total_requisitions = len(
+        all_requisitions
+    )
 
     total_submitted_requisitions = Requisition.objects(
         status="submetida"
@@ -1521,11 +1585,6 @@ def admin_dashboard():
     total_rejected_requisitions = Requisition.objects(
         status="rejeitada"
     ).count()
-
-    total_draft_requisitions = Requisition.objects(
-        status="rascunho"
-    ).count()
-
    
 
     return render_template('admin_dashboard.html',
@@ -1541,7 +1600,7 @@ def admin_dashboard():
                             total_submitted_requisitions=total_submitted_requisitions,
                             total_approved_requisitions=total_approved_requisitions,
                             total_rejected_requisitions=total_rejected_requisitions,
-                            total_draft_requisitions=total_draft_requisitions,
+                            requisition_search=requisition_search,
                           )
 
 
