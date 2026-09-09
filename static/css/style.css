@@ -366,8 +366,35 @@ footer {
 }
 
 .footer-copyright {
-    margin-top: 0.2rem;
+    margin-top: 0.1rem;
     color: #6c757d;
-    font-size: 0.6rem;
+    font-size: 0.45rem;
     line-height: 1;
+}
+
+.reset-password-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.reset-password-title {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.reset-password-subtitle {
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+@media (max-width: 420px) {
+    .reset-password-title {
+        font-size: 1.55rem;
+    }
+
+    .reset-password-subtitle {
+        font-size: 0.9rem;
+    }
 }
