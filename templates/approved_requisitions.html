@@ -36,23 +36,18 @@ container-fluid px-4
 
         <div class="card glassmorphism-card shadow-lg border-0 mb-4">
             <div class="card-body">
-
-                {{ url_for('approved_requisitions') }}
+                <form method="GET" action="{{ url_for('approved_requisitions') }}">
                     <div class="row g-3 align-items-end">
-
                         <div class="col-lg-9">
                             <label
                                 for="approved-search"
-                                class="form-label text-light"
-                            >
+                                class="form-label text-light">
                                 Pesquisar
                             </label>
-
                             <div class="input-group">
                                 <span class="input-group-text bg-dark text-light border-secondary">
                                     <i class="bi bi-search"></i>
                                 </span>
-
                                 <input
                                     type="text"
                                     id="approved-search"
@@ -76,8 +71,7 @@ container-fluid px-4
                                 </button>
 
                                 {% if search_query %}
-                                     }}"
-                                        class="btn btn-outline-light rounded-pill"
+                                        <class="btn btn-outline-light rounded-pill"
                                         title="Limpar pesquisa"
                                         aria-label="Limpar pesquisa"
                                     >
@@ -86,7 +80,6 @@ container-fluid px-4
                                 {% endif %}
                             </div>
                         </div>
-
                     </div>
                 </form>
             </div>
@@ -104,7 +97,7 @@ container-fluid px-4
                 {% if requisitions %}
 
                     <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle mb-0">
+                        <table class="table table-dark table-hover table-sm align-middle mb-0 approved-table">
                             <thead>
                                 <tr>
                                     <th>Número</th>
@@ -186,9 +179,7 @@ container-fluid px-4
 
                                         <td class="text-center text-nowrap">
                                             <div class="d-inline-flex align-items-center justify-content-center gap-2">
-
-                                                 }}"
-                                                    class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center"
+                                                    <class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center"
                                                     style="width: 36px; height: 36px;"
                                                     title="Abrir PDF da requisição"
                                                     aria-label="Abrir PDF da requisição"
@@ -199,11 +190,10 @@ container-fluid px-4
                                                 </a>
 
                                                 {% if requisition.quotation_storage_key %}
-                                                     }}"
-                                                        class="btn btn-sm btn-dark rounded-circle d-inline-flex align-items-center justify-content-center"
+                                                        <class="btn btn-sm btn-dark rounded-circle d-inline-flex align-items-center justify-content-center"
                                                         style="width: 36px; height: 36px;"
                                                         title="Abrir cotação anexada"
-                                                        aria-label="Abrir cotação anexada"
+                                                        aria-label="Abrir Anexo"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                     >
@@ -243,9 +233,8 @@ container-fluid px-4
                                 “{{ search_query }}”.
                             </p>
 
-                             }}"
-                                class="btn btn-outline-light rounded-pill"
-                            >
+                             
+                                <class="btn btn-outline-light rounded-pill">
                                 <i class="bi bi-x-circle me-1"></i>
                                 Limpar pesquisa
                             </a>
