@@ -14,7 +14,7 @@
                         {{ requisition.requisition_number }}
                     </h2>
 
-                    <small class="text-muted">
+                    <small class="text-light">
                         Criada por {{ requisition.user.username }}
                     </small>
                 </div>
@@ -155,7 +155,7 @@
                             'view_requisition_quotation',
                             requisition_id=requisition.id
                         ) }}"
-                        class="btn btn-outline-danger rounded-pill mt-2"
+                        class="btn btn-dark justify-content-end rounded-pill mt-2"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -200,9 +200,9 @@
                     class="form-label"
                 >
                     {% if requisition.quotation_storage_key %}
-                        Substituir cotação
+                        Substituir
                     {% else %}
-                        Anexar cotação
+                        Anexar
                     {% endif %}
                 </label>
 
@@ -226,9 +226,9 @@
                     <i class="bi bi-cloud-arrow-up-fill me-1"></i>
 
                     {% if requisition.quotation_storage_key %}
-                        Substituir cotação
+                        Substituir 
                     {% else %}
-                        Anexar cotação
+                        Anexar 
                     {% endif %}
                 </button>
             </form>

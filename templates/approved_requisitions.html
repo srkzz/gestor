@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}
+Requisições Aprovadas
+{% endblock %}
+
+{% block container_class %}
+container-fluid px-4
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-12">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h2 class="text-white mb-1">
+                    <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                    Requisições Aprovadas
+                </h2>
+
+                <p class="text-light opacity-75 mb-0">
+                    Consulta global das requisições aprovadas.
+                </p>
+            </div>
+
+            <span class="badge bg-success rounded-pill fs-6 px-3 py-2">
+                {{ total_results }}
+                {% if total_results == 1 %}
+                    resultado
+                {% else %}
+                    resultados
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="card glassmorphism-card shadow-lg border-0 mb-4">
+            <div class="card-body">
+
+                {{ url_for('approved_requisitions') }}
+                    <div class="row g-3 align-items-end">
+
+                        <div class="col-lg-9">
+                            <label
+                                for="approved-search"
+                                class="form-label text-light"
+                            >
+                                Pesquisar
+                            </label>
+
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark text-light border-secondary">
+                                    <i class="bi bi-search"></i>
+                                </span>
+
+                                <input
+                                    type="text"
+                                    id="approved-search"
+                                    name="search"
+                                    class="form-control bg-dark text-light border-secondary"
+                                    value="{{ search_query }}"
+                                    placeholder="Número, requerente, máquina, marca, modelo, código ou descrição do material..."
+                                    autocomplete="off"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="d-flex gap-2">
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary rounded-pill flex-grow-1"
+                                >
+                                    <i class="bi bi-search me-1"></i>
+                                    Pesquisar
+                                </button>
+
+                                {% if search_query %}
+                                     }}"
+                                        class="btn btn-outline-light rounded-pill"
+                                        title="Limpar pesquisa"
+                                        aria-label="Limpar pesquisa"
+                                    >
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card glassmorphism-card shadow-lg border-0 mb-5">
+            <div class="card-header bg-transparent border-bottom border-light border-opacity-25">
+                <h4 class="text-white mb-0">
+                    <i class="bi bi-list-check me-2"></i>
+                    Lista de Requisições
+                </h4>
+            </div>
+
+            <div class="card-body p-0">
+                {% if requisitions %}
+
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Requerente</th>
+                                    <th>Referência</th>
+                                    <th>Marca</th>
+                                    <th>Modelo</th>
+                                    <th>Materiais</th>
+                                    <th>Urgência</th>
+                                    <th>Aprovada em</th>
+                                    <th class="text-center text-nowrap">
+                                        Documentos
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for requisition in requisitions %}
+                                    <tr>
+                                        <td>
+                                            <strong class="text-info">
+                                                {{ requisition.requisition_number }}
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            {% if requisition.user %}
+                                                {{ requisition.user.username }}
+                                            {% else %}
+                                                <span class="text-muted">
+                                                    Utilizador indisponível
+                                                </span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {{ requisition.machine_reference }}
+                                        </td>
+
+                                        <td>
+                                            {{ requisition.brand }}
+                                        </td>
+
+                                        <td>
+                                            {{ requisition.model }}
+                                        </td>
+
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary rounded-pill">
+                                                {{ requisition.items|length }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            {% if requisition.priority == "alta" %}
+                                                <span class="badge bg-danger">
+                                                    Alta
+                                                </span>
+
+                                            {% elif requisition.priority == "media" %}
+                                                <span class="badge bg-warning text-dark">
+                                                    Média
+                                                </span>
+
+                                            {% else %}
+                                                <span class="badge bg-info text-dark">
+                                                    Baixa
+                                                </span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="text-nowrap">
+                                            {% if requisition.approved_at %}
+                                                {{ requisition.approved_at.strftime("%d/%m/%Y %H:%M") }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="text-center text-nowrap">
+                                            <div class="d-inline-flex align-items-center justify-content-center gap-2">
+
+                                                 }}"
+                                                    class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center"
+                                                    style="width: 36px; height: 36px;"
+                                                    title="Abrir PDF da requisição"
+                                                    aria-label="Abrir PDF da requisição"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                </a>
+
+                                                {% if requisition.quotation_storage_key %}
+                                                     }}"
+                                                        class="btn btn-sm btn-dark rounded-circle d-inline-flex align-items-center justify-content-center"
+                                                        style="width: 36px; height: 36px;"
+                                                        title="Abrir cotação anexada"
+                                                        aria-label="Abrir cotação anexada"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        <i class="bi bi-paperclip"></i>
+                                                    </a>
+                                                {% else %}
+                                                    <span
+                                                        class="btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center disabled"
+                                                        style="width: 36px; height: 36px;"
+                                                        title="Sem cotação anexada"
+                                                        aria-label="Sem cotação anexada"
+                                                    >
+                                                        <i class="bi bi-paperclip"></i>
+                                                    </span>
+                                                {% endif %}
+
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                {% else %}
+
+                    <div class="text-center text-light py-5">
+                        <i class="bi bi-search display-4 text-info"></i>
+
+                        {% if search_query %}
+                            <h4 class="mt-3">
+                                Nenhuma requisição encontrada
+                            </h4>
+
+                            <p class="text-light opacity-75">
+                                Não existem requisições aprovadas correspondentes a
+                                “{{ search_query }}”.
+                            </p>
+
+                             }}"
+                                class="btn btn-outline-light rounded-pill"
+                            >
+                                <i class="bi bi-x-circle me-1"></i>
+                                Limpar pesquisa
+                            </a>
+                        {% else %}
+                            <h4 class="mt-3">
+                                Ainda não existem requisições aprovadas
+                            </h4>
+                        {% endif %}
+                    </div>
+
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
