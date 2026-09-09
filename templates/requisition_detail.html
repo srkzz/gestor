@@ -150,7 +150,18 @@
                 <strong>
                     {{ requisition.quotation_original_name }}
                 </strong>
-
+                    <a
+                        href="{{ url_for(
+                            'view_requisition_quotation',
+                            requisition_id=requisition.id
+                        ) }}"
+                        class="btn btn-outline-danger rounded-pill mt-2"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+                        Abrir
+                    </a>
                 {% if requisition.quotation_size %}
                     <span class="ms-2 text-muted">
                         {{ "%.2f"|format(

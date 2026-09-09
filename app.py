@@ -2849,7 +2849,84 @@ def upload_requisition_quotation(requisition_id):
         )
     )
 
+@app.route(
+    "/requisitions/<string:requisition_id>/quotation"
+)
+@login_required
+def view_requisition_quotation(requisition_id):
+    requisition = Requisition.objects(
+        id=requisition_id
+    ).first_or_404()
 
+    if not requisition.quotation_storage_key:
+        flash(
+            "Esta requisição não possui uma cotação anexada.",
+            "warning"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    bucket_name = os.environ.get("R2_BUCKET_NAME")
+
+    if not bucket_name:
+        flash(
+            "O armazenamento de cotações não está disponível.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+    try:
+        r2_client = get_r2_client()
+
+        original_name = (
+            requisition.quotation_original_name
+            or "cotacao.pdf"
+        )
+
+        quotation_url = r2_client.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={
+                "Bucket": bucket_name,
+                "Key": requisition.quotation_storage_key,
+                "ResponseContentType": "application/pdf",
+                "ResponseContentDisposition": (
+                    f'inline; filename="{original_name}"'
+                )
+            },
+            ExpiresIn=300
+        )
+
+        return redirect(quotation_url)
+
+    except (BotoCoreError, ClientError):
+        app.logger.exception(
+            "Erro ao gerar o acesso à cotação."
+        )
+
+        flash(
+            "Não foi possível abrir a cotação.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "requisition_detail",
+                requisition_id=requisition.id
+            )
+        )
+
+        
 # --- Error Handlers ---
 
 @app.errorhandler(404)
