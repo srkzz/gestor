@@ -3498,16 +3498,36 @@ def reset_password(token):
                 url_for("login")
             )
 
+        # Gerar e guardar o hash da nova password
         user.password = bcrypt.generate_password_hash(
-        password
+            password
         ).decode("utf-8")
 
         user.save()
 
+        # Confirmar internamente que o hash foi guardado
+        if not bcrypt.check_password_hash(
+            user.password,
+            password
+        ):
+            app.logger.error(
+                "Falha ao validar a nova password após o reset."
+            )
+
+            flash(
+                "Não foi possível alterar a palavra-passe.",
+                "error"
+            )
+
+            return render_template(
+                "reset_password.html",
+                token=token
+            )
+
+        # Invalidar o token apenas depois de guardar a password
         reset_token.used_at = datetime.utcnow()
         reset_token.save()
 
-        # Invalida os restantes links do utilizador.
         PasswordResetToken.objects(
             user=user,
             used_at=None
@@ -3526,11 +3546,6 @@ def reset_password(token):
         return redirect(
             url_for("login")
         )
-
-    return render_template(
-        "reset_password.html",
-        token=token
-    )
 
 # --- Error Handlers ---
 
