@@ -3486,36 +3486,25 @@ def reset_password(token):
         user = reset_token.user
 
         if not user:
-            reset_token.used_at = datetime.utcnow()
-            reset_token.save()
-
             flash(
                 "Não foi possível recuperar esta conta.",
                 "error"
             )
+            return redirect(url_for("login"))
 
-            return redirect(
-                url_for("login")
-            )
+        try:
+            # O setter password gera automaticamente o hash Bcrypt
+            user.password = password
+            user.save()
 
-        # Gerar e guardar o hash da nova password
-        user.password = bcrypt.generate_password_hash(
-            password
-        ).decode("utf-8")
-
-        user.save()
-
-        # Confirmar internamente que o hash foi guardado
-        if not bcrypt.check_password_hash(
-            user.password,
-            password
-        ):
-            app.logger.error(
-                "Falha ao validar a nova password após o reset."
+        except Exception:
+            app.logger.exception(
+                "Erro ao guardar a nova palavra-passe."
             )
 
             flash(
-                "Não foi possível alterar a palavra-passe.",
+                "Não foi possível alterar a palavra-passe. "
+                "Tente novamente.",
                 "error"
             )
 
@@ -3524,7 +3513,7 @@ def reset_password(token):
                 token=token
             )
 
-        # Invalidar o token apenas depois de guardar a password
+        # Invalidar o token apenas depois de guardar
         reset_token.used_at = datetime.utcnow()
         reset_token.save()
 
@@ -3543,9 +3532,8 @@ def reset_password(token):
             "success"
         )
 
-        return redirect(
-            url_for("login")
-        )
+        return redirect(url_for("login"))
+    
 
 # --- Error Handlers ---
 
