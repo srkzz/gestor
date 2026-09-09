@@ -244,10 +244,11 @@ Analisar {{ requisition.requisition_number }}
             </div>
 
                 <div class="card-body">
-                <form
-                    method="POST"
-                    action="{{ url_for('approve_requisition', requisition_id=requisition.id) }}"
-                >
+        <form
+                method="POST"
+                action="{{ url_for('approve_requisition', requisition_id=requisition.id) }}"
+                id="approval-form"
+            >
             <input
                 type="hidden"
                 name="csrf_token"
