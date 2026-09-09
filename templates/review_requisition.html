@@ -283,7 +283,58 @@ Analisar {{ requisition.requisition_number }}
                             <i class="bi bi-eraser me-1"></i>
                             Limpar assinatura
                         </button>
+                        {% if requisition.quotation_storage_key %}
+                        <div class="card bg-secondary text-light shadow-lg mt-4">
+                        <div class="card-header">
+                        <h4 class="text-white mb-0">
+                        <i class="bi bi-paperclip me-2"></i>
+                        Anexo
+                        </h4>
+                        </div>
 
+                        <div class="card-body">
+                        <div class="alert alert-success d-flex flex-wrap align-items-center justify-content-between gap-3 mb-0">
+
+                        <div>
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+
+                        <strong>
+                        {{ requisition.quotation_original_name }}
+                        </strong>
+
+                        {% if requisition.quotation_size %}
+                        <span class="ms-2 text-muted">
+                        {{ "%.2f"|format(
+                            requisition.quotation_size / 1024 / 1024
+                        ) }} MB
+                        </span>
+                        {% endif %}
+
+                        {% if requisition.quotation_uploaded_at %}
+                        <div class="small text-muted mt-1">
+                        Anexada em
+                        {{ requisition.quotation_uploaded_at.strftime("%d/%m/%Y %H:%M") }}
+                        </div>
+                        {% endif %}
+                        </div>
+                        <a>
+                        {{ url_for(
+                        'view_requisition_quotation',
+                        requisition_id=requisition.id
+                        ) }}
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+                        Abrir cotação
+                        </a>
+
+                        </div>
+                        </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-secondary mt-4">
+                        <i class="bi bi-paperclip me-2"></i>
+                        Esta requisição não possui um anexo.
+                        </div>
+                        {% endif %}
                         <div class="d-flex justify-content-end mt-4">
                             <button
                                 type="submit"
