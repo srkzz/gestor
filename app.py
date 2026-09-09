@@ -268,8 +268,16 @@ class Requisition(db.Document):
     approved_by = db.ReferenceField(User)
     approver_signature = db.StringField()
     approved_at = db.DateTimeField()
-
     rejection_reason = db.StringField()
+    quotation_storage_key = db.StringField()
+    quotation_original_name = db.StringField()
+    quotation_content_type = db.StringField()
+    quotation_size = db.IntField()
+    quotation_uploaded_at = db.DateTimeField()
+    quotation_uploaded_by = db.ReferenceField(
+        User,
+        required=False
+    )
 
     meta = {
         "indexes": [
