@@ -213,7 +213,7 @@ Analisar {{ requisition.requisition_number }}
                             <img src="{{ requisition.requester_signature }}"
                             alt="Assinatura do requerente"
                             class="img-fluid"
-                            style"display: block; max-width: 100%; max-height: 220px; margin: auto;">
+                            style=display: block; max-width: 100%; max-height: 220px; margin: auto;">
                         </div>
 
                         <div class="text-muted small mt-2">
@@ -292,7 +292,7 @@ Analisar {{ requisition.requisition_number }}
                 {% else %}
                     <div class="alert alert-warning mt-4 mb-0">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        É necessário anexar uma cotação antes de aprovar.
+                        É necessário assinar para aprovar.
                     </div>
                 {% endif %}
             </form>
@@ -352,9 +352,12 @@ Analisar {{ requisition.requisition_number }}
             </p>
 
             {% if requisition.approver_signature %}
-                <div class="bg-white rounded p-3 text-center">
-                    {{ requisition.approver_signature }}
-                </div>
+               <div class="bg-white rounded p-3 text-center">
+                            <img src="{{ requisition.approver_signature }}"
+                            alt="Assinatura do aprovador"
+                            class="img-fluid"
+                            style=display: block; max-width: 100%; max-height: 220px; margin: auto;">
+                        </div>
             {% endif %}
 
             {% if requisition.approved_by %}
@@ -414,7 +417,7 @@ Analisar {{ requisition.requisition_number }}
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+                    <i class="bi bi-file-earmark-pdf-fill text-dark me-1"></i>
                     Abrir anexo
                 </a>
             </div>
