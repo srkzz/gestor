@@ -33,58 +33,54 @@ container-fluid px-4
                 {% endif %}
             </span>
         </div>
-
         <div class="card glassmorphism-card shadow-lg border-0 mb-4">
-            <div class="card-body">
-                <form method="GET" action="{{ url_for('approved_requisitions') }}">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-lg-9">
-                            <label
-                                for="approved-search"
-                                class="form-label text-light">
-                                Pesquisar
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-dark text-light border-secondary">
-                                    <i class="bi bi-search"></i>
-                                </span>
-                                <input
-                                    type="text"
-                                    id="approved-search"
-                                    name="search"
-                                    class="form-control bg-dark text-light border-secondary"
-                                    value="{{ search_query }}"
-                                    placeholder="Número, requerente, máquina, marca, modelo, código ou descrição do material..."
-                                    autocomplete="off"
-                                >
-                            </div>
-                        </div>
-
-                        <div class="col-lg-3">
-                            <div class="d-flex gap-2">
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary rounded-pill flex-grow-1"
-                                >
-                                    <i class="bi bi-search me-1"></i>
-                                    Pesquisar
-                                </button>
-
-                                {% if search_query %}
-                                        <class="btn btn-outline-light rounded-pill"
-                                        title="Limpar pesquisa"
-                                        aria-label="Limpar pesquisa"
-                                    >
-                                        <i class="bi bi-x-circle-fill"></i>
-                                    </a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </form>
+        <div class="card-body p-4">
+        <form
+            method="GET"
+            action="{{ url_for('approved_requisitions') }}"
+        >
+            <label
+                for="approved-search"
+                class="form-label text-dark fw-semibold"
+            >
+                Pesquisar
+            </label>
+            <div class="input-group">
+                <span class="input-group-text bg-dark text-white border-dark">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input
+                    type="text"
+                    id="approved-search"
+                    name="search"
+                    value="{{ search_query }}"
+                    class="form-control bg-white text-dark border-secondary"
+                    placeholder="Pesquisar número, requerente, equipamento, material ou código..."
+                    autocomplete="off"
+                >
+                <button
+                    type="submit"
+                    class="btn btn-dark px-4"
+                >
+                    Pesquisar
+                </button>
             </div>
-        </div>
 
+            {% if search_query %}
+                <div class="mt-3">
+                    <a
+                        href="/approved-requisitions"
+                        class="btn btn-sm btn-outline-dark rounded-pill"
+                    >
+                        <i class="bi bi-x-circle me-1"></i>
+                        Limpar pesquisa
+                    </a>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+        </div>
         <div class="card glassmorphism-card shadow-lg border-0 mb-5">
             <div class="card-header bg-transparent border-bottom border-light border-opacity-25">
                 <h4 class="text-white mb-0">
@@ -177,41 +173,43 @@ container-fluid px-4
                                             {% endif %}
                                         </td>
 
-                                        <td class="text-center text-nowrap">
-                                            <div class="d-inline-flex align-items-center justify-content-center gap-2">
-                                                    <class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                    style="width: 36px; height: 36px;"
-                                                    title="Abrir PDF da requisição"
-                                                    aria-label="Abrir PDF da requisição"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
-                                                </a>
+                                <td class="text-center text-nowrap">
+                                <div class="d-inline-flex align-items-center justify-content-center gap-2">
 
-                                                {% if requisition.quotation_storage_key %}
-                                                        <class="btn btn-sm btn-dark rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                        style="width: 36px; height: 36px;"
-                                                        title="Abrir cotação anexada"
-                                                        aria-label="Abrir Anexo"
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <i class="bi bi-paperclip"></i>
-                                                    </a>
-                                                {% else %}
-                                                    <span
-                                                        class="btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center disabled"
-                                                        style="width: 36px; height: 36px;"
-                                                        title="Sem cotação anexada"
-                                                        aria-label="Sem cotação anexada"
-                                                    >
-                                                        <i class="bi bi-paperclip"></i>
-                                                    </span>
-                                                {% endif %}
+                                <a
+                                href="/requisitions/{{ requisition.id }}/pdf"
+                                class="btn btn-sm btn-outline-danger rounded-circle action-icon"
+                                title="Abrir PDF da requisição"
+                                aria-label="Abrir PDF da requisição"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </a>
 
-                                            </div>
-                                        </td>
+                                {% if requisition.quotation_storage_key %}
+                                <a
+                                href="/requisitions/{{ requisition.id }}/quotation"
+                                class="btn btn-sm btn-dark rounded-circle action-icon"
+                                title="Abrir anexo"
+                                aria-label="Abrir anexo"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >
+                                <i class="bi bi-paperclip"></i>
+                                </a>
+                                {% else %}
+                                <span
+                                class="btn btn-sm btn-outline-secondary rounded-circle action-icon disabled"
+                                title="Sem cotação anexada"
+                                aria-label="Sem cotação anexada"
+                                >
+                                <i class="bi bi-paperclip"></i>
+                                </span>
+                                {% endif %}
+
+                                </div>
+                                </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
