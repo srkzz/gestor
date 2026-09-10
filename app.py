@@ -151,7 +151,7 @@ class User(db.Document):
     username = db.StringField(required=True, unique=True, max_length=80)
     email = db.StringField(required=True, unique=True, max_length=120)
     password_hash = db.StringField(required=True, max_length=255)
-    avatar_url = db.StringField(default='https://www.gravatar.com/avatar/?d=mp')
+    avatar_url = db.StringField(default='https://pngimg.com/uploads/smiley/smiley_PNG43.png')
     is_admin = db.BooleanField(default=False)
     approved_only = db.BooleanField(default=False)
 
