@@ -9,6 +9,7 @@ import uuid
 import smtplib
 import hashlib
 import secrets
+from zoneinfo import ZoneInfo
 from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
 from email.message import EmailMessage
@@ -1246,7 +1247,7 @@ def add_requisition():
         ]):
             flash(
                 "Preencha a referência da máquina, marca, "
-                "modelo e data necessária.",
+                "modelo e data.",
                 "error"
             )
 
@@ -1263,7 +1264,7 @@ def add_requisition():
             ).date()
         except ValueError:
             flash(
-                "A data necessária não é válida.",
+                "A data não é válida.",
                 "error"
             )
 
@@ -1980,7 +1981,7 @@ def requisition_pdf(requisition_id):
             requisition.priority.capitalize()
         ),
         (
-            "Data necessária",
+            "Data",
             requisition.due_date.strftime(
                 "%d/%m/%Y"
             )
@@ -2344,14 +2345,18 @@ def requisition_pdf(requisition_id):
         90
     )
 
+    pdf_created_at = datetime.now(
+    ZoneInfo("Africa/Kigali")
+    )
+
     pdf.multi_cell(
-        0,
-        5,
-        _pdf_safe(
-            "Documento gerado automaticamente pelo "
-            "Sistema de Gestão de Requisições."
-        ),
-        align="C"
+    0,
+    5,
+    _pdf_safe(
+        "Documento gerado automaticamente a: "
+        f"{pdf_created_at.strftime('%d/%m/%Y %H:%M')}"
+    ),
+    align="C"
     )
 
     pdf_output = bytes(
@@ -2448,7 +2453,7 @@ def edit_requisition(requisition_id):
             due_date_raw
         ]):
             flash(
-                "Preencha a referência, marca, modelo e data necessária.",
+                "Preencha a referência, marca, modelo e data.",
                 "error"
             )
 
@@ -2464,7 +2469,7 @@ def edit_requisition(requisition_id):
             ).date()
         except ValueError:
             flash(
-                "A data necessária não é válida.",
+                "A data não é válida.",
                 "error"
             )
 
