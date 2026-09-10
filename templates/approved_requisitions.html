@@ -69,7 +69,7 @@ container-fluid px-4
             {% if search_query %}
                 <div class="mt-3">
                     <a
-                        href="/approved-requisitions"
+                        href="{{ url_for('approved_requisitions') }}"
                         class="btn btn-sm btn-outline-dark rounded-pill"
                     >
                         <i class="bi bi-x-circle me-1"></i>

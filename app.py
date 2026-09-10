@@ -3243,120 +3243,63 @@ def approved_requisitions():
         ""
     ).strip()
 
-    requisitions_query = Requisition.objects(
+    approved_query = Requisition.objects(
         status="aprovada"
     )
 
-    if search_query:
-        safe_search = re.escape(search_query)
-
-        matching_users = User.objects(
-            __raw__={
-                "$or": [
-                    {
-                        "username": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "email": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    }
-                ]
-            }
-        ).only("id")
-
-        matching_user_ids = [
-            user.id
-            for user in matching_users
-        ]
-
-        search_conditions = [
-            {
-                "requisition_number": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "machine_reference": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "brand": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "model": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "serial_number": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "description": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "items.part_code": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "items.part_description": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            },
-            {
-                "items.unit": {
-                    "$regex": safe_search,
-                    "$options": "i"
-                }
-            }
-        ]
-
-        if matching_user_ids:
-            search_conditions.append(
-                {
-                    "user": {
-                        "$in": matching_user_ids
-                    }
-                }
-            )
-
-        requisitions_query = requisitions_query(
-            __raw__={
-                "$or": search_conditions
-            }
+    all_approved_requisitions = list(
+        approved_query.order_by(
+            "-approved_at",
+            "-date_created"
         )
-
-    approved_requisitions_list = (
-        requisitions_query
-        .order_by("-approved_at", "-date_created")
-        .all()
     )
+
+    if search_query:
+        normalized_search = search_query.upper()
+
+        requisitions = [
+            requisition
+            for requisition in all_approved_requisitions
+            if (
+                normalized_search
+                in requisition.requisition_number.upper()
+                or normalized_search
+                in (requisition.machine_reference or "").upper()
+                or normalized_search
+                in (requisition.brand or "").upper()
+                or normalized_search
+                in (requisition.model or "").upper()
+                or normalized_search
+                in (requisition.serial_number or "").upper()
+                or normalized_search
+                in (requisition.description or "").upper()
+                or (
+                    requisition.user
+                    and (
+                        normalized_search
+                        in (requisition.user.username or "").upper()
+                        or normalized_search
+                        in (requisition.user.email or "").upper()
+                    )
+                )
+                or any(
+                    normalized_search
+                    in (item.part_code or "").upper()
+                    or normalized_search
+                    in (item.part_description or "").upper()
+                    for item in requisition.items
+                )
+            )
+        ]
+
+    else:
+        requisitions = all_approved_requisitions
 
     return render_template(
         "approved_requisitions.html",
-        requisitions=approved_requisitions_list,
+        requisitions=requisitions,
         search_query=search_query,
-        total_results=len(approved_requisitions_list)
+        total_results=len(requisitions)
     )
 
 @app.route("/admin/email/test")
