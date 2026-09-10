@@ -1516,61 +1516,86 @@ def admin_dashboard():
     )
 
     if requisition_search:
-        matching_users = User.objects(
-            Q(username__icontains=requisition_search)
-            | Q(email__icontains=requisition_search)
-        ).only("id")
-
-        matching_user_ids = [
-            user.id
-            for user in matching_users
-        ]
-
-        search_filter = (
-            Q(
-                machine_reference__icontains=requisition_search
-            )
-            | Q(
-                brand__icontains=requisition_search
-            )
-            | Q(
-                model__icontains=requisition_search
-            )
-            | Q(
-                serial_number__icontains=requisition_search
-            )
-            | Q(
-                description__icontains=requisition_search
-            )
-            | Q(
-                items__part_code__icontains=requisition_search
-            )
-            | Q(
-                items__part_description__icontains=requisition_search
-            )
+        normalized_search = (
+            requisition_search
+            .strip()
+            .upper()
         )
 
-        if matching_user_ids:
+        # O número da requisição é uma propriedade calculada,
+        # por isso é pesquisado em Python.
+        
+        if (normalized_search.startswith("REQ-")
+                or (
+                    len(normalized_search) == 6
+                    and normalized_search.isalnum()
+                )
+            ):
+
+            all_requisitions = [
+                requisition
+                for requisition in all_requisitions_query.order_by(
+                    "-date_created"
+                )
+                if normalized_search
+                in requisition.requisition_number.upper()
+            ]
+
+        else:
+            matching_users = User.objects(
+                Q(username__icontains=requisition_search)
+                | Q(email__icontains=requisition_search)
+            ).only("id")
+
+            matching_user_ids = [
+                user.id
+                for user in matching_users
+            ]
+
             search_filter = (
-                search_filter
-                | Q(user__in=matching_user_ids)
+                Q(
+                    machine_reference__icontains=requisition_search
+                )
+                | Q(
+                    brand__icontains=requisition_search
+                )
+                | Q(
+                    model__icontains=requisition_search
+                )
+                | Q(
+                    serial_number__icontains=requisition_search
+                )
+                | Q(
+                    description__icontains=requisition_search
+                )
+                | Q(
+                    items__part_code__icontains=requisition_search
+                )
+                | Q(
+                    items__part_description__icontains=requisition_search
+                )
             )
 
-        all_requisitions_query = (
-            all_requisitions_query.filter(
-                search_filter
+            if matching_user_ids:
+                search_filter = (
+                    search_filter
+                    | Q(user__in=matching_user_ids)
+                )
+
+            all_requisitions = list(
+                all_requisitions_query
+                .filter(search_filter)
+                .order_by("-date_created")
             )
-        )
 
-    all_requisitions = (
-        all_requisitions_query
-        .order_by("-date_created")
-        .all()
-    )
+    else:
+            all_requisitions = list(
+                all_requisitions_query.order_by(
+                    "-date_created"
+                )
+            )
 
-    total_requisitions = len(
-        all_requisitions
-    )
+    total_requisitions = len(all_requisitions)
 
     total_submitted_requisitions = Requisition.objects(
         status="submetida"
