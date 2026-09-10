@@ -55,7 +55,7 @@ Analisar {{ requisition.requisition_number }}
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-md-3">
-                            <div class="text-muted text-light small">
+                            <div class="text-light small">
                                 Referência da máquina
                             </div>
 
@@ -65,7 +65,7 @@ Analisar {{ requisition.requisition_number }}
                         </div>
 
                         <div class="col-md-3">
-                            <div class="text-muted text-light small">
+                            <div class="text-light small">
                                 Marca
                             </div>
 
@@ -73,7 +73,7 @@ Analisar {{ requisition.requisition_number }}
                         </div>
 
                         <div class="col-md-3">
-                            <div class="text-muted text-light small">
+                            <div class="text-light small">
                                 Modelo
                             </div>
 
@@ -81,7 +81,7 @@ Analisar {{ requisition.requisition_number }}
                         </div>
 
                         <div class="col-md-3">
-                            <div class="text-muted text-light small">
+                            <div class="text-light small">
                                 Número de série
                             </div>
 
@@ -143,7 +143,7 @@ Analisar {{ requisition.requisition_number }}
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-md-4">
-                            <div class="text-muted text-light small">
+                            <div class="text-light small">
                                 Requerente
                             </div>
 
@@ -153,7 +153,7 @@ Analisar {{ requisition.requisition_number }}
                         </div>
 
                         <div class="col-md-4">
-                            <div class="text-muted text-light small">
+                            <div class="text-light small">
                                 Urgência
                             </div>
 
@@ -175,7 +175,7 @@ Analisar {{ requisition.requisition_number }}
                         </div>
 
                         <div class="col-md-4">
-                            <div class="text-muted text-light small">
+                            <div class="text-light small">
                                 Data
                             </div>
 
@@ -188,7 +188,7 @@ Analisar {{ requisition.requisition_number }}
                     {% if requisition.description %}
                         <hr>
 
-                        <div class="text-muted text-light small mb-2">
+                        <div class="text-light small mb-2">
                             Descrição ou observações
                         </div>
 
@@ -216,7 +216,7 @@ Analisar {{ requisition.requisition_number }}
                             style=display: block; max-width: 100%; max-height: 220px; margin: auto;">
                         </div>
 
-                        <div class="text-muted small mt-2">
+                        <div class="text-light small mt-2">
                             Assinado por
                             <strong>{{ requisition.user.username }}</strong>
 
@@ -402,7 +402,7 @@ Analisar {{ requisition.requisition_number }}
                     </strong>
 
                     {% if requisition.quotation_size %}
-                        <span class="ms-2 text-muted">
+                        <span class="ms-2 text-light">
                             {{ "%.2f"|format(
                                 requisition.quotation_size / 1024 / 1024
                             ) }} MB
@@ -410,7 +410,7 @@ Analisar {{ requisition.requisition_number }}
                     {% endif %}
 
                     {% if requisition.quotation_uploaded_at %}
-                        <div class="small text-muted mt-1">
+                        <div class="small text-light mt-1">
                             Anexada em
                             {{ requisition.quotation_uploaded_at.strftime("%d/%m/%Y %H:%M") }}
                         </div>
