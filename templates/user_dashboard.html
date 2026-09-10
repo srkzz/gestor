@@ -232,17 +232,6 @@
                                         aria-label="Ver requisição">
                                         <i class="bi bi-eye-fill"></i>
                                         </a>
-                                    </td>
-                                    <td class="text-center text-nowrap">
-                                            <div class="d-inline-flex align-items-center gap-2">
-
-                                                <a href="{{ url_for('review_requisition', requisition_id=requisition.id) }}"
-                                                   class="btn btn-sm btn-outline-info rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                   style="width: 34px; height: 34px;"
-                                                   title="Ver requisição">
-                                                      <i class="bi bi-eye-fill"></i>
-                                                </a>
-
                                                 {% if requisition.status == "aprovada" %}
                                                     <a href="{{ url_for('requisition_pdf', requisition_id=requisition.id) }}"
                                                        class="btn btn-sm btn-outline-light rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -261,6 +250,7 @@
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>    
                                             {% endif %}
+                                        </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
