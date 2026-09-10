@@ -42,20 +42,24 @@
                 <!-- Left links -->
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center"> {# Alinhado à direita #}
                     {% if 'user_id' in session %}
+                        {% if not current_user_approved_only %}
                         <li class="nav-item">
                             <a class="nav-link" aria-current="page" href="{{ url_for('user_dashboard') }}" data-mdb-ripple-init>
                                 <i class="bi bi-grid-fill me-1"></i> Dashboard
                             </a>
                         </li>
+                        {% endif %}
                          <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('approved_requisitions') }}" data-mdb-ripple-init>
                             <i class="bi bi-check-circle-fill me-1"></i>
                             Aprovadas
                             </a>
                         </li>
+                        {% if not current_user_approved_only %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('add_requisition') }}" data-mdb><i class="bi bi-file-earmark-arrow-up"></i> Nova Requisição
                         </a>
+                        {% endif %}
                         </li>
                         {# NOVO: Link para o Painel de Administração (apenas se for admin) #}
                         {% if current_user_is_admin %}

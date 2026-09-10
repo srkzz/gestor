@@ -153,6 +153,7 @@ class User(db.Document):
     password_hash = db.StringField(required=True, max_length=255)
     avatar_url = db.StringField(default='https://www.gravatar.com/avatar/?d=mp')
     is_admin = db.BooleanField(default=False)
+    approved_only = db.BooleanField(default=False)
 
     @property
     def password(self):
@@ -513,6 +514,31 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def full_access_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = User.objects(
+            id=ObjectId(session["user_id"])
+        ).first()
+
+        if not user:
+            session.clear()
+            return redirect(url_for("login"))
+
+        if user.approved_only and not user.is_admin:
+            flash(
+                "A sua conta tem acesso apenas às "
+                "requisições aprovadas.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("approved_requisitions")
+            )
+
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 # --- Rotas principais ---
 
@@ -569,6 +595,10 @@ def login():
             session['avatar_url'] = user.avatar_url
             session['is_admin'] = user.is_admin
             flash(f'Bem-vindo, {user.username}!', 'success')
+            if user.approved_only and not user.is_admin:
+                return redirect(
+                    url_for("approved_requisitions")
+                )
             return redirect(url_for('user_dashboard'))
         else:
             flash('Credenciais inválidas.', 'error')
@@ -586,6 +616,7 @@ def logout():
 
 @app.route("/dashboard")
 @login_required
+@full_access_required
 def user_dashboard():
     user = get_current_user()
 
@@ -1200,6 +1231,7 @@ def export_tasks_pdf():
 
 @app.route("/requisitions/new", methods=["GET", "POST"])
 @login_required
+@full_access_required
 def add_requisition():
     user = User.objects(
         id=ObjectId(session["user_id"])
@@ -2442,6 +2474,7 @@ def requisition_pdf(requisition_id):
     methods=["GET", "POST"]
 )
 @login_required
+@full_access_required
 def edit_requisition(requisition_id):
     requisition = Requisition.objects(
         id=requisition_id
@@ -2891,6 +2924,7 @@ def send_password_reset_email(
     methods=["POST"]
 )
 @login_required
+@full_access_required
 def upload_requisition_quotation(requisition_id):
     requisition = Requisition.objects(
         id=requisition_id
@@ -3167,6 +3201,17 @@ def view_requisition_quotation(requisition_id):
     requisition = Requisition.objects(
         id=requisition_id
     ).first_or_404()
+
+    current_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    if (
+        current_user.approved_only
+        and not current_user.is_admin
+        and requisition.status != "aprovada"
+    ):
+        abort(403)
 
     if not requisition.quotation_storage_key:
         flash(
@@ -3603,6 +3648,77 @@ def reset_password(token):
         token=token
      )
 
+
+@app.route(
+    "/admin/users/<string:user_id>/toggle-approved-only",
+    methods=["POST"]
+)
+@admin_required
+def toggle_approved_only(user_id):
+    current_user = User.objects(
+        id=ObjectId(session["user_id"])
+    ).first_or_404()
+
+    target_user = User.objects(
+        id=ObjectId(user_id)
+    ).first_or_404()
+
+    if target_user.id == current_user.id:
+        flash(
+            "Não pode limitar a sua própria conta.",
+            "error"
+        )
+        return redirect(url_for("admin_dashboard"))
+
+    if target_user.is_admin:
+        flash(
+            "Não pode aplicar acesso limitado a um administrador.",
+            "error"
+        )
+        return redirect(url_for("admin_dashboard"))
+
+    target_user.approved_only = (
+        not target_user.approved_only
+    )
+
+    target_user.save()
+
+    if target_user.approved_only:
+        flash(
+            f"{target_user.username} agora tem acesso "
+            "apenas às requisições aprovadas.",
+            "success"
+        )
+    else:
+        flash(
+            f"{target_user.username} voltou a ter "
+            "acesso completo.",
+            "success"
+        )
+
+    return redirect(url_for("admin_dashboard"))
+
+@app.context_processor
+def inject_user_access():
+    if "user_id" not in session:
+        return {
+            "current_user_approved_only": False
+        }
+
+    try:
+        user = User.objects(
+            id=ObjectId(session["user_id"])
+        ).first()
+    except Exception:
+        user = None
+
+    return {
+        "current_user_approved_only": bool(
+            user
+            and user.approved_only
+            and not user.is_admin
+        )
+    }
 # --- Error Handlers ---
 
 @app.errorhandler(404)

@@ -346,9 +346,17 @@
                                 <td>{{ user.email }}</td>
                                 <td>
                                     {% if user.is_admin %}
-                                        <span class="badge bg-success rounded-pill">Sim</span>
+                                        <span class="badge bg-success rounded-pill">
+                                            Admin
+                                        </span>
+                                    {% elif user.approved_only %}
+                                        <span class="badge bg-info text-dark rounded-pill">
+                                            Só aprovadas
+                                        </span>
                                     {% else %}
-                                        <span class="badge bg-danger rounded-pill">Não</span>
+                                        <span class="badge bg-secondary rounded-pill">
+                                            Acesso completo
+                                        </span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -366,7 +374,38 @@
                                                 </button>
                                             {% endif %}
                                         </form>
-                                        
+                                <form method="POST" action="{{ url_for('toggle_approved_only', user_id=user.id) }}" class="d-inline ms-2">
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+                                {% if user.approved_only %}
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-info rounded-pill"
+                                        onclick="return confirm(
+                                            'Dar acesso completo a {{ user.username }}?'
+                                        )"
+                                        title="Dar acesso completo"
+                                    >
+                                        <i class="bi bi-unlock-fill me-1"></i>
+                                        Acesso completo
+                                    </button>
+                                {% else %}
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-info rounded-pill"
+                                        onclick="return confirm(
+                                            'Limitar {{ user.username }} às aprovadas?'
+                                        )"
+                                        title="Limitar às requisições aprovadas"
+                                    >
+                                        <i class="bi bi-eye-fill me-1"></i>
+                                        Só aprovadas
+                                    </button>
+                                {% endif %}
+                            </form>
                                         {# Botão para apagar utilizador - desabilitado se for o próprio admin #}
                                         <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" class="d-inline ms-2">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
