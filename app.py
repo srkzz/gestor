@@ -631,66 +631,6 @@ def user_dashboard():
             priority=priority_filter
         )
 
-    # Pesquisa global
-    if search_query:
-        safe_search = re.escape(search_query)
-
-        filtered_query = filtered_query(
-            __raw__={
-                "$or": [
-                    {
-                        "machine_reference": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "brand": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "model": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "serial_number": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "description": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "items.part_code": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "items.part_description": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    },
-                    {
-                        "items.unit": {
-                            "$regex": safe_search,
-                            "$options": "i"
-                        }
-                    }
-                ]
-            }
-        )
-
-    # Esta parte deve ficar fora do if search_query
     allowed_sort_fields = [
         "date_created",
         "due_date",
@@ -714,37 +654,132 @@ def user_dashboard():
     )
 
     filters_active = (
-    status_filter != "all"
-    or priority_filter != "all"
-    or bool(search_query)
+        status_filter != "all"
+        or priority_filter != "all"
+        or bool(search_query)
     )
 
-    total_filtered_requisitions = filtered_query.count()
-    total_pages = math.ceil(
-    total_filtered_requisitions / PER_PAGE
-    )
+    if search_query:
+        normalized_search = search_query.strip().upper()
 
-    if total_pages < 1:
-        total_pages = 1
+        # Carrega as requisições já filtradas por estado e prioridade.
+        candidate_requisitions = list(
+            filtered_query
+            .order_by(sort_field)
+            .all()
+        )
 
-    if page > total_pages:
-        page = total_pages
+        # A pesquisa é feita em Python porque requisition_number
+        # é uma propriedade calculada, não um campo MongoDB.
+        matching_requisitions = [
+            requisition
+            for requisition in candidate_requisitions
+            if (
+                normalized_search
+                in requisition.requisition_number.upper()
 
-    # Todas as requisições ficam sempre visíveis na tabela principal
+                or normalized_search
+                in (
+                    requisition.machine_reference
+                    or ""
+                ).upper()
+
+                or normalized_search
+                in (
+                    requisition.brand
+                    or ""
+                ).upper()
+
+                or normalized_search
+                in (
+                    requisition.model
+                    or ""
+                ).upper()
+
+                or normalized_search
+                in (
+                    requisition.serial_number
+                    or ""
+                ).upper()
+
+                or normalized_search
+                in (
+                    requisition.description
+                    or ""
+                ).upper()
+
+                or any(
+                    normalized_search
+                    in (item.part_code or "").upper()
+
+                    or normalized_search
+                    in (
+                        item.part_description
+                        or ""
+                    ).upper()
+
+                    or normalized_search
+                    in (item.unit or "").upper()
+
+                    for item in requisition.items
+                )
+            )
+        ]
+
+        total_filtered_requisitions = len(
+            matching_requisitions
+        )
+
+        total_pages = math.ceil(
+            total_filtered_requisitions / PER_PAGE
+        )
+
+        if total_pages < 1:
+            total_pages = 1
+
+        if page > total_pages:
+            page = total_pages
+
+        start_index = (page - 1) * PER_PAGE
+        end_index = start_index + PER_PAGE
+
+        filtered_requisitions = (
+            matching_requisitions[
+                start_index:end_index
+            ]
+        )
+
+    else:
+        total_filtered_requisitions = (
+            filtered_query.count()
+        )
+
+        total_pages = math.ceil(
+            total_filtered_requisitions / PER_PAGE
+        )
+
+        if total_pages < 1:
+            total_pages = 1
+
+        if page > total_pages:
+            page = total_pages
+
+        filtered_requisitions = (
+            filtered_query
+            .order_by(sort_field)
+            .skip((page - 1) * PER_PAGE)
+            .limit(PER_PAGE)
+            .all()
+        )
+
+    # Todas as requisições continuam visíveis
+    # na tabela principal.
     requisitions = (
         all_requisitions_query
         .order_by("-date_created")
         .all()
     )
 
-    # Resultados específicos da pesquisa e filtros
-    filtered_requisitions = (
-        filtered_query
-        .order_by(sort_field)
-        .skip((page - 1) * PER_PAGE)
-        .limit(PER_PAGE)
-        .all()
-    )
     # Contadores gerais
     total_requisitions_count = Requisition.objects(
         user=user
