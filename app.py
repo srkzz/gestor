@@ -1918,13 +1918,6 @@ def requisition_pdf(requisition_id):
         return redirect(url_for("login"))
 
     # Apenas o requerente ou um administrador pode abrir o PDF
-    is_owner = (
-        str(requisition.user.id)
-        == str(current_user.id)
-    )
-
-    if not is_owner and not current_user.is_admin:
-        abort(403)
 
     if requisition.status != "aprovada":
         flash(
